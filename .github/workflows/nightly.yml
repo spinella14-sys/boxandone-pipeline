@@ -27,7 +27,7 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install duckdb boto3 requests beautifulsoup4 curl_cffi
+        run: pip install -r requirements.txt
 
       # The job writes into ~/boxandone, which is where every script expects to
       # live. The repo holds the scripts; the data comes from R2.
