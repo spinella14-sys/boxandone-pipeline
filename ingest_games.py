@@ -1,0 +1,525 @@
+#!/usr/bin/env python3
+"""
+ingest_games.py — game-grain box score ingestion from Basketball Reference.
+
+Four phases. Each is resumable and safe to interrupt with Ctrl-C.
+
+    python3 ingest_games.py schedule --seasons 2026:1980
+    python3 ingest_games.py fetch                 # runs until done or --limit
+    python3 ingest_games.py parse
+    python3 ingest_games.py status
+
+Design notes:
+  - Box score rows carry data-append-csv="jokicni01", so every player links by
+    BBRef ID. We NEVER match on name here. Same-named contemporaries are a
+    non-issue.
+  - Raw HTML is gzipped to disk and never re-fetched. A parser bug costs
+    minutes, not another 76 hours of scraping.
+  - Reverse chronological by default: current season first, so the live
+    pipeline is proven before the backfill runs.
+  - Unknown BBRef IDs go to staging_players. Nothing auto-creates a player.
+
+Requires: requests, beautifulsoup4
+"""
+
+import argparse
+import gzip
+import os
+import random
+import re
+import sys
+import time
+from datetime import datetime
+
+BASE = "https://www.basketball-reference.com"
+HOME = os.path.expanduser("~/boxandone")
+BOX_DIR = os.path.join(HOME, "raw", "boxscores")
+SCHED_DIR = os.path.join(HOME, "raw", "schedules")
+DB_PATH = os.path.join(HOME, "data", "boxandone.duckdb")
+
+REQUEST_DELAY = 5.0
+JITTER = 1.5
+USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+)
+
+MONTHS = ["october", "november", "december", "january", "february",
+          "march", "april", "may", "june", "july", "august", "september"]
+
+
+def db():
+    import duckdb
+    con = duckdb.connect(DB_PATH)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS ingest_log (
+            game_id     VARCHAR PRIMARY KEY,
+            league      VARCHAR,
+            season      VARCHAR,
+            game_date   DATE,
+            source_slug VARCHAR,
+            season_type VARCHAR DEFAULT 'regular',
+            fetched     BOOLEAN DEFAULT FALSE,
+            parsed      BOOLEAN DEFAULT FALSE,
+            fetch_error VARCHAR,
+            parse_error VARCHAR,
+            box_rows    INTEGER,
+            updated_at  TIMESTAMP DEFAULT now()
+        )
+    """)
+    return con
+
+
+def season_label(end_year: int) -> str:
+    return f"{end_year-1}-{str(end_year)[2:]}"
+
+
+def polite_sleep():
+    time.sleep(REQUEST_DELAY + random.uniform(0, JITTER))
+
+
+def get(session, url, tries=4):
+    for attempt in range(tries):
+        try:
+            r = session.get(url, timeout=60)
+        except Exception as e:
+            print(f"    network error: {e}")
+            time.sleep(10 * (attempt + 1))
+            continue
+        if r.status_code == 200:
+            r.encoding = "utf-8"
+            return r.text
+        if r.status_code == 404:
+            return None
+        if r.status_code == 429:
+            wait = 60 * (attempt + 1)
+            print(f"    429 rate limited — sleeping {wait}s")
+            time.sleep(wait)
+            continue
+        print(f"    HTTP {r.status_code}")
+        time.sleep(15)
+    return None
+
+
+# ---------------------------------------------------------------------------
+# PHASE 1 — schedule
+# ---------------------------------------------------------------------------
+
+def phase_schedule(seasons):
+    import requests
+    from bs4 import BeautifulSoup
+
+    os.makedirs(SCHED_DIR, exist_ok=True)
+    session = requests.Session()
+    session.headers.update({"User-Agent": USER_AGENT})
+    con = db()
+
+    for end_year in seasons:
+        label = season_label(end_year)
+        found = 0
+
+        for month in MONTHS:
+            slug = f"NBA_{end_year}_games-{month}.html"
+            cache = os.path.join(SCHED_DIR, slug + ".gz")
+
+            if os.path.exists(cache):
+                with gzip.open(cache, "rt", encoding="utf-8") as f:
+                    html = f.read()
+            else:
+                html = get(session, f"{BASE}/leagues/{slug}")
+                polite_sleep()
+                if html is None:
+                    continue
+                with gzip.open(cache, "wt", encoding="utf-8") as f:
+                    f.write(html)
+
+            soup = BeautifulSoup(html, "html.parser")
+            table = soup.find("table", id="schedule")
+            if not table:
+                continue
+
+            for row in (table.find("tbody") or table).find_all("tr"):
+                if row.get("class") and "thead" in row.get("class"):
+                    continue
+                cell = row.find(attrs={"data-stat": "box_score_text"})
+                if not cell:
+                    continue
+                link = cell.find("a")
+                if not link or not link.get("href"):
+                    continue          # game not yet played
+                m = re.search(r"/boxscores/(\d{9}[A-Z]{3})\.html", link["href"])
+                if not m:
+                    continue
+                slug_id = m.group(1)
+                gdate = datetime.strptime(slug_id[:8], "%Y%m%d").date()
+
+                con.execute("""
+                    INSERT INTO ingest_log (game_id, league, season, game_date, source_slug)
+                    VALUES (?, 'NBA', ?, ?, ?)
+                    ON CONFLICT (game_id) DO NOTHING
+                """, [f"NBA_{slug_id}", label, gdate, slug_id])
+                found += 1
+
+        total = con.execute(
+            "SELECT COUNT(*) FROM ingest_log WHERE season=?", [label]).fetchone()[0]
+        print(f"  {label}: {found} game links seen, {total} in queue")
+
+    grand = con.execute("SELECT COUNT(*) FROM ingest_log").fetchone()[0]
+    print(f"\nqueue total: {grand:,} games")
+    con.close()
+
+
+# ---------------------------------------------------------------------------
+# PHASE 2 — fetch box scores
+# ---------------------------------------------------------------------------
+
+def box_path(slug):
+    return os.path.join(BOX_DIR, slug[:4], f"{slug}.html.gz")
+
+
+def phase_fetch(limit=None):
+    import requests
+
+    session = requests.Session()
+    session.headers.update({"User-Agent": USER_AGENT})
+
+    # Read the work list, then RELEASE the lock for the duration of the fetch.
+    con = db()
+    rows = con.execute("""
+        SELECT game_id, source_slug FROM ingest_log
+        WHERE NOT fetched ORDER BY game_date DESC
+    """).fetchall()
+    con.close()
+
+    if limit:
+        rows = rows[:limit]
+    if not rows:
+        print("  nothing pending")
+        return
+
+    eta = len(rows) * (REQUEST_DELAY + JITTER / 2) / 3600
+    print(f"  {len(rows):,} games pending  (~{eta:.1f} hours)")
+    print("  database is NOT locked during fetch — other tools can run")
+    print("  Ctrl-C is safe — progress flushes before exit\n")
+
+    def flush(ok_ids, err_ids, final=False):
+        """Write progress. Retries on lock contention rather than crashing.
+
+        Another process (usually a concurrent parse) can hold the write lock.
+        Losing a flush is harmless — the HTML is on disk and gets marked
+        fetched on the next run — but crashing the fetch is not.
+        """
+        if not ok_ids and not err_ids:
+            return
+        delays = [2, 5, 15, 30, 60, 90]
+        for attempt, wait in enumerate(delays, 1):
+            try:
+                c = db()
+                for gid in ok_ids:
+                    c.execute("UPDATE ingest_log SET fetched=TRUE, fetch_error=NULL, "
+                              "updated_at=now() WHERE game_id=?", [gid])
+                for gid, msg in err_ids:
+                    c.execute("UPDATE ingest_log SET fetch_error=?, updated_at=now() "
+                              "WHERE game_id=?", [msg, gid])
+                c.commit()
+                c.close()
+                ok_ids.clear()
+                err_ids.clear()
+                return
+            except Exception as e:
+                if attempt == 1:
+                    print(f"  db busy ({str(e)[:60]}) — retrying")
+                if attempt < len(delays):
+                    time.sleep(wait)
+                else:
+                    print(f"  could not write progress after {len(delays)} tries; "
+                          f"{len(ok_ids)} game(s) held for next flush")
+                    if final:
+                        print("  (harmless — files are on disk and will be "
+                              "marked fetched on the next run)")
+                    return
+
+    pending_ok, pending_err = [], []
+    done = fail = 0
+
+    try:
+        for i, (game_id, slug) in enumerate(rows, 1):
+            path = box_path(slug)
+            if os.path.exists(path):
+                pending_ok.append(game_id)
+            else:
+                html = get(session, f"{BASE}/boxscores/{slug}.html")
+                polite_sleep()
+                if html is None:
+                    pending_err.append((game_id, "not found"))
+                    fail += 1
+                else:
+                    os.makedirs(os.path.dirname(path), exist_ok=True)
+                    with gzip.open(path, "wt", encoding="utf-8") as f:
+                        f.write(html)
+                    pending_ok.append(game_id)
+                    done += 1
+
+            if i % 25 == 0:
+                flush(pending_ok, pending_err)
+                remain = (len(rows) - i) * (REQUEST_DELAY + JITTER / 2) / 3600
+                print(f"  {i:,}/{len(rows):,}  ok={done} fail={fail}  ~{remain:.1f}h left")
+    except KeyboardInterrupt:
+        print("\n  interrupted — flushing progress")
+    finally:
+        flush(pending_ok, pending_err, final=True)
+
+    print(f"\n  fetched {done:,}, failed {fail}")
+
+# ---------------------------------------------------------------------------
+# PHASE 3 — parse
+# ---------------------------------------------------------------------------
+
+def mp_to_seconds(txt):
+    if not txt:
+        return None
+    m = re.match(r"^(\d+):(\d{2})$", txt.strip())
+    if m:
+        return int(m.group(1)) * 60 + int(m.group(2))
+    return None
+
+
+def _i(row, stat):
+    el = row.find(attrs={"data-stat": stat})
+    if not el:
+        return None
+    t = el.get_text(strip=True)
+    if t in ("", "-"):
+        return None
+    try:
+        return int(float(t))
+    except ValueError:
+        return None
+
+
+def parse_box_html(html, slug):
+    """Return (game_dict, list_of_player_rows)."""
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(html, "html.parser")
+
+    home_abbr = slug[9:12]
+    gdate = datetime.strptime(slug[:8], "%Y%m%d").date()
+
+    team_tables = {}
+    for t in soup.find_all("table"):
+        tid = t.get("id") or ""
+        m = re.match(r"^box-([A-Z]{3})-game-basic$", tid)
+        if m:
+            team_tables[m.group(1)] = t
+
+    if not team_tables:
+        return None, []
+
+    abbrs = list(team_tables.keys())
+    away_abbr = next((a for a in abbrs if a != home_abbr), None)
+
+    players, team_pts = [], {}
+
+    for abbr, table in team_tables.items():
+        opp = next((a for a in abbrs if a != abbr), None)
+        body = table.find("tbody") or table
+        starter_count = 0
+        seen_separator = False
+
+        for row in body.find_all("tr"):
+            cls = row.get("class") or []
+            if "thead" in cls:
+                seen_separator = True
+                continue
+
+            th = row.find("th", attrs={"data-stat": "player"})
+            if not th:
+                continue
+            bbref_id = th.get("data-append-csv")
+            if not bbref_id:
+                continue
+            name = th.get_text(strip=True)
+
+            reason = row.find(attrs={"data-stat": "reason"})
+            if reason is not None:
+                players.append({
+                    "bbref_id": bbref_id, "name": name, "team_abbr": abbr,
+                    "opp_abbr": opp, "is_home": abbr == home_abbr,
+                    "started": False, "played": False,
+                    "dnp_reason": reason.get_text(strip=True) or "DNP",
+                    "seconds_played": None,
+                })
+                continue
+
+            if not seen_separator and starter_count < 5:
+                started = True
+                starter_count += 1
+            else:
+                started = False
+
+            pts = _i(row, "pts")
+            team_pts[abbr] = team_pts.get(abbr, 0) + (pts or 0)
+
+            players.append({
+                "bbref_id": bbref_id, "name": name, "team_abbr": abbr,
+                "opp_abbr": opp, "is_home": abbr == home_abbr,
+                "started": started, "played": True, "dnp_reason": None,
+                "seconds_played": mp_to_seconds(
+                    (row.find(attrs={"data-stat": "mp"}) or
+                     type("x", (), {"get_text": lambda *a, **k: ""})()).get_text(strip=True)),
+                "fgm": _i(row, "fg"),   "fga": _i(row, "fga"),
+                "fg3m": _i(row, "fg3"), "fg3a": _i(row, "fg3a"),
+                "ftm": _i(row, "ft"),   "fta": _i(row, "fta"),
+                "orb": _i(row, "orb"),  "drb": _i(row, "drb"), "trb": _i(row, "trb"),
+                "ast": _i(row, "ast"),  "stl": _i(row, "stl"), "blk": _i(row, "blk"),
+                "tov": _i(row, "tov"),  "pf": _i(row, "pf"),   "pts": pts,
+                "plus_minus": _i(row, "plus_minus"),
+            })
+
+    game = {
+        "game_id": f"NBA_{slug}",
+        "league": "NBA", "game_date": gdate,
+        "home_abbr": home_abbr, "away_abbr": away_abbr,
+        "home_score": team_pts.get(home_abbr),
+        "away_score": team_pts.get(away_abbr),
+        "source_game_id": slug,
+        "source_url": f"{BASE}/boxscores/{slug}.html",
+    }
+    return game, players
+
+
+def phase_parse(limit=None):
+    con = db()
+
+    idmap = dict(con.execute(
+        "SELECT source_id, player_id FROM player_identifiers WHERE source='bbref'"
+    ).fetchall())
+    print(f"  registry: {len(idmap):,} bbref IDs")
+
+    rows = con.execute("""
+        SELECT game_id, source_slug, season,
+               COALESCE(season_type,'regular') FROM ingest_log
+        WHERE fetched AND NOT parsed ORDER BY game_date DESC
+    """).fetchall()
+    if limit:
+        rows = rows[:limit]
+    if not rows:
+        print("  nothing to parse")
+        return
+
+    games = box_rows = unknown = 0
+    unknown_ids = {}
+
+    for game_id, slug, season, stype in rows:
+        path = box_path(slug)
+        if not os.path.exists(path):
+            con.execute("UPDATE ingest_log SET fetched=FALSE WHERE game_id=?", [game_id])
+            continue
+
+        with gzip.open(path, "rt", encoding="utf-8") as f:
+            html = f.read()
+
+        try:
+            g, plist = parse_box_html(html, slug)
+        except Exception as e:
+            con.execute("UPDATE ingest_log SET parse_error=? WHERE game_id=?",
+                        [str(e)[:200], game_id])
+            continue
+
+        if not g:
+            con.execute("UPDATE ingest_log SET parse_error='no box tables' "
+                        "WHERE game_id=?", [game_id])
+            continue
+
+        con.execute("""
+            INSERT INTO games (game_id, league, season, game_date, season_type,
+                               home_abbr, away_abbr, home_score, away_score,
+                               source, source_game_id, source_url, box_complete)
+            VALUES (?,?,?,?,?,?,?,?,?,'bbref',?,?,TRUE)
+            ON CONFLICT (game_id) DO NOTHING
+        """, [g["game_id"], "NBA", season, g["game_date"], stype, g["home_abbr"],
+              g["away_abbr"], g["home_score"], g["away_score"],
+              g["source_game_id"], g["source_url"]])
+
+        for p in plist:
+            pid = idmap.get(p["bbref_id"])
+            if not pid:
+                unknown += 1
+                unknown_ids[p["bbref_id"]] = p["name"]
+                con.execute("""
+                    INSERT INTO staging_players
+                      (source, source_id, raw_name, raw_name_norm, raw_team,
+                       raw_league, match_status)
+                    VALUES ('bbref',?,?,LOWER(?),?, 'NBA','pending')
+                """, [p["bbref_id"], p["name"], p["name"], p["team_abbr"]])
+                continue
+
+            con.execute("""
+                INSERT INTO player_game_box
+                  (player_id, game_id, team_abbr, opp_abbr, is_home, started, played,
+                   dnp_reason, seconds_played, fgm, fga, fg3m, fg3a, ftm, fta,
+                   orb, drb, trb, ast, stl, blk, tov, pf, pts, plus_minus, source)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'bbref')
+                ON CONFLICT (player_id, game_id) DO NOTHING
+            """, [pid, g["game_id"], p["team_abbr"], p["opp_abbr"], p["is_home"],
+                  p["started"], p["played"], p["dnp_reason"], p["seconds_played"],
+                  p.get("fgm"), p.get("fga"), p.get("fg3m"), p.get("fg3a"),
+                  p.get("ftm"), p.get("fta"), p.get("orb"), p.get("drb"),
+                  p.get("trb"), p.get("ast"), p.get("stl"), p.get("blk"),
+                  p.get("tov"), p.get("pf"), p.get("pts"), p.get("plus_minus")])
+            box_rows += 1
+
+        con.execute("UPDATE ingest_log SET parsed=TRUE, box_rows=?, parse_error=NULL, "
+                    "updated_at=now() WHERE game_id=?", [len(plist), game_id])
+        games += 1
+        if games % 200 == 0:
+            print(f"  parsed {games:,} games, {box_rows:,} box rows")
+
+    con.commit()
+    print(f"\n  games {games:,} | box rows {box_rows:,} | unknown players {unknown}")
+    if unknown_ids:
+        print(f"  {len(unknown_ids)} distinct unknown BBRef IDs -> staging_players:")
+        for k, v in list(unknown_ids.items())[:15]:
+            print(f"    {k}  {v}")
+    con.close()
+
+
+# ---------------------------------------------------------------------------
+
+def phase_status():
+    con = db()
+    q = con.execute("""
+        SELECT season,
+               COUNT(*) AS queued,
+               SUM(CASE WHEN fetched THEN 1 ELSE 0 END) AS fetched,
+               SUM(CASE WHEN parsed  THEN 1 ELSE 0 END) AS parsed,
+               SUM(CASE WHEN fetch_error IS NOT NULL THEN 1 ELSE 0 END) AS errs
+        FROM ingest_log GROUP BY season ORDER BY season DESC
+    """).fetchall()
+    print(f"  {'season':10} {'queued':>8} {'fetched':>8} {'parsed':>8} {'errors':>7}")
+    for r in q:
+        print(f"  {r[0]:10} {r[1]:>8,} {r[2]:>8,} {r[3]:>8,} {r[4]:>7}")
+    tot = con.execute("SELECT COUNT(*) FROM player_game_box").fetchone()[0]
+    pend = con.execute(
+        "SELECT COUNT(*) FROM staging_players WHERE match_status='pending'").fetchone()[0]
+    print(f"\n  box rows: {tot:,}   staging pending: {pend:,}")
+    con.close()
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("phase", choices=["schedule", "fetch", "parse", "status"])
+    ap.add_argument("--seasons", default="2026:2026",
+                    help="end-year range, newest first, e.g. 2026:1980")
+    ap.add_argument("--limit", type=int)
+    a = ap.parse_args()
+
+    if a.phase == "schedule":
+        hi, lo = (int(x) for x in a.seasons.split(":"))
+        phase_schedule(range(hi, lo - 1, -1))
+    elif a.phase == "fetch":
+        phase_fetch(limit=a.limit)
+    elif a.phase == "parse":
+        phase_parse(limit=a.limit)
+    else:
+        phase_status()

@@ -1,0 +1,225 @@
+#!/usr/bin/env python3
+"""
+patch_season_type.py
+
+Fixes two things:
+
+1. season_type — every game currently loads as 'regular'. BBRef's playoff index
+   (/playoffs/NBA_{year}_games.html) lists postseason box scores. Play-in games
+   appear in NEITHER the monthly schedule marker nor the playoff index, so they
+   are inferred: non-playoff games within 10 days before the first playoff game,
+   2020 onward. Before 2020 there was no play-in.
+
+2. overtimes — currently always 0. Derived from box score minutes rather than
+   re-parsing HTML: one team plays 240 minutes in regulation, +25 per OT.
+
+Run:  python3 patch_season_type.py
+Safe to rerun. Costs one request per season already in ingest_log.
+"""
+
+import os
+import re
+import sys
+import time
+import gzip
+from datetime import timedelta
+
+HOME = os.path.expanduser("~/boxandone")
+DB_PATH = os.path.join(HOME, "data", "boxandone.duckdb")
+PO_DIR = os.path.join(HOME, "raw", "playoff_index")
+TARGET = os.path.join(HOME, "ingest_games.py")
+
+UA = {"User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36")}
+
+PLAYIN_FIRST_SEASON = 2020      # bubble play-in for the 8 seed
+PLAYIN_WINDOW_DAYS = 10
+
+
+# ---------------------------------------------------------------------------
+# 1. Patch ingest_games.py so future parses set season_type
+# ---------------------------------------------------------------------------
+
+def patch_source():
+    if not os.path.exists(TARGET):
+        sys.exit(f"{TARGET} not found")
+
+    src = open(TARGET, encoding="utf-8").read()
+    changed = []
+
+    old_sel = ("        SELECT game_id, source_slug, season FROM ingest_log\n"
+               "        WHERE fetched AND NOT parsed ORDER BY game_date DESC")
+    new_sel = ("        SELECT game_id, source_slug, season,\n"
+               "               COALESCE(season_type,'regular') FROM ingest_log\n"
+               "        WHERE fetched AND NOT parsed ORDER BY game_date DESC")
+    if old_sel in src:
+        src = src.replace(old_sel, new_sel)
+        changed.append("parse query selects season_type")
+
+    if "for game_id, slug, season in rows:" in src:
+        src = src.replace("for game_id, slug, season in rows:",
+                          "for game_id, slug, season, stype in rows:")
+        changed.append("parse loop unpacks season_type")
+
+    old_ins = "            VALUES (?,?,?,?,'regular',?,?,?,?,'bbref',?,?,TRUE)"
+    new_ins = "            VALUES (?,?,?,?,?,?,?,?,?,'bbref',?,?,TRUE)"
+    if old_ins in src:
+        src = src.replace(old_ins, new_ins)
+        changed.append("games INSERT takes season_type")
+
+    old_args = ('        """, [g["game_id"], "NBA", season, g["game_date"], g["home_abbr"],')
+    new_args = ('        """, [g["game_id"], "NBA", season, g["game_date"], stype, g["home_abbr"],')
+    if old_args in src:
+        src = src.replace(old_args, new_args)
+        changed.append("games INSERT args include season_type")
+
+    old_ddl = "            source_slug VARCHAR,"
+    new_ddl = "            source_slug VARCHAR,\n            season_type VARCHAR DEFAULT 'regular',"
+    if old_ddl in src and "season_type VARCHAR DEFAULT" not in src:
+        src = src.replace(old_ddl, new_ddl)
+        changed.append("ingest_log DDL adds season_type")
+
+    if changed:
+        open(TARGET + ".bak", "w", encoding="utf-8").write(
+            open(TARGET, encoding="utf-8").read())
+        open(TARGET, "w", encoding="utf-8").write(src)
+        for c in changed:
+            print(f"    {c}")
+        print(f"    backup -> ingest_games.py.bak")
+    else:
+        print("    already patched")
+
+
+# ---------------------------------------------------------------------------
+# 2. Fetch playoff indexes and label games
+# ---------------------------------------------------------------------------
+
+def label_games():
+    import duckdb
+    import requests
+    from bs4 import BeautifulSoup
+
+    os.makedirs(PO_DIR, exist_ok=True)
+    con = duckdb.connect(DB_PATH)
+
+    cols = [r[1] for r in con.execute("PRAGMA table_info('ingest_log')").fetchall()]
+    if "season_type" not in cols:
+        con.execute("ALTER TABLE ingest_log ADD COLUMN season_type VARCHAR DEFAULT 'regular'")
+        print("    added ingest_log.season_type")
+
+    seasons = [r[0] for r in con.execute(
+        "SELECT DISTINCT season FROM ingest_log ORDER BY season DESC").fetchall()]
+    if not seasons:
+        sys.exit("ingest_log is empty — run 'schedule' first")
+
+    session = requests.Session()
+    session.headers.update(UA)
+
+    for label in seasons:
+        end_year = int(label.split("-")[0]) + 1
+        cache = os.path.join(PO_DIR, f"NBA_{end_year}_playoffs.html.gz")
+
+        if os.path.exists(cache):
+            html = gzip.open(cache, "rt", encoding="utf-8").read()
+        else:
+            url = f"https://www.basketball-reference.com/playoffs/NBA_{end_year}_games.html"
+            r = session.get(url, timeout=30)
+            time.sleep(5.5)
+            if r.status_code != 200:
+                print(f"    {label}: playoff index HTTP {r.status_code} — skipped")
+                continue
+            html = r.text
+            gzip.open(cache, "wt", encoding="utf-8").write(html)
+
+        soup = BeautifulSoup(html, "html.parser")
+        table = soup.find("table", id="schedule")
+        if not table:
+            print(f"    {label}: no schedule table")
+            continue
+
+        slugs = []
+        for row in (table.find("tbody") or table).find_all("tr"):
+            cell = row.find(attrs={"data-stat": "box_score_text"})
+            a = cell.find("a") if cell else None
+            if a and a.get("href"):
+                m = re.search(r"/boxscores/(\d{9}[A-Z]{3})\.html", a["href"])
+                if m:
+                    slugs.append(m.group(1))
+
+        if not slugs:
+            print(f"    {label}: 0 playoff links")
+            continue
+
+        con.execute("UPDATE ingest_log SET season_type='regular' WHERE season=?", [label])
+
+        ids = [f"NBA_{s}" for s in slugs]
+        con.execute(
+            f"UPDATE ingest_log SET season_type='playoff' "
+            f"WHERE game_id IN ({','.join('?' * len(ids))})", ids)
+
+        po = con.execute("SELECT COUNT(*) FROM ingest_log WHERE season=? AND season_type='playoff'",
+                         [label]).fetchone()[0]
+
+        playin = 0
+        if end_year >= PLAYIN_FIRST_SEASON:
+            first_po = con.execute(
+                "SELECT MIN(game_date) FROM ingest_log WHERE season=? AND season_type='playoff'",
+                [label]).fetchone()[0]
+            if first_po:
+                lo = first_po - timedelta(days=PLAYIN_WINDOW_DAYS)
+                con.execute("""
+                    UPDATE ingest_log SET season_type='playin'
+                    WHERE season=? AND season_type='regular'
+                      AND game_date >= ? AND game_date < ?
+                """, [label, lo, first_po])
+                playin = con.execute(
+                    "SELECT COUNT(*) FROM ingest_log WHERE season=? AND season_type='playin'",
+                    [label]).fetchone()[0]
+
+        reg = con.execute(
+            "SELECT COUNT(*) FROM ingest_log WHERE season=? AND season_type='regular'",
+            [label]).fetchone()[0]
+        print(f"    {label}: regular={reg:,}  playin={playin}  playoff={po}")
+
+    # push labels onto already-loaded games rows
+    con.execute("""
+        UPDATE games SET season_type = l.season_type
+        FROM ingest_log l WHERE l.game_id = games.game_id
+          AND games.season_type IS DISTINCT FROM l.season_type
+    """)
+    con.commit()
+    con.close()
+
+
+# ---------------------------------------------------------------------------
+# 3. Derive overtimes from box minutes
+# ---------------------------------------------------------------------------
+
+def fix_overtimes():
+    import duckdb
+    con = duckdb.connect(DB_PATH)
+    con.execute("""
+        UPDATE games SET overtimes = COALESCE((
+            SELECT GREATEST(0, CAST(ROUND((MAX(tm.team_min) - 240.0) / 25.0) AS INTEGER))
+            FROM (
+                SELECT b.game_id, b.team_abbr, SUM(b.seconds_played)/60.0 AS team_min
+                FROM player_game_box b WHERE b.played GROUP BY 1,2
+            ) tm WHERE tm.game_id = games.game_id
+        ), 0)
+    """)
+    con.commit()
+    dist = con.execute("""
+        SELECT overtimes, COUNT(*) FROM games GROUP BY 1 ORDER BY 1
+    """).fetchall()
+    print(f"    overtime distribution: {dist}")
+    con.close()
+
+
+if __name__ == "__main__":
+    print("1. patching ingest_games.py")
+    patch_source()
+    print("\n2. labeling games from playoff index")
+    label_games()
+    print("\n3. deriving overtimes from box minutes")
+    fix_overtimes()
+    print("\ndone")

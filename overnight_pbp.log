@@ -1,0 +1,370 @@
+=== 2002-03 ===
+  2002-03: 1277 games pending (~64 min)
+  Ctrl-C is safe; progress flushes every 25 games
+
+    25/1277  ok=25 fail=0  ~63 min left
+    50/1277  ok=50 fail=0  ~61 min left
+    75/1277  ok=75 fail=0  ~60 min left
+   100/1277  ok=100 fail=0  ~59 min left
+   125/1277  ok=125 fail=0  ~58 min left
+   150/1277  ok=150 fail=0  ~56 min left
+   175/1277  ok=175 fail=0  ~55 min left
+   200/1277  ok=200 fail=0  ~54 min left
+   225/1277  ok=225 fail=0  ~53 min left
+   250/1277  ok=250 fail=0  ~51 min left
+   275/1277  ok=275 fail=0  ~50 min left
+   300/1277  ok=300 fail=0  ~49 min left
+   325/1277  ok=325 fail=0  ~48 min left
+   350/1277  ok=350 fail=0  ~46 min left
+   375/1277  ok=375 fail=0  ~45 min left
+   400/1277  ok=400 fail=0  ~44 min left
+   425/1277  ok=425 fail=0  ~43 min left
+   450/1277  ok=450 fail=0  ~41 min left
+   475/1277  ok=475 fail=0  ~40 min left
+   500/1277  ok=500 fail=0  ~39 min left
+   525/1277  ok=525 fail=0  ~38 min left
+   550/1277  ok=550 fail=0  ~36 min left
+   575/1277  ok=575 fail=0  ~35 min left
+   600/1277  ok=600 fail=0  ~34 min left
+   625/1277  ok=625 fail=0  ~33 min left
+   650/1277  ok=650 fail=0  ~31 min left
+   675/1277  ok=675 fail=0  ~30 min left
+   700/1277  ok=700 fail=0  ~29 min left
+   725/1277  ok=725 fail=0  ~28 min left
+   750/1277  ok=750 fail=0  ~26 min left
+   775/1277  ok=775 fail=0  ~25 min left
+   800/1277  ok=800 fail=0  ~24 min left
+   825/1277  ok=825 fail=0  ~23 min left
+   850/1277  ok=850 fail=0  ~21 min left
+   875/1277  ok=875 fail=0  ~20 min left
+   900/1277  ok=900 fail=0  ~19 min left
+   925/1277  ok=925 fail=0  ~18 min left
+   950/1277  ok=950 fail=0  ~16 min left
+   975/1277  ok=975 fail=0  ~15 min left
+  1000/1277  ok=1000 fail=0  ~14 min left
+  1025/1277  ok=1025 fail=0  ~13 min left
+  1050/1277  ok=1050 fail=0  ~11 min left
+  1075/1277  ok=1075 fail=0  ~10 min left
+  1100/1277  ok=1100 fail=0  ~9 min left
+  1125/1277  ok=1125 fail=0  ~8 min left
+  1150/1277  ok=1150 fail=0  ~6 min left
+  1175/1277  ok=1175 fail=0  ~5 min left
+  1200/1277  ok=1200 fail=0  ~4 min left
+  1225/1277  ok=1225 fail=0  ~3 min left
+  1250/1277  ok=1250 fail=0  ~1 min left
+  1275/1277  ok=1275 fail=0  ~0 min left
+
+  fetched 1277, failed 0
+  bridged nba ids: 2857
+  parsed 200 games, 96529 events
+  parsed 400 games, 191845 events
+  parsed 600 games, 286882 events
+  parsed 800 games, 381975 events
+  parsed 1000 games, 475771 events
+  parsed 1200 games, 569319 events
+
+  games 1277 | events 606770 | events with unbridged personId 272
+=== 2001-02 ===
+  2001-02: 1260 games pending (~63 min)
+  Ctrl-C is safe; progress flushes every 25 games
+
+    25/1260  ok=25 fail=0  ~62 min left
+    50/1260  ok=50 fail=0  ~60 min left
+    75/1260  ok=75 fail=0  ~59 min left
+   100/1260  ok=100 fail=0  ~58 min left
+   125/1260  ok=125 fail=0  ~57 min left
+   150/1260  ok=150 fail=0  ~56 min left
+   175/1260  ok=175 fail=0  ~54 min left
+   200/1260  ok=200 fail=0  ~53 min left
+   225/1260  ok=225 fail=0  ~52 min left
+   250/1260  ok=250 fail=0  ~50 min left
+   275/1260  ok=275 fail=0  ~49 min left
+   300/1260  ok=300 fail=0  ~48 min left
+   325/1260  ok=325 fail=0  ~47 min left
+   350/1260  ok=350 fail=0  ~46 min left
+   375/1260  ok=375 fail=0  ~44 min left
+   400/1260  ok=400 fail=0  ~43 min left
+   425/1260  ok=425 fail=0  ~42 min left
+   450/1260  ok=450 fail=0  ~40 min left
+   475/1260  ok=475 fail=0  ~39 min left
+   500/1260  ok=500 fail=0  ~38 min left
+   525/1260  ok=525 fail=0  ~37 min left
+   550/1260  ok=550 fail=0  ~36 min left
+   575/1260  ok=575 fail=0  ~34 min left
+   600/1260  ok=600 fail=0  ~33 min left
+   625/1260  ok=625 fail=0  ~32 min left
+   650/1260  ok=650 fail=0  ~30 min left
+   675/1260  ok=675 fail=0  ~29 min left
+   700/1260  ok=700 fail=0  ~28 min left
+   725/1260  ok=725 fail=0  ~27 min left
+   750/1260  ok=750 fail=0  ~26 min left
+   775/1260  ok=775 fail=0  ~24 min left
+   800/1260  ok=800 fail=0  ~23 min left
+   825/1260  ok=825 fail=0  ~22 min left
+   850/1260  ok=850 fail=0  ~20 min left
+   875/1260  ok=875 fail=0  ~19 min left
+   900/1260  ok=900 fail=0  ~18 min left
+   925/1260  ok=925 fail=0  ~17 min left
+   950/1260  ok=950 fail=0  ~16 min left
+   975/1260  ok=975 fail=0  ~14 min left
+  1000/1260  ok=1000 fail=0  ~13 min left
+  1025/1260  ok=1025 fail=0  ~12 min left
+  1050/1260  ok=1050 fail=0  ~10 min left
+  1075/1260  ok=1075 fail=0  ~9 min left
+  1100/1260  ok=1100 fail=0  ~8 min left
+  1125/1260  ok=1125 fail=0  ~7 min left
+  1150/1260  ok=1150 fail=0  ~6 min left
+  1175/1260  ok=1175 fail=0  ~4 min left
+  1200/1260  ok=1200 fail=0  ~3 min left
+  1225/1260  ok=1225 fail=0  ~2 min left
+  1250/1260  ok=1250 fail=0  ~0 min left
+
+  fetched 1260, failed 0
+  bridged nba ids: 2857
+  parsed 200 games, 95463 events
+  parsed 400 games, 189898 events
+  parsed 600 games, 284185 events
+  parsed 800 games, 378422 events
+  parsed 1000 games, 472722 events
+  parsed 1200 games, 566418 events
+
+  games 1260 | events 595588 | events with unbridged personId 306
+=== 2000-01 ===
+  2000-01: 1260 games pending (~63 min)
+  Ctrl-C is safe; progress flushes every 25 games
+
+    25/1260  ok=25 fail=0  ~62 min left
+    50/1260  ok=50 fail=0  ~60 min left
+    75/1260  ok=75 fail=0  ~59 min left
+   100/1260  ok=100 fail=0  ~58 min left
+   125/1260  ok=125 fail=0  ~57 min left
+   150/1260  ok=150 fail=0  ~56 min left
+   175/1260  ok=175 fail=0  ~54 min left
+   200/1260  ok=200 fail=0  ~53 min left
+   225/1260  ok=225 fail=0  ~52 min left
+   250/1260  ok=250 fail=0  ~50 min left
+   275/1260  ok=275 fail=0  ~49 min left
+   300/1260  ok=300 fail=0  ~48 min left
+   325/1260  ok=325 fail=0  ~47 min left
+   350/1260  ok=350 fail=0  ~46 min left
+   375/1260  ok=375 fail=0  ~44 min left
+   400/1260  ok=400 fail=0  ~43 min left
+   425/1260  ok=425 fail=0  ~42 min left
+   450/1260  ok=450 fail=0  ~40 min left
+   475/1260  ok=475 fail=0  ~39 min left
+   500/1260  ok=500 fail=0  ~38 min left
+   525/1260  ok=525 fail=0  ~37 min left
+   550/1260  ok=550 fail=0  ~36 min left
+   575/1260  ok=575 fail=0  ~34 min left
+   600/1260  ok=600 fail=0  ~33 min left
+   625/1260  ok=625 fail=0  ~32 min left
+   650/1260  ok=650 fail=0  ~30 min left
+   675/1260  ok=675 fail=0  ~29 min left
+   700/1260  ok=700 fail=0  ~28 min left
+   725/1260  ok=725 fail=0  ~27 min left
+   750/1260  ok=750 fail=0  ~26 min left
+   775/1260  ok=775 fail=0  ~24 min left
+   800/1260  ok=800 fail=0  ~23 min left
+   825/1260  ok=825 fail=0  ~22 min left
+   850/1260  ok=850 fail=0  ~20 min left
+   875/1260  ok=875 fail=0  ~19 min left
+   900/1260  ok=900 fail=0  ~18 min left
+   925/1260  ok=925 fail=0  ~17 min left
+   950/1260  ok=950 fail=0  ~16 min left
+   975/1260  ok=975 fail=0  ~14 min left
+  1000/1260  ok=1000 fail=0  ~13 min left
+  1025/1260  ok=1025 fail=0  ~12 min left
+  1050/1260  ok=1050 fail=0  ~10 min left
+  1075/1260  ok=1075 fail=0  ~9 min left
+  1100/1260  ok=1100 fail=0  ~8 min left
+  1125/1260  ok=1125 fail=0  ~7 min left
+  1150/1260  ok=1150 fail=0  ~6 min left
+  1175/1260  ok=1175 fail=0  ~4 min left
+  1200/1260  ok=1200 fail=0  ~3 min left
+  1225/1260  ok=1225 fail=0  ~2 min left
+  1250/1260  ok=1250 fail=0  ~0 min left
+
+  fetched 1260, failed 0
+  bridged nba ids: 2857
+  parsed 200 games, 97265 events
+  parsed 400 games, 193346 events
+  parsed 600 games, 288823 events
+  parsed 800 games, 384045 events
+  parsed 1000 games, 478334 events
+  parsed 1200 games, 573497 events
+
+  games 1260 | events 602342 | events with unbridged personId 324
+=== 1999-00 ===
+  1999-00: 1264 games pending (~63 min)
+  Ctrl-C is safe; progress flushes every 25 games
+
+    25/1264  ok=25 fail=0  ~62 min left
+    50/1264  ok=50 fail=0  ~61 min left
+    75/1264  ok=75 fail=0  ~59 min left
+   100/1264  ok=100 fail=0  ~58 min left
+   125/1264  ok=125 fail=0  ~57 min left
+   150/1264  ok=150 fail=0  ~56 min left
+   175/1264  ok=175 fail=0  ~54 min left
+   200/1264  ok=200 fail=0  ~53 min left
+   225/1264  ok=225 fail=0  ~52 min left
+   250/1264  ok=250 fail=0  ~51 min left
+   275/1264  ok=275 fail=0  ~49 min left
+   300/1264  ok=300 fail=0  ~48 min left
+   325/1264  ok=325 fail=0  ~47 min left
+   350/1264  ok=350 fail=0  ~46 min left
+   375/1264  ok=375 fail=0  ~44 min left
+   400/1264  ok=400 fail=0  ~43 min left
+   425/1264  ok=425 fail=0  ~42 min left
+   450/1264  ok=450 fail=0  ~41 min left
+   475/1264  ok=475 fail=0  ~39 min left
+   500/1264  ok=500 fail=0  ~38 min left
+   525/1264  ok=525 fail=0  ~37 min left
+   550/1264  ok=550 fail=0  ~36 min left
+   575/1264  ok=575 fail=0  ~34 min left
+   600/1264  ok=600 fail=0  ~33 min left
+   625/1264  ok=625 fail=0  ~32 min left
+   650/1264  ok=650 fail=0  ~31 min left
+   675/1264  ok=675 fail=0  ~29 min left
+   700/1264  ok=700 fail=0  ~28 min left
+   725/1264  ok=725 fail=0  ~27 min left
+   750/1264  ok=750 fail=0  ~26 min left
+   775/1264  ok=775 fail=0  ~24 min left
+   800/1264  ok=800 fail=0  ~23 min left
+   825/1264  ok=825 fail=0  ~22 min left
+   850/1264  ok=850 fail=0  ~21 min left
+   875/1264  ok=875 fail=0  ~19 min left
+   900/1264  ok=900 fail=0  ~18 min left
+   925/1264  ok=925 fail=0  ~17 min left
+   950/1264  ok=950 fail=0  ~16 min left
+   975/1264  ok=975 fail=0  ~14 min left
+  1000/1264  ok=1000 fail=0  ~13 min left
+  1025/1264  ok=1025 fail=0  ~12 min left
+  1050/1264  ok=1050 fail=0  ~11 min left
+  1075/1264  ok=1075 fail=0  ~9 min left
+  1100/1264  ok=1100 fail=0  ~8 min left
+  1125/1264  ok=1125 fail=0  ~7 min left
+  1150/1264  ok=1150 fail=0  ~6 min left
+  1175/1264  ok=1175 fail=0  ~4 min left
+  1200/1264  ok=1200 fail=0  ~3 min left
+  1225/1264  ok=1225 fail=0  ~2 min left
+  1250/1264  ok=1250 fail=0  ~1 min left
+
+  fetched 1264, failed 0
+  bridged nba ids: 2857
+  parsed 200 games, 100101 events
+  parsed 400 games, 198937 events
+  parsed 600 games, 297099 events
+  parsed 800 games, 393162 events
+  parsed 1000 games, 489632 events
+  parsed 1200 games, 585073 events
+
+  games 1264 | events 615138 | events with unbridged personId 339
+=== 1998-99 ===
+  1998-99: 791 games pending (~40 min)
+  Ctrl-C is safe; progress flushes every 25 games
+
+    25/791  ok=25 fail=0  ~38 min left
+    50/791  ok=50 fail=0  ~37 min left
+    75/791  ok=75 fail=0  ~36 min left
+   100/791  ok=100 fail=0  ~35 min left
+   125/791  ok=125 fail=0  ~33 min left
+   150/791  ok=150 fail=0  ~32 min left
+    net 0029800160: Failed to perform, curl: (28) Operation timed out 
+   175/791  ok=175 fail=0  ~31 min left
+   200/791  ok=200 fail=0  ~30 min left
+   225/791  ok=225 fail=0  ~28 min left
+   250/791  ok=250 fail=0  ~27 min left
+   275/791  ok=275 fail=0  ~26 min left
+   300/791  ok=300 fail=0  ~25 min left
+   325/791  ok=325 fail=0  ~23 min left
+   350/791  ok=350 fail=0  ~22 min left
+   375/791  ok=375 fail=0  ~21 min left
+   400/791  ok=400 fail=0  ~20 min left
+   425/791  ok=425 fail=0  ~18 min left
+   450/791  ok=450 fail=0  ~17 min left
+   475/791  ok=475 fail=0  ~16 min left
+   500/791  ok=500 fail=0  ~15 min left
+   525/791  ok=525 fail=0  ~13 min left
+   550/791  ok=550 fail=0  ~12 min left
+   575/791  ok=575 fail=0  ~11 min left
+   600/791  ok=600 fail=0  ~10 min left
+   625/791  ok=625 fail=0  ~8 min left
+   650/791  ok=650 fail=0  ~7 min left
+   675/791  ok=675 fail=0  ~6 min left
+   700/791  ok=700 fail=0  ~5 min left
+   725/791  ok=725 fail=0  ~3 min left
+   750/791  ok=750 fail=0  ~2 min left
+   775/791  ok=775 fail=0  ~1 min left
+
+  fetched 791, failed 0
+  bridged nba ids: 2857
+  parsed 200 games, 99041 events
+  parsed 400 games, 195596 events
+  parsed 600 games, 289259 events
+
+  games 791 | events 379082 | events with unbridged personId 155
+=== 1997-98 ===
+  1997-98: 1260 games pending (~63 min)
+  Ctrl-C is safe; progress flushes every 25 games
+
+    25/1260  ok=25 fail=0  ~62 min left
+    50/1260  ok=50 fail=0  ~60 min left
+    75/1260  ok=75 fail=0  ~59 min left
+   100/1260  ok=100 fail=0  ~58 min left
+   125/1260  ok=125 fail=0  ~57 min left
+   150/1260  ok=150 fail=0  ~56 min left
+   175/1260  ok=175 fail=0  ~54 min left
+   200/1260  ok=200 fail=0  ~53 min left
+   225/1260  ok=225 fail=0  ~52 min left
+   250/1260  ok=250 fail=0  ~50 min left
+   275/1260  ok=275 fail=0  ~49 min left
+   300/1260  ok=300 fail=0  ~48 min left
+   325/1260  ok=325 fail=0  ~47 min left
+   350/1260  ok=350 fail=0  ~46 min left
+   375/1260  ok=375 fail=0  ~44 min left
+   400/1260  ok=400 fail=0  ~43 min left
+   425/1260  ok=425 fail=0  ~42 min left
+   450/1260  ok=450 fail=0  ~40 min left
+   475/1260  ok=475 fail=0  ~39 min left
+   500/1260  ok=500 fail=0  ~38 min left
+   525/1260  ok=525 fail=0  ~37 min left
+   550/1260  ok=550 fail=0  ~36 min left
+   575/1260  ok=575 fail=0  ~34 min left
+   600/1260  ok=600 fail=0  ~33 min left
+   625/1260  ok=625 fail=0  ~32 min left
+   650/1260  ok=650 fail=0  ~30 min left
+   675/1260  ok=675 fail=0  ~29 min left
+   700/1260  ok=700 fail=0  ~28 min left
+   725/1260  ok=725 fail=0  ~27 min left
+   750/1260  ok=750 fail=0  ~26 min left
+   775/1260  ok=775 fail=0  ~24 min left
+   800/1260  ok=800 fail=0  ~23 min left
+   825/1260  ok=825 fail=0  ~22 min left
+   850/1260  ok=850 fail=0  ~20 min left
+   875/1260  ok=875 fail=0  ~19 min left
+   900/1260  ok=900 fail=0  ~18 min left
+   925/1260  ok=925 fail=0  ~17 min left
+   950/1260  ok=950 fail=0  ~16 min left
+   975/1260  ok=975 fail=0  ~14 min left
+  1000/1260  ok=1000 fail=0  ~13 min left
+  1025/1260  ok=1025 fail=0  ~12 min left
+  1050/1260  ok=1050 fail=0  ~10 min left
+  1075/1260  ok=1075 fail=0  ~9 min left
+  1100/1260  ok=1100 fail=0  ~8 min left
+  1125/1260  ok=1125 fail=0  ~7 min left
+  1150/1260  ok=1150 fail=0  ~6 min left
+  1175/1260  ok=1175 fail=0  ~4 min left
+  1200/1260  ok=1200 fail=0  ~3 min left
+  1225/1260  ok=1225 fail=0  ~2 min left
+  1250/1260  ok=1250 fail=0  ~0 min left
+
+  fetched 1260, failed 0
+  bridged nba ids: 2857
+  parsed 200 games, 98944 events
+  parsed 400 games, 195303 events
+  parsed 600 games, 291262 events
+  parsed 800 games, 387868 events
+  parsed 1000 games, 482892 events
+  parsed 1200 games, 577713 events
+
+  games 1260 | events 605605 | events with unbridged personId 212

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Box and One — data probe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E0E0E; --paper:#f7f6f4; --red:#FF1744; --grey:#999;
+    --rule:#e2e0dc; --panel:#ffffff;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *,*::before,*::after{box-sizing:inherit}
+  html{scroll-padding-top:env(safe-area-inset-top,0px)}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Barlow',system-ui,sans-serif; font-size:14px; line-height:1.4;
+    font-variant-numeric:tabular-nums;
+  }
+  header{
+    display:flex; flex-wrap:wrap; gap:16px; align-items:baseline;
+    padding:14px 18px; border-bottom:2px solid var(--ink); background:var(--panel);
+    position:sticky; top:env(safe-area-inset-top,0px); z-index:5;
+  }
+  h1{
+    font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:22px;
+    letter-spacing:.14em; margin:0; text-transform:uppercase;
+  }
+  .meta{color:var(--grey); font-size:12px}
+  .controls{display:flex; gap:6px; margin-left:auto; flex-wrap:wrap}
+  button,select{
+    font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:13px;
+    letter-spacing:.06em; padding:5px 11px; border:1px solid var(--ink);
+    background:var(--panel); color:var(--ink); cursor:pointer; border-radius:0;
+  }
+  button[aria-pressed="true"]{background:var(--ink); color:var(--paper)}
+  button:focus-visible,select:focus-visible,th:focus-visible{outline:2px solid var(--red); outline-offset:1px}
+  main{padding:0 18px 40px}
+  .wrap{overflow-x:auto; border:1px solid var(--rule); background:var(--panel); margin-top:14px}
+  table{border-collapse:collapse; width:100%; font-size:13px}
+  th{
+    font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:12px;
+    letter-spacing:.08em; text-align:right; padding:7px 8px; cursor:pointer;
+    border-bottom:1px solid var(--ink); white-space:nowrap;
+    position:sticky; top:0; background:var(--panel); user-select:none;
+  }
+  th:first-child,td:first-child{text-align:left; position:sticky; left:0; background:var(--panel); z-index:1}
+  th.sorted{color:var(--red)}
+  td{padding:4px 8px; text-align:right; border-bottom:1px solid var(--rule); white-space:nowrap}
+  tbody tr:hover td{background:#f0eeea}
+  tbody tr:hover td:first-child{background:#f0eeea}
+  .name{cursor:pointer; font-weight:500}
+  .name:hover{color:var(--red)}
+  .pct{display:block; font-size:10px; line-height:1; margin-top:1px; color:var(--grey)}
+  .bar{display:block; height:2px; margin-top:2px; background:var(--red); opacity:.85}
+  .status{padding:24px 18px; color:var(--grey)}
+  .err{color:var(--red); padding:18px; border:1px solid var(--red); margin:18px 0; background:var(--panel)}
+  .err code{font-family:ui-monospace,monospace; font-size:12px}
+  dialog{
+    border:2px solid var(--ink); padding:0; max-width:900px; width:94vw;
+    background:var(--panel); color:var(--ink);
+  }
+  dialog::backdrop{background:rgba(14,14,14,.45)}
+  .dlg-head{display:flex; align-items:baseline; gap:14px; padding:12px 16px; border-bottom:1px solid var(--ink)}
+  .dlg-head h2{font-family:'Barlow Condensed',sans-serif; font-weight:900; letter-spacing:.1em; margin:0; font-size:20px; text-transform:uppercase}
+  .dlg-body{display:flex; gap:18px; padding:16px; flex-wrap:wrap}
+  .court{flex:0 0 300px}
+  .gl{flex:1 1 380px; max-height:420px; overflow:auto}
+  .gl table{font-size:12px}
+  .closeb{margin-left:auto}
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){--ink:#f2f0ec; --paper:#141312; --panel:#1c1b1a; --rule:#33312e; --grey:#8a8681}
+  }
+  :root[data-theme="dark"]{--ink:#f2f0ec; --paper:#141312; --panel:#1c1b1a; --rule:#33312e; --grey:#8a8681}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Box and One</h1>
+  <span class="meta" id="meta">loading…</span>
+  <div class="controls">
+    <select id="season"></select>
+    <button id="mode-standard" aria-pressed="true">Percentile</button>
+    <button id="mode-heat" aria-pressed="false">Heatmap</button>
+    <select id="rate">
+      <option value="total">Totals</option>
+      <option value="pg">Per game</option>
+      <option value="p36">Per 36</option>
+      <option value="p100">Per 100</option>
+    </select>
+  </div>
+</header>
+
+<main>
+  <div id="status" class="status">Loading manifest…</div>
+  <div class="wrap" id="wrap" hidden><table id="tbl"><thead></thead><tbody></tbody></table></div>
+</main>
+
+<dialog id="dlg">
+  <div class="dlg-head">
+    <h2 id="dlg-name"></h2>
+    <span class="meta" id="dlg-meta"></span>
+    <button class="closeb" onclick="document.getElementById('dlg').close()">Close</button>
+  </div>
+  <div class="dlg-body">
+    <div class="court"><svg id="court" viewBox="-260 -60 520 500" width="300" height="288" aria-label="Shot chart"></svg>
+      <div class="meta" id="shotmeta" style="text-align:center"></div>
+    </div>
+    <div class="gl"><table id="gltbl"><thead></thead><tbody></tbody></table></div>
+  </div>
+</dialog>
+
+<script type="module">
+import { parquetReadObjects, asyncBufferFromUrl } from 'https://cdn.jsdelivr.net/npm/hyparquet@1.31.2/+esm';
+import { compressors } from 'https://cdn.jsdelivr.net/npm/hyparquet-compressors@1/+esm';
+
+// Point this at the R2 public URL once the bucket is reachable from a browser.
+const BASE = './data';
+
+const COLS = [
+  ['full_name','Player',   'txt'],
+  ['last_team','Tm',       'txt'],
+  ['gp','G',               'int'],
+  ['mp','MP',              'rate1'],
+  ['pts','PTS',            'rate1'],
+  ['trb','TRB',            'rate1'],
+  ['ast','AST',            'rate1'],
+  ['stl','STL',            'rate1'],
+  ['blk','BLK',            'rate1'],
+  ['tov','TOV',            'rate1'],
+  ['fga','FGA',            'rate1'],
+  ['fg3m','3PM',           'rate1'],
+  ['ts','TS%',             'pct3'],
+  ['age','Age',            'dec1'],
+];
+const HIGHER_WORSE = new Set(['tov']);
+
+let rows = [], pctile = {}, sortKey = 'pts', sortDesc = true;
+let mode = 'standard', rateMode = 'total', teamPoss = null;
+
+const $ = id => document.getElementById(id);
+const num = v => (typeof v === 'bigint') ? Number(v) : v;
+
+async function readParquet(url, columns) {
+  const file = await asyncBufferFromUrl({ url });
+  const opts = { file, compressors };
+  if (columns) opts.columns = columns;
+  const out = await parquetReadObjects(opts);
+  return out.map(r => { const o = {}; for (const k in r) o[k] = num(r[k]); return o; });
+}
+
+function fail(msg, detail) {
+  $('status').innerHTML = `<div class="err"><strong>${msg}</strong><br><code>${detail}</code></div>`;
+  $('status').hidden = false;
+}
+
+async function boot() {
+  let man;
+  try {
+    man = await (await fetch(`${BASE}/manifest.json`)).json();
+  } catch (e) {
+    return fail('Could not read manifest.json',
+      `${BASE}/manifest.json — ${e.message}. Serve this over http, not file://.`);
+  }
+  const seasons = man.seasons.map(s => s.season);
+  $('season').innerHTML = seasons.map(s => `<option>${s}</option>`).join('');
+  $('meta').textContent =
+    `${man.box_rows.toLocaleString()} box rows · ${man.pbp_events.toLocaleString()} events · ${man.players_with_games.toLocaleString()} players`;
+  await loadSeason(seasons[0]);
+}
+
+async function loadSeason(season) {
+  $('status').hidden = false;
+  $('status').textContent = `Loading ${season}…`;
+  $('wrap').hidden = true;
+  const t0 = performance.now();
+  try {
+    rows = (await readParquet(`${BASE}/seasons/${season}/player_season.parquet`))
+             .filter(r => r.season_type === 'regular' && r.mp > 250);
+    try {
+      const t = await readParquet(`${BASE}/seasons/${season}/team_season.parquet`);
+      teamPoss = {};
+      for (const r of t) if (r.season_type === 'regular') teamPoss[r.team_abbr] = r.poss_est / r.gp;
+    } catch { teamPoss = null; }
+  } catch (e) {
+    return fail(`Could not load ${season}`, e.message);
+  }
+  for (const r of rows) {
+    const tsa = 2 * (r.fga + 0.44 * r.fta);
+    r.ts = tsa > 0 ? r.pts / tsa : null;
+  }
+  computePercentiles();
+  const ms = Math.round(performance.now() - t0);
+  $('status').hidden = true;
+  $('wrap').hidden = false;
+  $('meta').textContent = `${season} · ${rows.length} players · loaded in ${ms} ms`;
+  render();
+}
+
+function valueFor(r, key) {
+  const raw = r[key];
+  if (raw == null) return null;
+  if (key === 'age' || key === 'ts' || key === 'gp') return raw;
+  const mins = r.mp || 0;
+  switch (rateMode) {
+    case 'pg':   return r.gp ? raw / r.gp : null;
+    case 'p36':  return mins ? raw * 36 / mins : null;
+    case 'p100': {
+      if (!teamPoss || !teamPoss[r.last_team] || !mins) return null;
+      const poss = teamPoss[r.last_team] * (mins / 48 / 5) * 5;
+      return poss ? raw * 100 / poss : null;
+    }
+    default: return raw;
+  }
+}
+
+function computePercentiles() {
+  pctile = {};
+  for (const [key, , kind] of COLS) {
+    if (kind === 'txt') continue;
+    const vals = rows.map(r => valueFor(r, key)).filter(v => v != null).sort((a, b) => a - b);
+    if (!vals.length) continue;
+    pctile[key] = r => {
+      const v = valueFor(r, key);
+      if (v == null) return null;
+      let lo = 0, hi = vals.length;
+      while (lo < hi) { const m = (lo + hi) >> 1; if (vals[m] < v) lo = m + 1; else hi = m; }
+      let p = Math.round(100 * lo / (vals.length - 1 || 1));
+      if (HIGHER_WORSE.has(key)) p = 100 - p;
+      return Math.max(0, Math.min(100, p));
+    };
+  }
+}
+
+function fmt(v, kind) {
+  if (v == null) return '';
+  if (kind === 'txt') return v;
+  if (kind === 'int') return Math.round(v);
+  if (kind === 'pct3') return (v * 100).toFixed(1);
+  if (kind === 'dec1') return v.toFixed(1);
+  return rateMode === 'total' ? Math.round(v) : v.toFixed(1);
+}
+
+function tint(p) {
+  // grey -> red, matching the HELP pill logic
+  const a = 0.05 + 0.5 * (p / 100);
+  return `rgba(255,23,68,${a.toFixed(3)})`;
+}
+
+function render() {
+  const thead = $('tbl').querySelector('thead');
+  thead.innerHTML = '<tr>' + COLS.map(([k, label]) =>
+    `<th tabindex="0" data-k="${k}" class="${k === sortKey ? 'sorted' : ''}">${label}${k === sortKey ? (sortDesc ? ' ↓' : ' ↑') : ''}</th>`
+  ).join('') + '</tr>';
+  thead.querySelectorAll('th').forEach(th => {
+    const go = () => {
+      const k = th.dataset.k;
+      if (k === sortKey) sortDesc = !sortDesc; else { sortKey = k; sortDesc = true; }
+      render();
+    };
+    th.onclick = go;
+    th.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
+  });
+
+  const sorted = [...rows].sort((a, b) => {
+    const av = sortKey === 'full_name' || sortKey === 'last_team' ? a[sortKey] : valueFor(a, sortKey);
+    const bv = sortKey === 'full_name' || sortKey === 'last_team' ? b[sortKey] : valueFor(b, sortKey);
+    if (av == null) return 1; if (bv == null) return -1;
+    if (typeof av === 'string') return sortDesc ? bv.localeCompare(av) : av.localeCompare(bv);
+    return sortDesc ? bv - av : av - bv;
+  });
+
+  $('tbl').querySelector('tbody').innerHTML = sorted.map(r => '<tr>' + COLS.map(([k, , kind]) => {
+    if (kind === 'txt') {
+      const cls = k === 'full_name' ? ' class="name" data-pid="' + r.player_id + '"' : '';
+      return `<td${cls}>${r[k] ?? ''}</td>`;
+    }
+    const v = valueFor(r, k);
+    const p = pctile[k] ? pctile[k](r) : null;
+    const body = fmt(v, kind);
+    if (mode === 'heat') {
+      return `<td style="background:${p == null ? 'transparent' : tint(p)}">${body}</td>`;
+    }
+    return `<td>${body}${p == null ? '' :
+      `<span class="pct">${p}</span><span class="bar" style="width:${p}%"></span>`}</td>`;
+  }).join('') + '</tr>').join('');
+
+  $('tbl').querySelectorAll('.name').forEach(td =>
+    td.onclick = () => openPlayer(td.dataset.pid, td.textContent));
+}
+
+async function openPlayer(pid, name) {
+  $('dlg-name').textContent = name;
+  $('dlg-meta').textContent = 'loading…';
+  $('gltbl').querySelector('tbody').innerHTML = '';
+  $('court').innerHTML = '';
+  $('dlg').showModal();
+
+  let log = [], shots = [];
+  try { log = await readParquet(`${BASE}/players/${pid}/gamelog.parquet`); } catch {}
+  try { shots = await readParquet(`${BASE}/players/${pid}/shots.parquet`); } catch {}
+
+  $('dlg-meta').textContent = `${log.length} games · ${shots.length} shots`;
+
+  const gcols = [['game_date','Date'],['team_abbr','Tm'],['opp_abbr','Opp'],
+                 ['mp','MP'],['pts','PTS'],['trb','TRB'],['ast','AST'],['plus_minus','+/-']];
+  $('gltbl').querySelector('thead').innerHTML =
+    '<tr>' + gcols.map(c => `<th>${c[1]}</th>`).join('') + '</tr>';
+  $('gltbl').querySelector('tbody').innerHTML = log.slice().reverse().map(g => '<tr>' +
+    gcols.map(([k]) => {
+      let v = g[k];
+      // hyparquet hands back real Date objects for parquet DATE columns
+      if (k === 'game_date' && v != null) {
+        v = (v instanceof Date) ? v.toISOString().slice(0, 10) : String(v).slice(0, 10);
+      }
+      if (k === 'mp' && v != null) v = Number(v).toFixed(1);
+      return `<td>${v ?? ''}</td>`;
+    }).join('') + '</tr>').join('');
+
+  drawCourt(shots);
+}
+
+function drawCourt(shots) {
+  const line = 'var(--rule)';
+  let svg = `
+    <rect x="-250" y="-50" width="500" height="470" fill="none" stroke="${line}"/>
+    <circle cx="0" cy="0" r="7.5" fill="none" stroke="${line}"/>
+    <rect x="-30" y="-7.5" width="60" height="1" fill="${line}"/>
+    <rect x="-80" y="-50" width="160" height="190" fill="none" stroke="${line}"/>
+    <path d="M -220 -50 L -220 92 A 237.5 237.5 0 0 0 220 92 L 220 -50" fill="none" stroke="${line}"/>`;
+  const made = shots.filter(s => s.shot_result === 'Made').length;
+  for (const s of shots) {
+    if (s.x_legacy == null) continue;
+    const hit = s.shot_result === 'Made';
+    svg += hit
+      ? `<circle cx="${s.x_legacy}" cy="${s.y_legacy}" r="4" fill="var(--red)" opacity=".75"/>`
+      : `<circle cx="${s.x_legacy}" cy="${s.y_legacy}" r="3.5" fill="none" stroke="var(--grey)" stroke-width="1.5" opacity=".6"/>`;
+  }
+  $('court').innerHTML = `<g transform="scale(1,-1) translate(0,-420)">${svg}</g>`;
+  $('shotmeta').textContent = shots.length
+    ? `${made}/${shots.length} · ${(100 * made / shots.length).toFixed(1)}%` : 'no shot data';
+}
+
+$('season').onchange = e => loadSeason(e.target.value);
+$('rate').onchange = e => { rateMode = e.target.value; computePercentiles(); render(); };
+$('mode-standard').onclick = () => {
+  mode = 'standard'; $('mode-standard').ariaPressed = 'true'; $('mode-heat').ariaPressed = 'false'; render();
+};
+$('mode-heat').onclick = () => {
+  mode = 'heat'; $('mode-heat').ariaPressed = 'true'; $('mode-standard').ariaPressed = 'false'; render();
+};
+
+boot();
+</script>
+</body>
+</html>

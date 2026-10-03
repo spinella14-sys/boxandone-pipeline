@@ -1,0 +1,9 @@
+.env
+data/
+raw/
+backups/
+*.duckdb*
+*.bak_*
+__pycache__/
+.env*
+*.save
