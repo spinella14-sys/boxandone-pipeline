@@ -1,0 +1,68 @@
+name: nightly
+
+# In season the NBA finishes around 1am Eastern at the latest, and Basketball
+# Reference needs time to post box scores. 10:00 UTC is 5am Eastern, which is
+# late enough for the slowest west-coast game and early enough to be done
+# before anyone looks.
+on:
+  schedule:
+    - cron: '0 10 * * *'
+  workflow_dispatch:        # so it can be triggered by hand
+
+concurrency:
+  group: nightly
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install duckdb boto3 requests beautifulsoup4 curl_cffi
+
+      # The job writes into ~/boxandone, which is where every script expects to
+      # live. The repo holds the scripts; the data comes from R2.
+      - name: Lay out the working directory
+        run: |
+          mkdir -p ~/boxandone/data ~/boxandone/raw
+          cp *.py ~/boxandone/ 2>/dev/null || true
+
+      # Scraped HTML and JSON persist between runs so a re-run does not refetch
+      # pages Basketball Reference already served. The cache key rolls weekly so
+      # it cannot grow without bound.
+      - name: Restore scrape cache
+        uses: actions/cache@v4
+        with:
+          path: ~/boxandone/raw
+          key: scrape-${{ github.run_id }}
+          restore-keys: scrape-
+
+      - name: Run
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT_URL }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          BOXANDONE_HOME: /home/runner/boxandone
+        run: python ~/boxandone/nightly2.py
+
+      # The run writes its own log to R2 either way; this keeps a copy on the
+      # action so a failure can be read without opening the bucket.
+      - name: Upload log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-log
+          path: ~/boxandone/*.log
+          if-no-files-found: ignore
