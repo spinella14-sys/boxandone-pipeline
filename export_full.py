@@ -577,14 +577,26 @@ ORDER BY g.game_date, e.action_id
 
 REGISTRY_SQL = """
 SELECT p.player_id, p.full_name, p.display_name, p.name_normalized,
-       p.birthdate, p.birthdate_status, p.position,
-       p.height_in, p.weight_lb, p.college, p.draft_year, p.draft_round,
-       p.draft_pick, p.status, p.nationality,
+       -- the registry first, the scrape second: a value already here was put
+       -- there by a better-trusted source, so enrichment fills blanks only
+       COALESCE(p.birthdate, bio.birthdate) AS birthdate,
+       CASE WHEN p.birthdate IS NULL AND bio.birthdate IS NOT NULL
+            THEN 'confirmed' ELSE p.birthdate_status END AS birthdate_status,
+       p.position,
+       COALESCE(p.height_in, bio.height_in) AS height_in,
+       COALESCE(p.weight_lb, bio.weight_lb) AS weight_lb,
+       COALESCE(p.college, bio.college) AS college,
+       COALESCE(p.draft_year, bio.draft_year) AS draft_year,
+       COALESCE(p.draft_round, bio.draft_round) AS draft_round,
+       COALESCE(p.draft_pick, bio.draft_pick) AS draft_pick,
+       p.status,
+       COALESCE(p.nationality, bio.country) AS nationality,
        i.source_id AS bbref_id, n.source_id AS nba_id,
        s.seasons, s.first_season, s.last_season, s.career_gp, s.career_pts
 FROM hot.players p
 LEFT JOIN hot.player_identifiers i ON i.player_id=p.player_id AND i.source='bbref'
 LEFT JOIN hot.player_identifiers n ON n.player_id=p.player_id AND n.source='nba'
+LEFT JOIN hot.player_bio bio ON bio.player_id=p.player_id AND bio.source='nba'
 LEFT JOIN (
     SELECT b.player_id, COUNT(DISTINCT g.season) seasons,
            MIN(g.season) first_season, MAX(g.season) last_season,
@@ -607,11 +619,16 @@ def put(con, s3, bucket, sql, key, tmp):
     return len(body)
 
 
-def cmd_seasons(env):
+def cmd_seasons(env, only=None):
     con, s3 = connect(env), s3c(env)
     bucket = env["R2_BUCKET_NAME"]
     seasons = [r[0] for r in con.execute(
         "SELECT DISTINCT season FROM all_games ORDER BY season DESC").fetchall()]
+    if only:
+        missing = [s for s in only if s not in seasons]
+        if missing:
+            sys.exit("  no games for season(s): %s" % ", ".join(missing))
+        seasons = [s for s in seasons if s in only]
     tot = 0
     with tempfile.TemporaryDirectory() as tmp:
         for s in seasons:
@@ -702,6 +719,8 @@ if __name__ == "__main__":
                                     "registry", "manifest", "all"])
     ap.add_argument("--limit", type=int)
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--season", action="append",
+                    help="limit `seasons` to this season; repeatable")
     a = ap.parse_args()
     e = load_env()
 
@@ -710,7 +729,7 @@ if __name__ == "__main__":
     elif a.cmd == "check":
         cmd_check(e)
     elif a.cmd == "seasons":
-        cmd_seasons(e)
+        cmd_seasons(e, a.season)
     elif a.cmd == "players":
         cmd_players(e, a.limit)
     elif a.cmd == "registry":
@@ -719,6 +738,6 @@ if __name__ == "__main__":
         cmd_manifest(e)
     else:
         cmd_registry(e)
-        cmd_seasons(e)
+        cmd_seasons(e, a.season)
         cmd_players(e, a.limit)
         cmd_manifest(e)

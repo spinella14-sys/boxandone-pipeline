@@ -84,14 +84,22 @@ def team_seasons(env):
             break
         token = page.get("NextContinuationToken")
 
+    # A season with only preseason games so far has no regular-season rows.
+    # Rather than skip it, borrow the most recent regular-season team list.
+    last_regular, pending = None, []
     for s in sorted(seasons, reverse=True):
         with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as f:
             p = f.name
         try:
             s3.download_file(bucket, "v2/seasons/%s/team_season.parquet" % s, p)
-            for (a,) in con.execute(
+            teams = [a for (a,) in con.execute(
                     "SELECT DISTINCT team_abbr FROM read_parquet('%s') "
-                    "WHERE season_type='regular' ORDER BY 1" % p).fetchall():
+                    "WHERE season_type='regular' ORDER BY 1" % p).fetchall()]
+            if teams and last_regular is None:
+                last_regular = teams
+            elif s == max(seasons) and last_regular is None:
+                pending.append(s)
+            for a in teams:
                 out.append((a, s))
         except Exception:
             pass
@@ -99,6 +107,11 @@ def team_seasons(env):
             if os.path.exists(p):
                 os.unlink(p)
     con.close()
+    for s in pending:
+        if last_regular:
+            print("  %s has no regular-season games yet; using %d teams from "
+                  "the latest regular season" % (s, len(last_regular)))
+            out.extend((a, s) for a in last_regular)
     return out
 
 
