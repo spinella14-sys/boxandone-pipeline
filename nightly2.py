@@ -33,7 +33,7 @@ in the morning.
 import argparse
 import json
 import os
-import subprocess
+import subprocess  # patched by patch_nightly
 import sys
 import tempfile
 import time
@@ -326,12 +326,40 @@ def rebuild_registry_and_manifest(env, log):
         glob = os.path.join(tmp, "*player_season.parquet")
 
         reg = os.path.join(tmp, "registry.parquet")
-        con.execute("""
+        # What a source claims about a player lives in player_bio, kept apart
+        # from the registry so a scrape never overwrites a better-trusted
+        # value. The registry wins; the scrape only fills blanks. Same rule
+        # as export_full.REGISTRY_SQL.
+        has_bio = con.execute(
+            "SELECT COUNT(*) FROM duckdb_tables() "
+            "WHERE database_name='hot' AND table_name='player_bio'").fetchone()[0] > 0
+        if has_bio:
+            cols = """
+                COALESCE(p.birthdate, bio.birthdate) AS birthdate,
+                CASE WHEN p.birthdate IS NULL AND bio.birthdate IS NOT NULL
+                     THEN 'confirmed' ELSE p.birthdate_status END AS birthdate_status,
+                p.position,
+                COALESCE(p.height_in, bio.height_in) AS height_in,
+                COALESCE(p.weight_lb, bio.weight_lb) AS weight_lb,
+                COALESCE(p.college, bio.college) AS college,
+                COALESCE(p.draft_year, bio.draft_year) AS draft_year,
+                COALESCE(p.draft_round, bio.draft_round) AS draft_round,
+                COALESCE(p.draft_pick, bio.draft_pick) AS draft_pick,
+                p.status,
+                COALESCE(p.nationality, bio.country) AS nationality"""
+            join = ("LEFT JOIN hot.player_bio bio "
+                    "ON bio.player_id=p.player_id AND bio.source='nba'")
+        else:
+            log("  player_bio not in this database — registry without enrichment")
+            cols = """
+                p.birthdate, p.birthdate_status, p.position,
+                p.height_in, p.weight_lb, p.college, p.draft_year,
+                p.draft_round, p.draft_pick, p.status, p.nationality"""
+            join = ""
+        sql = ("""
             COPY (
               SELECT p.player_id, p.full_name, p.display_name, p.name_normalized,
-                     p.birthdate, p.birthdate_status, p.position,
-                     p.height_in, p.weight_lb, p.college, p.draft_year,
-                     p.draft_round, p.draft_pick, p.status, p.nationality,
+                     """ + cols + """,
                      i.source_id AS bbref_id, n.source_id AS nba_id,
                      s.seasons, s.first_season, s.last_season,
                      s.career_gp, s.career_pts
@@ -340,6 +368,7 @@ def rebuild_registry_and_manifest(env, log):
                 ON i.player_id=p.player_id AND i.source='bbref'
               LEFT JOIN hot.player_identifiers n
                 ON n.player_id=p.player_id AND n.source='nba'
+              """ + join + """
               LEFT JOIN (
                 SELECT player_id,
                        COUNT(DISTINCT season) AS seasons,
@@ -349,7 +378,8 @@ def rebuild_registry_and_manifest(env, log):
                 WHERE season_type='regular'
                 GROUP BY 1
               ) s ON s.player_id = p.player_id
-            ) TO '%s' (FORMAT PARQUET, COMPRESSION ZSTD)""" % (glob, reg))
+            ) TO '%s' (FORMAT PARQUET, COMPRESSION ZSTD)""")
+        con.execute(sql % (glob, reg))
         s3.upload_file(reg, bucket, "%s/registry/players.parquet" % PREFIX)
         log("  registry %.0f KB" % (os.path.getsize(reg) / 1024.0))
 
@@ -383,6 +413,24 @@ def rebuild_registry_and_manifest(env, log):
                       ContentType="application/json")
         log("  manifest: %d seasons" % len(rows))
     con.close()
+
+
+def box_rows(season):
+    """Box-score rows held for a season. A preseason game first ingested with
+    some players unknown gains rows later, once rosters add them, without
+    becoming a new game; this is how that is noticed."""
+    import duckdb
+    if not os.path.exists(DB_PATH):
+        return 0
+    con = duckdb.connect(DB_PATH, read_only=True)
+    try:
+        n = con.execute("""SELECT COUNT(*) FROM player_game_box b
+                          JOIN games g ON g.game_id = b.game_id
+                          WHERE g.season = ?""", [season]).fetchone()[0]
+    except Exception:
+        n = 0
+    con.close()
+    return n
 
 
 def changed_players(season, new_games):
@@ -476,18 +524,33 @@ def main():
         new_games = sorted(after - before)
         log("%d new games" % len(new_games))
 
-        if new_games:
-            ok &= run(log, ["bridge_games.py", "build",
-                            "--seasons", "%s:%s" % (season, season)])
-            if not a.no_pbp:
-                ok &= run(log, ["ingest_pbp.py", "fetch", "--season", season])
-                ok &= run(log, ["ingest_pbp.py", "parse", "--season", season])
-            ok &= run(log, ["bridge_nba_ids.py", "build", "--season", season])
+        # NBA.com sources Basketball Reference does not carry. Rosters first,
+        # so a rookie exists before his first preseason box score arrives.
+        rows_before = box_rows(season)
+        ok &= run(log, ["ingest_rosters.py", "build", "--season", season])
+        ok &= run(log, ["ingest_schedule.py", "build"])
+        if datetime.now().month in (9, 10):
+            ok &= run(log, ["ingest_preseason.py", "build", "--season", season])
+        pre_games = sorted(games_held(season) - after)
+        grew = box_rows(season) > rows_before
+        log("%d new preseason games" % len(pre_games))
+
+        if new_games or pre_games or grew:
+            if new_games:
+                ok &= run(log, ["bridge_games.py", "build",
+                                "--seasons", "%s:%s" % (season, season)])
+                if not a.no_pbp:
+                    ok &= run(log, ["ingest_pbp.py", "fetch", "--season", season])
+                    ok &= run(log, ["ingest_pbp.py", "parse", "--season", season])
+                ok &= run(log, ["bridge_nba_ids.py", "build", "--season", season])
 
             log("exporting season aggregates")
             export_season(env, log, season)
+            # export_season rewrites player_season without BPM; put it back
+            ok &= run(log, ["compute_bpm.py", "--season", season])
+            ok &= run(log, ["export_games_index.py", "build", "--season", season])
 
-            pids = changed_players(season, new_games)
+            pids = changed_players(season, new_games + pre_games)
             log("exporting %d changed player files" % len(pids))
             export_changed_players(env, log, season, pids)
 

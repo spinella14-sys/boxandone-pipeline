@@ -342,6 +342,17 @@ def run(env, only=None, dry=False, baseline=PTS_BASELINE):
                         "dbpm": p.get("dbpm"), "vorp": p.get("vorp"),
                         "pos_est": p.get("pos_est"), "role_est": p.get("role_est"),
                     }) + "\n")
+            # a file that already carries BPM (a re-run) would otherwise come
+            # out with every column twice; drop the old ones first
+            have_cols = [d[0] for d in con.execute(
+                "SELECT * FROM read_parquet('%s') LIMIT 0" % ps).description]
+            stale = [c for c in ("bpm", "obpm", "dbpm", "vorp", "pos_est", "role_est")
+                     if c in have_cols]
+            if stale:
+                ps2 = os.path.join(tmp, "ps_clean.parquet")
+                con.execute("COPY (SELECT * EXCLUDE (%s) FROM read_parquet('%s')) "
+                            "TO '%s' (FORMAT PARQUET)" % (", ".join(stale), ps, ps2))
+                ps = ps2
             out = os.path.join(tmp, "out.parquet")
             con.execute("""
                 COPY (SELECT p.*, a.bpm, a.obpm, a.dbpm, a.vorp, a.pos_est, a.role_est

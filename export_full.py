@@ -642,6 +642,12 @@ def cmd_seasons(env, only=None):
             print("  %-9s agg %5.0f KB   team %4.0f KB   games %6.0f KB"
                   % (s, (a or 0) / 1024.0, (b or 0) / 1024.0, (c or 0) / 1024.0))
     print("\n  %d seasons, %.1f MB" % (len(seasons), tot / 1048576.0))
+    # player_season was just rewritten without BPM; compute_bpm adds it back
+    print("\n  restoring BPM")
+    sys.path.insert(0, HOME)
+    import compute_bpm
+    for s in seasons:
+        compute_bpm.run(env, only=s)
     con.close()
 
 
