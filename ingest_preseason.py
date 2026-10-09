@@ -213,11 +213,20 @@ def cmd_check(seasons, con):
             print("      not in the registry: %s" % ", ".join(names))
 
 
+def current_season():
+    d = datetime.now()
+    y = d.year if d.month >= 10 else d.year - 1
+    return "%d-%s" % (y, str(y + 1)[2:])
+
+
 def cmd_build(seasons, con):
     total_g = total_b = total_skip = 0
     for s in seasons:
         try:
-            raw = fetch_gamelog(nba_season(s), SEASON_TYPE)
+            # the cache would serve the first night's games forever; a season
+            # still being played is always fetched fresh
+            raw = fetch_gamelog(nba_season(s), SEASON_TYPE,
+                                force=(s == current_season()))
         except Exception as e:
             print("  %-9s fetch failed: %s" % (s, str(e)[:48]))
             continue

@@ -503,6 +503,13 @@ def main():
         return
 
     if not acquire_lock(s3, bucket, log):
+        # say so in R2 rather than exiting without a trace
+        try:
+            s3.put_object(Bucket=bucket, Key="%s/%s_locked.txt" % (
+                LOG_PREFIX, datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")),
+                Body=log.text().encode(), ContentType="text/plain")
+        except Exception:
+            pass
         return
 
     ok = True
