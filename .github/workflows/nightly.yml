@@ -6,7 +6,10 @@ name: nightly
 # before anyone looks.
 on:
   schedule:
-    - cron: '0 10 * * *'
+    # 5:07am Eastern. Cron here is UTC-only, so both offsets are scheduled
+    # and the gate below runs only the one that is 5am Eastern today.
+    - cron: '7 9 * * *'      # 5:07am EDT (March-November)
+    - cron: '7 10 * * *'     # 5:07am EST (November-March)
   workflow_dispatch:        # so it can be triggered by hand
 
 concurrency:
@@ -14,7 +17,26 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.slot.outputs.skip }}
+    steps:
+      - id: slot
+        run: |
+          zone=$(TZ=America/New_York date +%Z)
+          slot="${{ github.event.schedule }}"
+          skip=false
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            if [ "$zone" = "EDT" ] && [ "$slot" = "7 10 * * *" ]; then skip=true; fi
+            if [ "$zone" = "EST" ] && [ "$slot" = "7 9 * * *" ]; then skip=true; fi
+          fi
+          echo "Eastern zone $zone, trigger '$slot', skip=$skip"
+          echo "skip=$skip" >> "$GITHUB_OUTPUT"
+
   run:
+    needs: gate
+    if: needs.gate.outputs.skip != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 90
 

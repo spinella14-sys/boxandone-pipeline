@@ -320,10 +320,12 @@ def cmd_parse(season_arg):
     print("\n  player items with no team attached: %d" % unmatched)
 
 
-def cmd_build(con):
+def cmd_build(con, season=None, force=False):
     for d in DDL:
         con.execute(d)
     end = datetime.now().year + (1 if datetime.now().month >= 10 else 0)
+    # one season (the nightly job) or all of them; --force refetches the page
+    years = ([int(season[:4]) + 1] if season else list(range(FIRST_YEAR, end + 1)))
     bbref = dict(con.execute(
         "SELECT source_id, player_id FROM player_identifiers WHERE source='bbref'"
     ).fetchall())
@@ -332,14 +334,24 @@ def cmd_build(con):
         "SELECT COALESCE(MAX(item_id), 0) FROM transaction_items").fetchone()[0]
     total_t = total_i = unknown = 0
 
-    for y in range(FIRST_YEAR, end + 1):
-        html, _ = fetch_season(y)
+    for y in years:
+        html, _ = fetch_season(y, force)
         if not html:
             continue
         url = ("https://www.basketball-reference.com/leagues/NBA_%d_transactions.html" % y)
         rows = parse_season(html, y, url)
         if not rows:
             continue
+
+        # Replace the season rather than add to it. Ids are date + position
+        # on the page, so an entry Basketball Reference inserts mid-day shifts
+        # the ones after it; and item ids are fresh each run, so inserting
+        # again would duplicate every item.
+        lab = season_label(y)
+        for t in ("transaction_items", "transaction_teams"):
+            con.execute("DELETE FROM %s WHERE transaction_id IN "
+                        "(SELECT transaction_id FROM transactions WHERE season=?)" % t, [lab])
+        con.execute("DELETE FROM transactions WHERE season=?", [lab])
 
         con.executemany("""
             INSERT INTO transactions (transaction_id, txn_date, season, txn_type,
@@ -423,7 +435,7 @@ if __name__ == "__main__":
         import duckdb
         con = duckdb.connect(DB_PATH, read_only=(a.cmd == "roster"))
         if a.cmd == "build":
-            cmd_build(con)
+            cmd_build(con, a.season, a.force)
         else:
             cmd_roster(con, a.team or "BOS", a.date or "2025-02-01")
         con.close()

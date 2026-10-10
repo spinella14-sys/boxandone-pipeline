@@ -380,6 +380,8 @@ def rebuild_registry_and_manifest(env, log):
               ) s ON s.player_id = p.player_id
             ) TO '%s' (FORMAT PARQUET, COMPRESSION ZSTD)""")
         con.execute(sql % (glob, reg))
+        import rosters_export as RX
+        reg = RX.add_rosters(con, reg, tmp)
         s3.upload_file(reg, bucket, "%s/registry/players.parquet" % PREFIX)
         log("  registry %.0f KB" % (os.path.getsize(reg) / 1024.0))
 
@@ -413,6 +415,36 @@ def rebuild_registry_and_manifest(env, log):
                       ContentType="application/json")
         log("  manifest: %d seasons" % len(rows))
     con.close()
+
+
+def box_keys(season):
+    """(player, game) pairs held for a season, to see exactly whose lines
+    a run added."""
+    import duckdb
+    if not os.path.exists(DB_PATH):
+        return set()
+    con = duckdb.connect(DB_PATH, read_only=True)
+    try:
+        out = set(con.execute("""SELECT b.player_id, b.game_id
+                                 FROM player_game_box b
+                                 JOIN games g ON g.game_id = b.game_id
+                                 WHERE g.season = ?""", [season]).fetchall())
+    except Exception:
+        out = set()
+    con.close()
+    return out
+
+
+def export_rosters(env, log):
+    sys.path.insert(0, HOME)
+    import duckdb
+    import rosters_export as RX
+    con = duckdb.connect()
+    con.execute("ATTACH '%s' AS hot (READ_ONLY)" % DB_PATH)
+    r = RX.export_current(con, s3c(env), env["R2_BUCKET_NAME"])
+    con.close()
+    log("  rosters: %s" % ("none on file" if not r else
+                           "%d players as of %s" % (r[1], r[0])))
 
 
 def box_rows(season):
@@ -533,14 +565,18 @@ def main():
 
         # NBA.com sources Basketball Reference does not carry. Rosters first,
         # so a rookie exists before his first preseason box score arrives.
-        rows_before = box_rows(season)
+        rows_before = box_keys(season)
         ok &= run(log, ["ingest_rosters.py", "build", "--season", season])
         ok &= run(log, ["ingest_schedule.py", "build"])
         if datetime.now().month in (9, 10):
             ok &= run(log, ["ingest_preseason.py", "build", "--season", season])
         pre_games = sorted(games_held(season) - after)
-        grew = box_rows(season) > rows_before
+        new_rows = box_keys(season) - rows_before
+        grew = bool(new_rows)
         log("%d new preseason games" % len(pre_games))
+
+        ok &= run(log, ["ingest_transactions.py", "build", "--season", season, "--force"])
+        ok &= run(log, ["export_transactions.py", "build"])
 
         if new_games or pre_games or grew:
             if new_games:
@@ -557,17 +593,28 @@ def main():
             ok &= run(log, ["compute_bpm.py", "--season", season])
             ok &= run(log, ["export_games_index.py", "build", "--season", season])
 
-            pids = changed_players(season, new_games + pre_games)
+            # everyone in a new game, plus anyone whose lines changed in a
+            # game we already held (a rookie added after his debut)
+            pids = sorted(set(changed_players(season, new_games))
+                          | {p for p, _ in new_rows})
             log("exporting %d changed player files" % len(pids))
             export_changed_players(env, log, season, pids)
-
-            log("rebuilding registry and manifest")
-            rebuild_registry_and_manifest(env, log)
 
             log("parsing possessions")
             ok &= run(log, ["parse_possessions_full.py", "build", "--season", season])
         else:
             log("nothing new — skipping export")
+
+        # Signings and waivers happen on days without games, so who is on
+        # which team is rebuilt every night. A failure here is logged and the
+        # run still pushes the database, so the night's ingest is not lost.
+        try:
+            log("rebuilding registry and manifest")
+            rebuild_registry_and_manifest(env, log)
+            export_rosters(env, log)
+        except Exception as e:
+            ok = False
+            log("registry/rosters FAILED: %s" % str(e)[:300])
 
         push_db(s3, bucket, log)
         touch_supabase(env, log)

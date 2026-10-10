@@ -683,7 +683,9 @@ def cmd_players(env, limit=None):
 def cmd_registry(env):
     con, s3 = connect(env), s3c(env)
     with tempfile.TemporaryDirectory() as tmp:
-        n = put(con, s3, env["R2_BUCKET_NAME"], REGISTRY_SQL,
+        sys.path.insert(0, HOME)
+        import rosters_export as RX
+        n = put(con, s3, env["R2_BUCKET_NAME"], RX.wrap(con, REGISTRY_SQL),
                 "%s/registry/players.parquet" % PREFIX, tmp)
     print("  registry %.1f KB" % ((n or 0) / 1024.0))
     con.close()
