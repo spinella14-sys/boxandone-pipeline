@@ -83,6 +83,7 @@ def main():
         ok = True
         ok &= N.run(log, ["ingest_transactions.py", "build", "--season", season, "--force"])
         ok &= N.run(log, ["ingest_rosters.py", "build", "--season", season])
+        ok &= N.run(log, ["sync_players_supabase.py"])
         if fingerprint(season) == before:
             log("no change — nothing pushed")
             status = "ok" if ok else "FAIL"
