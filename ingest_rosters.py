@@ -326,6 +326,9 @@ def cmd_build(con, season):
              d["player_id"], d.get("score"), d.get("why")])
 
     placed = [d for d in decided if d["player_id"] and d["decision"] != "stage"]
+    # replace today's snapshot: run hourly, a mid-day trade must not leave
+    # the player listed on both teams for the day
+    con.execute("DELETE FROM team_rosters WHERE as_of = ?", [today])
     con.executemany("""
         INSERT INTO team_rosters (as_of, season, team_abbr, player_id, jersey,
                position_raw, height_in, weight_lb, experience, school, source)

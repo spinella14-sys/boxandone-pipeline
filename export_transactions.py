@@ -83,9 +83,12 @@ def main():
     import duckdb
     ap = argparse.ArgumentParser()
     ap.add_argument("cmd", choices=["check", "build"])
+    ap.add_argument("--season", help="export just this season")
     a = ap.parse_args()
     con = duckdb.connect(DB_PATH, read_only=True)
     ss = seasons(con)
+    if a.season:
+        ss = [s for s in ss if s == a.season]
     if a.cmd == "check":
         print("  %d seasons" % len(ss))
         for s in ss[:3]:

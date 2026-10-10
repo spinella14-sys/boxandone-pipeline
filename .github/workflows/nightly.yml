@@ -13,7 +13,7 @@ on:
   workflow_dispatch:        # so it can be triggered by hand
 
 concurrency:
-  group: nightly
+  group: boxandone-db      # shared with the hourly transactions job
   cancel-in-progress: false
 
 jobs:

@@ -255,12 +255,17 @@ def parse_entry(html, date, season, url, seq):
 def parse_season(html, end_year, url):
     season = season_label(end_year)
     out = []
+    # position within the DATE, not within the block: a date can appear in
+    # more than one block, and restarting at 0 gave two entries the same id
+    seq_by_date = {}
     for date_str, block in LI_RE.findall(html):
         try:
             d = datetime.strptime(date_str, "%B %d, %Y").date()
         except ValueError:
             continue
-        for i, p in enumerate(P_RE.findall(block)):
+        for p in P_RE.findall(block):
+            i = seq_by_date.get(d, 0)
+            seq_by_date[d] = i + 1
             parsed = parse_entry(p, d, season, url, i)
             if parsed:
                 out.append(parsed)
