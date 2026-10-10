@@ -588,6 +588,10 @@ def main():
                     ok &= run(log, ["ingest_pbp.py", "fetch", "--season", season])
                     ok &= run(log, ["ingest_pbp.py", "parse", "--season", season])
                 ok &= run(log, ["bridge_nba_ids.py", "build", "--season", season])
+                # one play-by-play file per new game, for the game page
+                if not a.no_pbp:
+                    ok &= run(log, ["export_game_files.py", "build",
+                                    "--games", ",".join(new_games)])
 
             log("exporting season aggregates")
             export_season(env, log, season)
