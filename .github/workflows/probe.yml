@@ -1,0 +1,26 @@
+name: nba probe
+
+# Run by hand: can GitHub's runners reach stats.nba.com, cdn.nba.com and
+# Basketball Reference? Writes the answer to v2/logs/probe/github.txt.
+on:
+  workflow_dispatch:
+  push:
+    paths: ['nba_probe.py', '.github/workflows/probe.yml']
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install curl_cffi boto3
+      - name: Probe
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT_URL }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+        run: python nba_probe.py
