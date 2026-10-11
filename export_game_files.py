@@ -4,7 +4,8 @@ export_game_files.py — one play-by-play file per game, for the game page.
 
 Writes v2/games/{game_id}/pbp.parquet: every event in the game in order —
 clock, team, player, description, running score — with shot result, value,
-distance and court coordinates on the shot rows. The game page draws both the
+distance and court coordinates on the shot rows, and on made shots whether
+they were assisted and by whom (parse_assists.py). The game page draws both the
 play-by-play and the shot chart from this one file, so a game costs one fetch
 of roughly 15-25 KB rather than the season's whole play-by-play.
 
@@ -29,10 +30,11 @@ CACHE = os.path.join(HOME, "data", "archive")
 ENV_PATH = os.path.join(HOME, ".env")
 PREFIX = "v2"
 
-COLS = """action_id, event_group, period, clock_raw, seconds_left, elapsed_seconds,
-          player_id, player_name, team_abbr, action_type, sub_type, description,
-          shot_result, shot_value, shot_distance, x_legacy, y_legacy,
-          is_field_goal, score_home, score_away"""
+COLS = """e.action_id, e.event_group, e.period, e.clock_raw, e.seconds_left,
+          e.elapsed_seconds, e.player_id, e.player_name, e.team_abbr, e.action_type,
+          e.sub_type, e.description, e.shot_result, e.shot_value, e.shot_distance,
+          e.x_legacy, e.y_legacy, e.is_field_goal, e.score_home, e.score_away,
+          a.assisted, a.assist_player_id, a.assist_name"""
 
 
 def load_env():
@@ -75,6 +77,10 @@ def connect():
         print("  no archive cache — current season only")
         con.execute("CREATE VIEW all_games AS SELECT * FROM hot.games")
         con.execute("CREATE VIEW all_pbp AS SELECT * FROM hot.play_by_play")
+    # who assisted each made shot (parse_assists.py); empty if not parsed yet
+    sys.path.insert(0, HOME)
+    import parse_assists
+    parse_assists.add_ast_view(con, CACHE)
     return con
 
 
@@ -83,7 +89,9 @@ def write_games(con, s3, bucket, where, label):
     with tempfile.TemporaryDirectory() as tmp:
         out = os.path.join(tmp, "parts")
         con.execute("""
-            COPY (SELECT game_id, %s FROM all_pbp WHERE %s ORDER BY game_id, action_id)
+            COPY (SELECT e.game_id, %s FROM all_pbp e
+                  LEFT JOIN all_ast a ON a.game_id = e.game_id AND a.action_id = e.action_id
+                  WHERE %s ORDER BY e.game_id, e.action_id)
             TO '%s' (FORMAT PARQUET, COMPRESSION ZSTD, PARTITION_BY (game_id))"""
                     % (COLS, where, out))
         jobs = []
@@ -116,7 +124,7 @@ def seasons(con):
 
 
 def season_where(s):
-    return "game_id IN (SELECT game_id FROM all_games WHERE season = '%s')" % s
+    return "e.game_id IN (SELECT game_id FROM all_games WHERE season = '%s')" % s
 
 
 def main():
@@ -130,7 +138,7 @@ def main():
 
     if a.games:
         ids = [g.strip() for g in a.games.split(",") if g.strip()]
-        targets = [("games", "game_id IN (%s)" % ",".join("'%s'" % g.replace("'", "") for g in ids))]
+        targets = [("games", "e.game_id IN (%s)" % ",".join("'%s'" % g.replace("'", "") for g in ids))]
     elif a.all:
         targets = [(s, season_where(s)) for s in seasons(con)]
     elif a.season:
@@ -140,9 +148,9 @@ def main():
 
     if a.cmd == "check":
         for label, where in targets:
-            g, e = con.execute("SELECT COUNT(DISTINCT game_id), COUNT(*) FROM all_pbp WHERE %s"
+            g, n = con.execute("SELECT COUNT(DISTINCT e.game_id), COUNT(*) FROM all_pbp e WHERE %s"
                                % where).fetchone()
-            print("  %-12s %5d games  %8d events" % (label, g, e))
+            print("  %-12s %5d games  %8d events" % (label, g, n))
         return
 
     env = load_env()

@@ -250,10 +250,13 @@ def export_changed_players(env, log, season, player_ids):
     for view, tbl in (("all_games", "games"), ("all_box", "player_game_box"),
                       ("all_pbp", "play_by_play")):
         con.execute("CREATE VIEW %s AS SELECT * FROM hot.%s" % (view, tbl))
+    import parse_assists
+    parse_assists.add_ast_view(con, "/nonexistent")   # hot database only
 
     done = 0
     with tempfile.TemporaryDirectory() as tmp:
-        for kind, sql in (("gamelog", X.GAMELOG_SQL), ("shots", X.SHOTS_SQL)):
+        for kind, sql in (("gamelog", X.GAMELOG_SQL), ("shots", X.SHOTS_SQL),
+                          ("assists", X.ASSISTS_SQL)):
             for pid in player_ids:
                 key = "%s/players/%s/%s.parquet" % (PREFIX, pid, kind)
                 new = os.path.join(tmp, "new.parquet")
@@ -588,6 +591,9 @@ def main():
                     ok &= run(log, ["ingest_pbp.py", "fetch", "--season", season])
                     ok &= run(log, ["ingest_pbp.py", "parse", "--season", season])
                 ok &= run(log, ["bridge_nba_ids.py", "build", "--season", season])
+                # who assisted each new made shot, before anything exports it
+                if not a.no_pbp:
+                    ok &= run(log, ["parse_assists.py", "build", "--season", season])
                 # one play-by-play file per new game, for the game page
                 if not a.no_pbp:
                     ok &= run(log, ["export_game_files.py", "build",
@@ -598,6 +604,8 @@ def main():
             # export_season rewrites player_season without BPM; put it back
             ok &= run(log, ["compute_bpm.py", "--season", season])
             ok &= run(log, ["export_games_index.py", "build", "--season", season])
+            # NBA.com tracking totals: passing, touches, shots by dribbles
+            ok &= run(log, ["ingest_tracking.py", "build", "--season", season])
 
             # everyone in a new game, plus anyone whose lines changed in a
             # game we already held (a rookie added after his debut)

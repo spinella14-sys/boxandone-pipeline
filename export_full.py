@@ -31,7 +31,8 @@ PREFIX = "v2"
 ARCHIVE = "v2/archive"
 
 # what the export actually needs out of the archive
-NEEDED = ["games.parquet", "player_game_box.parquet", "play_by_play.parquet"]
+NEEDED = ["games.parquet", "player_game_box.parquet", "play_by_play.parquet",
+          "shot_assists.parquet"]
 
 
 def load_env():
@@ -131,6 +132,10 @@ def connect(env):
         SELECT * FROM hot.play_by_play
     """ % glob("play_by_play.parquet"))
 
+    # who assisted each made shot (parse_assists.py); empty until it has run
+    sys.path.insert(0, HOME)
+    import parse_assists
+    parse_assists.add_ast_view(con, CACHE)
     return con
 
 
@@ -569,10 +574,23 @@ SHOTS_SQL = """
 SELECT e.game_id, g.game_date, g.season, g.season_type,
        e.period, e.seconds_left, e.elapsed_seconds, e.team_abbr,
        e.shot_result, e.shot_value, e.shot_distance,
-       e.x_legacy, e.y_legacy, e.sub_type AS shot_type, e.description
+       e.x_legacy, e.y_legacy, e.sub_type AS shot_type, e.description,
+       a.assisted, a.assist_player_id, a.assist_name
 FROM all_pbp e JOIN all_games g ON g.game_id = e.game_id
+LEFT JOIN all_ast a ON a.game_id = e.game_id AND a.action_id = e.action_id
 WHERE e.player_id = '%s' AND e.is_field_goal
 ORDER BY g.game_date, e.action_id
+"""
+
+# every made shot this player assisted — read from the assists table alone,
+# which carries the shot's location and shooter
+ASSISTS_SQL = """
+SELECT a.game_id, g.game_date, g.season, g.season_type, a.period, a.team_abbr,
+       a.shooter_id, a.shooter_name, a.shot_value, a.shot_distance,
+       a.x_legacy, a.y_legacy, a.shot_type, a.description
+FROM all_ast a JOIN all_games g ON g.game_id = a.game_id
+WHERE a.assist_player_id = '%s'
+ORDER BY g.game_date, a.action_id
 """
 
 REGISTRY_SQL = """
@@ -672,6 +690,10 @@ def cmd_players(env, limit=None):
                     "%s/players/%s/shots.parquet" % (PREFIX, pid), tmp)
             if n:
                 shots += 1
+                size += n
+            n = put(con, s3, bucket, ASSISTS_SQL % pid,
+                    "%s/players/%s/assists.parquet" % (PREFIX, pid), tmp)
+            if n:
                 size += n
             if i % 200 == 0:
                 print("  %5d/%d  logs=%d shots=%d  %.0f MB"
