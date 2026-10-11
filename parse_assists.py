@@ -8,8 +8,10 @@ passer's surname and his running total: "Curry 26' 3PT Pull-Up (3 PTS)
 against the shooter's teammates in that same game — nine people at most,
 usually one name — and resolved to our player id.
 
-Matching, strongest first: the play-by-play surname ("Green"), then first
-initial + surname ("D. Green"), both with accents and punctuation folded.
+Matching: the play-by-play surname ("Green") or first initial + surname
+("D. Green"), with accents and punctuation folded, against the shooter's
+teammates in that game — both those named in play-by-play and everyone in
+that side's box score, which catches players whose NBA id is not bridged.
 Two teammates who share a surname and an initial cannot be told apart from
 the text; those are kept as assisted with no passer ("ambiguous") rather
 than guessed. Misses never carry a passer in this data, so only makes are
@@ -66,7 +68,7 @@ RESOLVE_SQL = """
 WITH made AS (
   SELECT e.game_id, e.action_id, e.team_abbr, e.player_id AS shooter,
          e.player_name AS shooter_name, e.period, e.shot_value, e.shot_distance,
-         e.x_legacy, e.y_legacy, e.sub_type, e.description,
+         e.x_legacy, e.y_legacy, e.sub_type, e.description, e.location,
          regexp_extract(e.description, '\\(([^()]*?)\\s+\\d+\\s+AST\\)', 1) AS ast_raw
   FROM all_pbp e JOIN all_games g ON g.game_id = e.game_id
   WHERE g.season = '{season}' AND e.is_field_goal AND e.shot_result = 'Made'
@@ -83,14 +85,38 @@ keys AS (
   SELECT game_id, team_abbr, player_id, bo_norm(substr(full_name, 1, 1) || player_name)
   FROM pool WHERE full_name IS NOT NULL
 ),
-cand AS (
-  SELECT m.game_id, m.action_id,
-         COUNT(DISTINCT k.player_id) AS n, MIN(k.player_id) AS pid
+-- The box score lists everyone who played, including players whose NBA id is
+-- not bridged and so carry no player_id in play-by-play. Matched by side of
+-- the floor (home/away) rather than team code, which differs between sources.
+boxkeys AS (
+  SELECT b.game_id, b.is_home, b.player_id,
+         bo_norm(regexp_replace(p.full_name, '^\\S+\\s+', '')) AS k
+  FROM all_box b JOIN all_games g ON g.game_id = b.game_id
+  JOIN hot.players p ON p.player_id = b.player_id
+  WHERE g.season = '{season}' AND b.played
+  UNION
+  SELECT b.game_id, b.is_home, b.player_id,
+         bo_norm(substr(p.full_name, 1, 1) || regexp_replace(p.full_name, '^\\S+\\s+', ''))
+  FROM all_box b JOIN all_games g ON g.game_id = b.game_id
+  JOIN hot.players p ON p.player_id = b.player_id
+  WHERE g.season = '{season}' AND b.played
+),
+hits AS (
+  SELECT m.game_id, m.action_id, k.player_id
   FROM made m
   JOIN keys k ON k.game_id = m.game_id AND k.team_abbr = m.team_abbr
              AND k.k = bo_norm(m.ast_raw) AND k.player_id <> coalesce(m.shooter, '')
   WHERE m.ast_raw <> ''
-  GROUP BY 1, 2
+  UNION
+  SELECT m.game_id, m.action_id, k.player_id
+  FROM made m
+  JOIN boxkeys k ON k.game_id = m.game_id AND k.is_home = (m.location = 'h')
+             AND k.k = bo_norm(m.ast_raw) AND k.player_id <> coalesce(m.shooter, '')
+  WHERE m.ast_raw <> '' AND m.location IN ('h', 'v')
+),
+cand AS (
+  SELECT game_id, action_id, COUNT(DISTINCT player_id) AS n, MIN(player_id) AS pid
+  FROM hits GROUP BY 1, 2
 )
 SELECT m.game_id, m.action_id,
        (m.ast_raw <> '') AS assisted,
@@ -150,6 +176,12 @@ def connect():
         print("  no archive cache — hot database only")
         con.execute("CREATE VIEW all_games AS SELECT * FROM hot.games")
         con.execute("CREATE VIEW all_pbp AS SELECT * FROM hot.play_by_play")
+    if have_cache:
+        con.execute("""CREATE VIEW all_box AS
+            SELECT * FROM read_parquet('%s', union_by_name=true)
+            UNION ALL BY NAME SELECT * FROM hot.player_game_box""" % (g % "player_game_box.parquet"))
+    else:
+        con.execute("CREATE VIEW all_box AS SELECT * FROM hot.player_game_box")
     add_ast_view(con)
     return con
 
