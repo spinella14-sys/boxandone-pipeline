@@ -89,17 +89,24 @@ keys AS (
 -- not bridged and so carry no player_id in play-by-play. Matched by side of
 -- the floor (home/away) rather than team code, which differs between sources.
 boxkeys AS (
-  SELECT b.game_id, b.is_home, b.player_id,
-         bo_norm(regexp_replace(p.full_name, '^\\S+\\s+', '')) AS k
+  -- surname = full name less the first word, with any Jr./Sr./II/III/IV
+  -- dropped ("Otto Porter Jr." -> "Porter"); keyed three ways: surname,
+  -- first initial + surname, first two letters + surname ("Je. Green")
+  SELECT b.game_id, b.is_home, b.player_id, p.full_name,
+         regexp_replace(regexp_replace(p.full_name, '^\\S+\\s+', ''),
+                        '\\s+(jr\\.?|sr\\.?|ii|iii|iv|v)$', '', 'i') AS surname
   FROM all_box b JOIN all_games g ON g.game_id = b.game_id
   JOIN hot.players p ON p.player_id = b.player_id
   WHERE g.season = '{season}' AND b.played
-  UNION
-  SELECT b.game_id, b.is_home, b.player_id,
-         bo_norm(substr(p.full_name, 1, 1) || regexp_replace(p.full_name, '^\\S+\\s+', ''))
-  FROM all_box b JOIN all_games g ON g.game_id = b.game_id
-  JOIN hot.players p ON p.player_id = b.player_id
-  WHERE g.season = '{season}' AND b.played
+),
+boxkeys_all AS (
+  SELECT game_id, is_home, player_id, bo_norm(surname) AS k FROM boxkeys
+  UNION SELECT game_id, is_home, player_id,
+               bo_norm(substr(full_name, 1, 1) || surname) FROM boxkeys
+  UNION SELECT game_id, is_home, player_id,
+               bo_norm(substr(full_name, 1, 2) || surname) FROM boxkeys
+  UNION SELECT game_id, is_home, player_id,
+               bo_norm(regexp_replace(full_name, '^\\S+\\s+', '')) FROM boxkeys
 ),
 hits AS (
   SELECT m.game_id, m.action_id, k.player_id
@@ -110,7 +117,7 @@ hits AS (
   UNION
   SELECT m.game_id, m.action_id, k.player_id
   FROM made m
-  JOIN boxkeys k ON k.game_id = m.game_id AND k.is_home = (m.location = 'h')
+  JOIN boxkeys_all k ON k.game_id = m.game_id AND k.is_home = (m.location = 'h')
              AND k.k = bo_norm(m.ast_raw) AND k.player_id <> coalesce(m.shooter, '')
   WHERE m.ast_raw <> '' AND m.location IN ('h', 'v')
 ),
