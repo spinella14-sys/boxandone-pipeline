@@ -57,6 +57,57 @@ def read_back():
             print("(no %s probe result yet)\n" % name)
 
 
+CDN = "https://cdn.nba.com/static/json/liveData/%s/%s_%s.json"
+FEED_GAMES = ["0022500001", "0022400001", "0022000001", "0021500001", "0021000001"]
+WANT = ["actionNumber", "period", "clock", "teamTricode", "personId", "playerName",
+        "actionType", "subType", "shotResult", "shotDistance", "x", "y",
+        "xLegacy", "yLegacy", "assistPersonId", "description", "scoreHome", "scoreAway"]
+
+
+def feed_check(cr):
+    """Does NBA's CDN play-by-play carry what stats.nba.com's does, and how far back?"""
+    out = ["", "cdn.nba.com liveData feed"]
+    first = None
+    for gid in FEED_GAMES:
+        try:
+            r = cr.get(CDN % ("playbyplay", "playbyplay", gid), headers=NBA_HEADERS,
+                       impersonate="chrome", timeout=20)
+            if r.status_code != 200:
+                out.append("  pbp %s  HTTP %s" % (gid, r.status_code)); continue
+            acts = r.json()["game"]["actions"]
+            out.append("  pbp %s  HTTP 200, %d actions" % (gid, len(acts)))
+            first = first or (gid, acts)
+        except Exception as e:
+            out.append("  pbp %s  FAILED: %s" % (gid, str(e)[:70]))
+        try:
+            r = cr.get(CDN % ("boxscore", "boxscore", gid), headers=NBA_HEADERS,
+                       impersonate="chrome", timeout=20)
+            out.append("  box %s  HTTP %s" % (gid, r.status_code))
+        except Exception as e:
+            out.append("  box %s  FAILED: %s" % (gid, str(e)[:70]))
+    if not first:
+        return out
+    gid, acts = first
+    keys = set().union(*(a.keys() for a in acts))
+    out.append("  fields in %s: missing %s" % (gid, [k for k in WANT if k not in keys] or "none"))
+    made = [a for a in acts if a.get("isFieldGoal") == 1 and a.get("shotResult") == "Made"]
+    withast = [a for a in made if a.get("assistPersonId")]
+    out.append("  made FG %d, with assistPersonId %d" % (len(made), len(withast)))
+    # where stats.nba.com is reachable, check the coordinates are the same numbers
+    try:
+        r = cr.get("https://stats.nba.com/stats/playbyplayv3?GameID=%s&StartPeriod=0&EndPeriod=0" % gid,
+                   headers=NBA_HEADERS, impersonate="chrome", timeout=10)
+        v3 = {a["actionNumber"]: a for a in r.json()["game"]["actions"]}
+        shots = [a for a in acts if a.get("isFieldGoal") == 1 and a["actionNumber"] in v3]
+        same = sum(1 for a in shots if a.get("xLegacy") == v3[a["actionNumber"]].get("xLegacy")
+                   and a.get("yLegacy") == v3[a["actionNumber"]].get("yLegacy"))
+        out.append("  vs playbyplayv3: %d shots matched by actionNumber, %d identical x/y"
+                   % (len(shots), same))
+    except Exception:
+        out.append("  vs playbyplayv3: not reachable here")
+    return out
+
+
 def main():
     import sys
     load_env()
@@ -73,6 +124,7 @@ def main():
         except Exception as e:
             res = "FAILED: %s" % str(e)[:90]
         lines.append("  %-44s %5.1fs  %s" % (label, time.time() - t, res))
+    lines += feed_check(cr)
     text = "\n".join(lines)
     print(text)
 
