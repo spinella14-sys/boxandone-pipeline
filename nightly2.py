@@ -652,6 +652,9 @@ def main():
                           | {p for p, _ in new_rows})
             log("exporting %d changed player files" % len(pids))
             export_changed_players(env, log, season, pids)
+            # career-arc points read the game logs just written
+            if pids:
+                ok &= run(log, ["compute_arcs.py", "build", "--players", ",".join(pids)])
 
             log("parsing possessions")
             ok &= run(log, ["parse_possessions_full.py", "build", "--season", season])
