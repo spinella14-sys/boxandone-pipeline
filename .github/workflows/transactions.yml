@@ -54,3 +54,11 @@ jobs:
         env:
           BOXANDONE_HOME: /home/runner/boxandone
         run: python ~/boxandone/hourly.py
+
+      # A run GitHub kills at its time limit never reaches its own cleanup;
+      # free the lock it holds (and only that lock) so the next run can start.
+      - name: Release lock
+        if: cancelled() || failure()
+        env:
+          BOXANDONE_HOME: /home/runner/boxandone
+        run: python ~/boxandone/release_lock.py

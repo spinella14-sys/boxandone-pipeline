@@ -99,6 +99,14 @@ jobs:
           BOXANDONE_HOME: /home/runner/boxandone
         run: python ~/boxandone/nightly2.py
 
+      # A run GitHub kills at its time limit never reaches its own cleanup;
+      # free the lock it holds (and only that lock) so the next run can start.
+      - name: Release lock
+        if: cancelled() || failure()
+        env:
+          BOXANDONE_HOME: /home/runner/boxandone
+        run: python ~/boxandone/release_lock.py
+
       # The run writes its own log to R2 either way; this keeps a copy on the
       # action so a failure can be read without opening the bucket.
       - name: Upload log
