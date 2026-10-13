@@ -96,9 +96,9 @@ TOV = {
     "offensive goaltending": "Offensive Goaltending",
     "step out of bounds": "Step Out of Bounds Turnover",
     "kicked ball": "Kicked Ball Violation", "lane violation": "Lane Violation Turnover",
+    "jumpball violation": "Jump Ball Violation", "jump ball violation": "Jump Ball Violation",
     "basket from below": "Basket from Below Turnover",
     "illegal assist": "Illegal Assist Turnover",
-    "jump ball violation": "Jump Ball Violation Turnover",
     "too many players": "Too Many Players Turnover",
 }
 SIMPLE = {"rebound": "Rebound", "substitution": "Substitution", "jumpball": "Jump Ball",
@@ -122,7 +122,18 @@ def tov_sub(st, desc):
         if "step" in desc:
             return "Step Out of Bounds Turnover"
         return "Out of Bounds Lost Ball Turnover"
-    return TOV.get(st) or _title(st) or "Unknown"
+    return TOV.get(st) or TOV.get(_tov_key(st)) or _title(st) or "Unknown"
+
+
+def _tov_key(st):
+    """'3-second-violation' -> '3 second', 'offensive-kicked-ball' -> 'kicked ball'."""
+    k = " ".join(st.replace("-", " ").split())
+    if k.startswith("offensive ") and k != "offensive foul" \
+            and k != "offensive goaltending":
+        k = k[len("offensive "):]
+    if k.endswith(" violation") and k not in ("lane violation", "jumpball violation"):
+        k = k[: -len(" violation")]
+    return k
 
 
 def shot_sub(st, desc):
