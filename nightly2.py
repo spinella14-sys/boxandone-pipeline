@@ -108,7 +108,38 @@ class Log:
         return "\n".join(self.lines)
 
 
+# Steps that call stats.nba.com, or only process what those calls fetched.
+STATS_STEPS = {"ingest_rosters.py", "ingest_preseason.py", "bridge_games.py",
+               "ingest_pbp.py", "bridge_nba_ids.py", "parse_assists.py",
+               "export_game_files.py", "ingest_tracking.py"}
+_stats_ok = None
+
+
+def stats_reachable(log):
+    """One 10-second request, once per run. GitHub's servers get no answer."""
+    global _stats_ok
+    if _stats_ok is None:
+        try:
+            from curl_cffi import requests as cr
+            r = cr.get("https://stats.nba.com/stats/commonteamroster"
+                       "?LeagueID=00&Season=2026-27&TeamID=1610612738",
+                       headers={"Referer": "https://www.nba.com/",
+                                "Origin": "https://www.nba.com",
+                                "x-nba-stats-origin": "stats",
+                                "x-nba-stats-token": "true"},
+                       impersonate="chrome", timeout=10)
+            _stats_ok = r.status_code == 200
+        except Exception:
+            _stats_ok = False
+        log("stats.nba.com %s" % ("reachable" if _stats_ok
+                                  else "UNREACHABLE — its steps will be skipped"))
+    return _stats_ok
+
+
 def run(log, argv, timeout=5400):
+    if argv and argv[0] in STATS_STEPS and not stats_reachable(log):
+        log("$ %s  — skipped (stats.nba.com unreachable)" % " ".join(argv))
+        return True
     log("$ %s" % " ".join(argv))
     try:
         p = subprocess.run([sys.executable] + argv, cwd=HOME, timeout=timeout,
