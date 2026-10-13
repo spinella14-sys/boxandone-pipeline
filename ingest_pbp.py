@@ -130,7 +130,7 @@ def seed_log(con, season):
     con.commit()
 
 
-def cmd_fetch(season, limit=None):
+def cmd_fetch(season, limit=None, source="nba"):
     from curl_cffi import requests as cr
 
     con = db()
@@ -183,21 +183,26 @@ def cmd_fetch(season, limit=None):
                     n = None
                 ok.append((gid, n))
             else:
-                url = ("https://stats.nba.com/stats/playbyplayv3"
-                       "?GameID=%s&StartPeriod=0&EndPeriod=14" % nba_gid)
-                got = None
-                for attempt in range(4):
-                    try:
-                        r = cr.get(url, headers=HEADERS, impersonate=IMPERSONATE, timeout=60)
-                    except Exception as e:
-                        print("    net %s: %s" % (nba_gid, str(e)[:50]))
-                        time.sleep(15 * (attempt + 1))
-                        continue
-                    if r.status_code == 200:
-                        got = r.text
-                        break
-                    print("    HTTP %s on %s" % (r.status_code, nba_gid))
-                    time.sleep(20 * (attempt + 1))
+                if source == "cdn":
+                    # NBA's CDN, translated to playbyplayv3's shape (cdn_feed.py)
+                    import cdn_feed
+                    got = cdn_feed.fetch_translated(nba_gid)
+                else:
+                    url = ("https://stats.nba.com/stats/playbyplayv3"
+                           "?GameID=%s&StartPeriod=0&EndPeriod=14" % nba_gid)
+                    got = None
+                    for attempt in range(4):
+                        try:
+                            r = cr.get(url, headers=HEADERS, impersonate=IMPERSONATE, timeout=60)
+                        except Exception as e:
+                            print("    net %s: %s" % (nba_gid, str(e)[:50]))
+                            time.sleep(15 * (attempt + 1))
+                            continue
+                        if r.status_code == 200:
+                            got = r.text
+                            break
+                        print("    HTTP %s on %s" % (r.status_code, nba_gid))
+                        time.sleep(20 * (attempt + 1))
 
                 if got is None:
                     err.append((gid, "fetch failed"))
@@ -215,7 +220,7 @@ def cmd_fetch(season, limit=None):
                         gzip.open(p, "wt", encoding="utf-8").write(got)
                         ok.append((gid, n))
                         done += 1
-                time.sleep(DELAY + random.uniform(0, JITTER))
+                time.sleep(0.3 if source == "cdn" else DELAY + random.uniform(0, JITTER))
 
             if i % 25 == 0:
                 flush(ok, err)
@@ -404,10 +409,11 @@ if __name__ == "__main__":
     ap.add_argument("cmd", choices=["fetch", "parse", "fields", "status"])
     ap.add_argument("--season", default="2025-26")
     ap.add_argument("--limit", type=int)
+    ap.add_argument("--source", choices=["nba", "cdn"], default="nba")
     a = ap.parse_args()
 
     if a.cmd == "fetch":
-        cmd_fetch(a.season, a.limit)
+        cmd_fetch(a.season, a.limit, a.source)
     elif a.cmd == "parse":
         cmd_parse(a.season, a.limit)
     elif a.cmd == "fields":

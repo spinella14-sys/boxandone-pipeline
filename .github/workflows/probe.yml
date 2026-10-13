@@ -5,7 +5,7 @@ name: nba probe
 on:
   workflow_dispatch:
   push:
-    paths: ['nba_probe.py', '.github/workflows/probe.yml']
+    paths: ['nba_probe.py', 'cdn_feed.py', '.github/workflows/probe.yml']
 
 jobs:
   probe:
@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install curl_cffi boto3
+      - run: pip install curl_cffi boto3 duckdb
       - name: Probe
         env:
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}

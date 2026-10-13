@@ -110,8 +110,8 @@ class Log:
 
 # Steps that call stats.nba.com, or only process what those calls fetched.
 STATS_STEPS = {"ingest_rosters.py", "ingest_preseason.py", "bridge_games.py",
-               "ingest_pbp.py", "bridge_nba_ids.py", "parse_assists.py",
-               "export_game_files.py", "ingest_tracking.py"}
+               "ingest_pbp.py", "bridge_nba_ids.py", "ingest_tracking.py"}
+# (a step given --source reads the CDN instead and always runs)
 _stats_ok = None
 
 
@@ -137,7 +137,8 @@ def stats_reachable(log):
 
 
 def run(log, argv, timeout=5400):
-    if argv and argv[0] in STATS_STEPS and not stats_reachable(log):
+    if argv and argv[0] in STATS_STEPS and "--source" not in argv \
+            and not stats_reachable(log):
         log("$ %s  — skipped (stats.nba.com unreachable)" % " ".join(argv))
         return True
     log("$ %s" % " ".join(argv))
@@ -616,12 +617,19 @@ def main():
 
         if new_games or pre_games or grew:
             if new_games:
-                ok &= run(log, ["bridge_games.py", "build",
+                # NBA's CDN rather than stats.nba.com, which GitHub cannot
+                # reach. Player ids are bridged from its box scores BEFORE the
+                # parse, so a rookie's events resolve the night he debuts.
+                ok &= run(log, ["bridge_games.py", "build", "--source", "schedule",
                                 "--seasons", "%s:%s" % (season, season)])
                 if not a.no_pbp:
-                    ok &= run(log, ["ingest_pbp.py", "fetch", "--season", season])
-                    ok &= run(log, ["ingest_pbp.py", "parse", "--season", season])
-                ok &= run(log, ["bridge_nba_ids.py", "build", "--season", season])
+                    ok &= run(log, ["ingest_pbp.py", "fetch", "--season", season,
+                                    "--source", "cdn"])
+                ok &= run(log, ["bridge_nba_ids.py", "build", "--season", season,
+                                "--source", "cdn"])
+                if not a.no_pbp:
+                    ok &= run(log, ["ingest_pbp.py", "parse", "--season", season,
+                                    "--source", "cdn"])
                 # who assisted each new made shot, before anything exports it
                 if not a.no_pbp:
                     ok &= run(log, ["parse_assists.py", "build", "--season", season])

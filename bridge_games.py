@@ -231,7 +231,13 @@ if __name__ == "__main__":
     ap.add_argument("cmd", choices=["build", "status"])
     ap.add_argument("--seasons", default="2025-26:1996-97")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--source", choices=["nba", "schedule"], default="nba")
     a = ap.parse_args()
+    if a.source == "schedule":
+        # NBA game ids from the CDN schedule instead of stats.nba.com (cdn_feed.py)
+        import cdn_feed
+        cdn_feed.preload("schedule")
+        fetch_log = cdn_feed.schedule_log
 
     if a.cmd == "status":
         cmd_status()

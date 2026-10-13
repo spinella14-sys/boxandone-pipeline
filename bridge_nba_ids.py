@@ -462,7 +462,13 @@ if __name__ == "__main__":
     ap.add_argument("--season", default="2025-26")
     ap.add_argument("--seasons", default=None,
                     help="range, newest first, e.g. 2024-25:1996-97")
+    ap.add_argument("--source", choices=["nba", "cdn"], default="nba")
     a = ap.parse_args()
+    if a.source == "cdn":
+        # player lines from CDN box scores instead of stats.nba.com (cdn_feed.py)
+        import cdn_feed
+        cdn_feed.preload("cdn")
+        fetch_gamelog = cdn_feed.player_log
 
     if a.cmd == "build":
         if a.seasons:

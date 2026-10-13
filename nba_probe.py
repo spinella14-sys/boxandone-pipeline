@@ -10,6 +10,7 @@ present, saves it to v2/logs/probe/{host}.txt so it can be read from the Mac.
 """
 import os
 import socket
+import sys
 import time
 from datetime import datetime, timezone
 
@@ -109,7 +110,6 @@ def feed_check(cr):
 
 
 def main():
-    import sys
     load_env()
     if "--read" in sys.argv:
         return read_back()
@@ -125,6 +125,15 @@ def main():
             res = "FAILED: %s" % str(e)[:90]
         lines.append("  %-44s %5.1fs  %s" % (label, time.time() - t, res))
     lines += feed_check(cr)
+    # the translated CDN feed, end to end: possessions must add up to the score
+    import subprocess
+    here = os.path.dirname(os.path.abspath(__file__))
+    lines += ["", "cdn_feed selftest"]
+    for gid in ("0022500001", "0042500101", "0012600001"):
+        p = subprocess.run([sys.executable, os.path.join(here, "cdn_feed.py"),
+                            "selftest", "--game", gid],
+                           capture_output=True, text=True, cwd=here)
+        lines += [l for l in (p.stdout + p.stderr).splitlines() if l.strip()][-4:]
     text = "\n".join(lines)
     print(text)
 
