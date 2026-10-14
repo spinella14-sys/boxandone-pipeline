@@ -80,7 +80,8 @@ def s3c(env):
                         aws_secret_access_key=env["R2_SECRET_ACCESS_KEY"],
                         region_name="auto",
                         config=Config(max_pool_connections=24,
-                                      retries={"max_attempts": 3}))
+                                      connect_timeout=30, read_timeout=300,
+                                      retries={"max_attempts": 10, "mode": "adaptive"}))
 
 
 def current_season(today=None):
@@ -200,7 +201,11 @@ def pull_db(s3, bucket, log):
 
 def push_db(s3, bucket, log):
     log("pushing database (%.0f MB)" % (os.path.getsize(DB_PATH) / 1048576.0))
-    s3.upload_file(DB_PATH, bucket, DB_KEY)
+    from boto3.s3.transfer import TransferConfig
+    # four 16 MB parts at a time: a home upload link cannot finish ten at
+    # once inside the timeout, which is how a push from the Mac failed
+    s3.upload_file(DB_PATH, bucket, DB_KEY, Config=TransferConfig(
+        multipart_chunksize=16 * 1024 * 1024, max_concurrency=4))
 
 
 def clear_schedule_cache(season, log):
