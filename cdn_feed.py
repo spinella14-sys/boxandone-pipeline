@@ -37,21 +37,34 @@ HEADERS = {"Referer": "https://www.nba.com/", "Origin": "https://www.nba.com",
 
 # ------------------------------------------------------------------ fetching
 
+class FetchFailed(Exception):
+    """The CDN could not be read just now; try again later."""
+
+
 def _get(kind, gid):
+    """JSON, or None when the game is not published (403/404). Raises
+    FetchFailed when the CDN keeps failing or keeps sending a bad body."""
     from curl_cffi import requests as cr
-    for attempt in range(3):
+    why = "no response"
+    for attempt in range(4):
         try:
             r = cr.get(URL % (kind, kind, gid), headers=HEADERS,
                        impersonate="chrome", timeout=30)
-        except Exception:
+        except Exception as e:
+            why = str(e)[:80]
             time.sleep(5 * (attempt + 1))
             continue
-        if r.status_code == 200:
-            return r.json()
         if r.status_code in (403, 404):      # game not published (yet)
             return None
+        if r.status_code == 200:
+            try:
+                return r.json()
+            except ValueError:
+                why = "body is not valid JSON"
+        else:
+            why = "HTTP %s" % r.status_code
         time.sleep(5 * (attempt + 1))
-    return None
+    raise FetchFailed("%s %s: %s" % (kind, gid, why))
 
 
 def _cache(gid, kind):
@@ -74,7 +87,11 @@ def load(gid, kind, fetch=True):
 
 def fetch_translated(gid):
     """For ingest_pbp.py: the game as playbyplayv3-shaped JSON text, or None."""
-    pbp, box = load(gid, "pbp"), load(gid, "box")
+    try:
+        pbp, box = load(gid, "pbp"), load(gid, "box")
+    except FetchFailed as e:
+        print("    %s" % e)
+        return None                        # counted as a failed fetch, retried next run
     if not pbp or not box:
         return None
     acts = translate(pbp, box)
