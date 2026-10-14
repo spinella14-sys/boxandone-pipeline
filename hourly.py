@@ -42,6 +42,8 @@ def fingerprint(season):
         """SELECT team_abbr, player_id FROM team_rosters
            WHERE as_of = (SELECT MAX(as_of) FROM team_rosters) AND season = ?
            ORDER BY 1, 2""",
+        """SELECT player_id, position FROM player_positions
+           WHERE source = 'admin' AND ? IS NOT NULL ORDER BY 1""",
     ):
         try:
             for row in con.execute(sql, [season]).fetchall():
@@ -84,6 +86,8 @@ def main():
         ok &= N.run(log, ["ingest_transactions.py", "build", "--season", season, "--force"])
         ok &= N.run(log, ["ingest_rosters.py", "build", "--season", season])
         ok &= N.run(log, ["sync_players_supabase.py"])
+        # positions ruled in the site's Positions tool
+        ok &= N.run(log, ["positions_supabase.py", "pull"])
         if fingerprint(season) == before:
             log("no change — nothing pushed")
             status = "ok" if ok else "FAIL"

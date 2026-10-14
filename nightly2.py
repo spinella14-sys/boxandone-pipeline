@@ -391,6 +391,16 @@ def rebuild_registry_and_manifest(env, log):
                 p.height_in, p.weight_lb, p.college, p.draft_year,
                 p.draft_round, p.draft_pick, p.status, p.nationality"""
             join = ""
+        # positions: an admin value on the player record wins, else the
+        # automatic first pass (assign_positions.py), flagged as such
+        has_pp = con.execute(
+            "SELECT COUNT(*) FROM duckdb_tables() "
+            "WHERE database_name='hot' AND table_name='player_positions'").fetchone()[0] > 0
+        if has_pp:
+            cols = cols.replace("p.position,", """COALESCE(p.position, pp.position) AS position,
+                CASE WHEN p.position IS NOT NULL THEN 'admin' ELSE pp.source END AS position_source,
+                CASE WHEN p.position IS NOT NULL THEN 1.0 ELSE pp.confidence END AS position_confidence,""")
+            join = join + " LEFT JOIN hot.player_positions pp ON pp.player_id=p.player_id"
         sql = ("""
             COPY (
               SELECT p.player_id, p.full_name, p.display_name, p.name_normalized,
@@ -664,6 +674,8 @@ def main():
         # Signings and waivers happen on days without games, so who is on
         # which team is rebuilt every night. A failure here is logged and the
         # run still pushes the database, so the night's ingest is not lost.
+        # positions ruled in the site's Positions tool, before the registry
+        ok &= run(log, ["positions_supabase.py", "pull"])
         try:
             log("rebuilding registry and manifest")
             rebuild_registry_and_manifest(env, log)

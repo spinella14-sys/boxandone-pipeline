@@ -600,7 +600,9 @@ SELECT p.player_id, p.full_name, p.display_name, p.name_normalized,
        COALESCE(p.birthdate, bio.birthdate) AS birthdate,
        CASE WHEN p.birthdate IS NULL AND bio.birthdate IS NOT NULL
             THEN 'confirmed' ELSE p.birthdate_status END AS birthdate_status,
-       p.position,
+       COALESCE(p.position, pp.position) AS position,
+       CASE WHEN p.position IS NOT NULL THEN 'admin' ELSE pp.source END AS position_source,
+       CASE WHEN p.position IS NOT NULL THEN 1.0 ELSE pp.confidence END AS position_confidence,
        COALESCE(p.height_in, bio.height_in) AS height_in,
        COALESCE(p.weight_lb, bio.weight_lb) AS weight_lb,
        COALESCE(p.college, bio.college) AS college,
@@ -615,6 +617,7 @@ FROM hot.players p
 LEFT JOIN hot.player_identifiers i ON i.player_id=p.player_id AND i.source='bbref'
 LEFT JOIN hot.player_identifiers n ON n.player_id=p.player_id AND n.source='nba'
 LEFT JOIN hot.player_bio bio ON bio.player_id=p.player_id AND bio.source='nba'
+LEFT JOIN hot.player_positions pp ON pp.player_id=p.player_id
 LEFT JOIN (
     SELECT b.player_id, COUNT(DISTINCT g.season) seasons,
            MIN(g.season) first_season, MAX(g.season) last_season,
