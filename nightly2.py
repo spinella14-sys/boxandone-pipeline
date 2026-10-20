@@ -652,6 +652,10 @@ def main():
                 if not a.no_pbp:
                     ok &= run(log, ["export_game_files.py", "build",
                                     "--games", ",".join(new_games)])
+                # lineups, stints and on/off for the season so far
+                if not a.no_pbp:
+                    ok &= run(log, ["build_lineups.py", "fetch", "--seasons", season])
+                    ok &= run(log, ["build_lineups.py", "build", "--seasons", season])
 
             log("exporting season aggregates")
             export_season(env, log, season)

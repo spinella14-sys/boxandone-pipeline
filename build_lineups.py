@@ -86,11 +86,20 @@ def load_missing():
         return set()
 
 
+def current_season():
+    from datetime import date
+    d = date.today()
+    y = d.year if d.month >= 10 else d.year - 1
+    return "%d-%s" % (y, str(y + 1)[2:])
+
+
 def cmd_fetch(seasons):
     missing = load_missing()
     os.makedirs(C.RAW, exist_ok=True)
     for season in seasons:
+        live = season == current_season()
         ids = [g for g in candidate_ids(season) if g not in missing]
+        streak = 0
         have = new = gone = failed = 0
         t0 = time.time()
         for i, gid in enumerate(ids, 1):
@@ -98,11 +107,19 @@ def cmd_fetch(seasons):
                 have += 1
                 continue
             try:
+                if live and gid[2] == "2" and streak >= 15:
+                    continue            # past the last game played so far
                 pbp = C.load(gid, "pbp")
                 if not pbp:
-                    missing.add(gid)
+                    # in the season under way, an absent id is usually a game
+                    # not played yet: never remember it as missing
+                    if live:
+                        streak += gid[2] == "2"
+                    else:
+                        missing.add(gid)
                     gone += 1
                     continue
+                streak = 0
                 C.load(gid, "box")
             except Exception as e:             # cdn_feed.FetchFailed: try again next run
                 failed += 1
@@ -175,7 +192,9 @@ def walk(gid, pbp, box):
         pa = [a for a in acts if a.get("period") == per]
         length = 720 if per <= 4 else 300
         base = 4 * 720 + (per - 5) * 300 if per > 4 else (per - 1) * 720
-        if per == 1:
+        # early 2019-20 box scores often lack starter flags; then period 1
+        # is inferred the same way as every later period
+        if per == 1 and all(len(starters[t]) == 5 for t in teams):
             on = {t: set(starters[t]) for t in teams}
         else:
             on = {t: set() for t in teams}
@@ -485,6 +504,22 @@ def cmd_check(season):
                 print("    %-3s n=%-4d  25th %.2f  median %.2f  75th %.2f" % (p, len(vals), q(.25), q(.5), q(.75)))
     # how well does "beside a C" alone split F from C?
     fc = [(r[2], pos[r[0]]) for r in rows if pos.get(r[0]) in ("F", "C") and r[2] is not None]
+    # both measures together: C when rarely beside another C, or usually tallest
+    fc2 = [(r[2], r[3], pos[r[0]]) for r in rows
+           if pos.get(r[0]) in ("F", "C") and r[2] is not None and r[3] is not None]
+    if fc2:
+        grid = [i / 20 for i in range(1, 20)]
+        best2 = max((sum(((w < a) or (t > b)) == (p == "C") for w, t, p in fc2), a, b)
+                    for a in grid for b in grid)
+        print("  F vs C on both: C if beside a C < %.2f or tallest > %.2f gets %d of %d right (%.0f%%)"
+              % (best2[1], best2[2], best2[0], len(fc2), 100.0 * best2[0] / len(fc2)))
+        miss = [(r, pos[r[0]]) for r in rows if pos.get(r[0]) in ("F", "C") and r[2] is not None
+                and r[3] is not None and (((r[2] < best2[1]) or (r[3] > best2[2])) != (pos[r[0]] == "C"))]
+        import duckdb as _d
+        nm = dict(_d.connect(DB_PATH, read_only=True).execute(
+            "SELECT player_id, full_name FROM players").fetchall())
+        for r, p in miss[:20]:
+            print("    missed: %-24s you: %s  beside a C %.2f  tallest %.2f" % (nm.get(r[0], r[0])[:24], p, r[2], r[3]))
     if fc:
         best = max(((sum((v < c) == (p == "C") for v, p in fc), c) for c in [i / 100 for i in range(5, 95)]))
         print("\n  F vs C on 'beside a C' alone: best cut %.2f gets %d of %d right (%.0f%%)"
