@@ -631,6 +631,9 @@ def main():
         ok &= run(log, ["ingest_games.py", "schedule", "--seasons", "%d:%d" % (ey, ey)])
         ok &= run(log, ["ingest_games.py", "fetch"])
         ok &= run(log, ["ingest_games.py", "parse"])
+        # a debut: Basketball Reference names a player we hold only by NBA id
+        ok &= run(log, ["link_staged_bbref.py", "--in-run"])
+        ok &= run(log, ["ingest_games.py", "parse"])
 
         after = games_held(season)
         new_games = sorted(after - before)
