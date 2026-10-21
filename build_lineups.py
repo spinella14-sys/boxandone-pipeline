@@ -195,6 +195,15 @@ def split_old_subs(acts, home, away, v):
         if not cands and words:
             # last resort: the last word of the name is the surname
             cands = [p for p in roster.get(a.get("teamId"), []) if p[1].split()[-1:] == words[-1:]]
+        if len(cands) > 1:
+            raw = (desc.split("replaced by", 1)[1]).lower().replace(".", " ").split()
+            suf = {w for w in raw if w in _SUFFIX}
+            if suf:
+                fam = {p[0]: set((pl.get("familyName") or "").lower().replace(".", " ").split())
+                       for side in (home, away) for pl in side["players"] for p in [(pl["personId"],)]}
+                keep = [p for p in cands if suf & fam.get(p[0], set())]
+                if keep:
+                    cands = keep
         if not cands:
             v["sub_in_unresolved"] += 1
             v.setdefault("unplaced", Counter())[desc.split("replaced by", 1)[1].strip()] += 1
@@ -205,6 +214,23 @@ def split_old_subs(acts, home, away, v):
         ins["candidates"] = [p[0] for p in cands]
         out.append(ins)
     return out
+
+
+def _lookahead(pa, i, cands, tid):
+    """The candidate who next acts on the floor or is next subbed out."""
+    for b in pa[i + 1:]:
+        t = (b.get("actionType") or "").lower()
+        if t == "substitution":
+            if b.get("teamId") == tid:
+                if (b.get("subType") or "").lower() == "out" and b.get("personId") in cands:
+                    return b["personId"]
+                if (b.get("subType") or "").lower() == "in" and set(b.get("candidates") or []) == set(cands):
+                    return None          # the other one comes in next: no evidence either way
+            continue
+        hit = [p for p in actors(b) if p in cands]
+        if hit:
+            return hit[0]
+    return None
 
 
 def walk(gid, pbp, box):
@@ -279,7 +305,7 @@ def walk(gid, pbp, box):
         last = length
         poss_team = None
         st = new_stint(per, base, on)
-        for a in pa:
+        for i, a in enumerate(pa):
             now = secs(a.get("clock"))
             if now is not None and now <= last:
                 for tid in teams:
@@ -315,9 +341,15 @@ def walk(gid, pbp, box):
                     # a shared surname: the one coming in is the one not on the floor
                     cands = a.get("candidates") or [pid]
                     off = [c for c in cands if c not in on[tid]]
-                    if len(cands) > 1 and len(off) != 1:
+                    pick = off[0] if off else pid
+                    if len(off) > 1:
+                        pick = _lookahead(pa, i, off, tid)
+                        if pick is None:
+                            pick = max(off, key=lambda c: box_min.get(c, 0) - played.get(c, 0))
+                            v["sub_in_by_minutes"] += 1
+                    elif len(cands) > 1 and not off:
                         v["sub_in_ambiguous"] += 1
-                    on[tid].add(off[0] if off else pid)
+                    on[tid].add(pick)
                 st = new_stint(per, at, on)
                 continue
             for pid in actors(a):
