@@ -155,14 +155,23 @@ def actors(a):
     return out
 
 
+_SUFFIX = {"jr", "sr", "ii", "iii", "iv", "v"}
+
+
 def _fold(s):
+    """Lower case, no accents, letters and spaces only, no Jr./III suffix."""
     import unicodedata
     s = unicodedata.normalize("NFKD", s or "")
-    return "".join(c for c in s if not unicodedata.combining(c)).lower().replace(".", "").strip()
+    s = "".join(c for c in s if not unicodedata.combining(c)).lower()
+    s = "".join(c if c.isalpha() or c == " " else " " for c in s)
+    words = [w for w in s.split() if w not in _SUFFIX]
+    return " ".join(words)
 
 
 def split_old_subs(acts, home, away, v):
-    """Early 2019-20: "X replaced by Y" rows with no separate "in" row."""
+    """Early 2019-20: "X replaced by Y" rows with no separate "in" row.
+    Each gets an "in" row whose candidates are the team's players matching
+    the name; walk() picks the one who is off the floor at that moment."""
     subs = [a for a in acts if (a.get("actionType") or "").lower() == "substitution"]
     if not subs or any((a.get("subType") or "").lower() == "in" for a in subs):
         return acts
@@ -179,17 +188,21 @@ def split_old_subs(acts, home, away, v):
         if "replaced by" not in desc:
             continue
         who = _fold(desc.split("replaced by", 1)[1])
-        cands = [p for p in roster.get(a.get("teamId"), []) if p[3] == who or p[1] == who
-                 or (p[1] and who.endswith(" " + p[1]) and who[:1] == p[2][:1])]
-        if len(cands) > 1:
-            # two players share the surname: the description's initial decides
-            cands = [p for p in cands if p[3] == who or who.split(" ")[0][:1] == p[2][:1]]
-        if len(cands) != 1:
+        words = who.split()
+        cands = [p for p in roster.get(a.get("teamId"), [])
+                 if p[3] == who or p[1] == who
+                 or (p[1] and len(words) > 1 and " ".join(words[1:]) == p[1] and words[0][:1] == p[2][:1])]
+        if not cands and words:
+            # last resort: the last word of the name is the surname
+            cands = [p for p in roster.get(a.get("teamId"), []) if p[1].split()[-1:] == words[-1:]]
+        if not cands:
             v["sub_in_unresolved"] += 1
+            v.setdefault("unplaced", Counter())[desc.split("replaced by", 1)[1].strip()] += 1
             continue
         ins = dict(a)
         ins["subType"] = "in"
         ins["personId"] = cands[0][0]
+        ins["candidates"] = [p[0] for p in cands]
         out.append(ins)
     return out
 
@@ -299,7 +312,12 @@ def walk(gid, pbp, box):
                         v["sub_out_not_on"] += 1
                     on[tid].discard(pid)
                 else:
-                    on[tid].add(pid)
+                    # a shared surname: the one coming in is the one not on the floor
+                    cands = a.get("candidates") or [pid]
+                    off = [c for c in cands if c not in on[tid]]
+                    if len(cands) > 1 and len(off) != 1:
+                        v["sub_in_ambiguous"] += 1
+                    on[tid].add(off[0] if off else pid)
                 st = new_stint(per, at, on)
                 continue
             for pid in actors(a):
@@ -328,6 +346,8 @@ def walk(gid, pbp, box):
                             and sum(s["pts_a"] for s in stints) == final[1])
     v.update(v_pre)
     reasons = []
+    if v["sub_in_ambiguous"]:
+        reasons.append("%d substitutions between same-surname players" % v["sub_in_ambiguous"])
     if v["sub_in_unresolved"]:
         reasons.append("%d substitutions with an unplaceable incoming name" % v["sub_in_unresolved"])
     if v["off_floor"]:
@@ -350,7 +370,8 @@ def walk(gid, pbp, box):
            "period_start_filled": v["period_start_filled"],
            "poss_h": sum(s["poss_h"] for s in stints), "poss_a": sum(s["poss_a"] for s in stints),
            "poss_est_h": round(est["h"], 1), "poss_est_a": round(est["a"], 1),
-           "reliable": not reasons, "reasons": "; ".join(reasons)}
+           "reliable": not reasons, "reasons": "; ".join(reasons),
+           "unplaced": ", ".join(sorted((v_pre.get("unplaced") or {}).keys()))}
     return stints, val
 
 
@@ -518,6 +539,13 @@ def cmd_build(seasons, upload=True):
             write_parquet(con, rows, cols, path)
             if s3:
                 s3.upload_file(path, bucket, "v2/lineups/%s" % name)
+        names = Counter()
+        for v in vals:
+            for n in (v.get("unplaced") or "").split(", "):
+                if n:
+                    names[n] += 1
+        if names:
+            print("      names still unplaced: %s" % ", ".join("%s (%d)" % kv for kv in names.most_common(15)))
         bad = [v for v in vals if not v["reliable"]]
         for v in bad[:5]:
             print("      set aside %s: %s" % (v["game_id"], v["reasons"]))
