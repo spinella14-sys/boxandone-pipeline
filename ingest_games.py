@@ -46,6 +46,8 @@ USER_AGENT = (
 
 MONTHS = ["october", "november", "december", "january", "february",
           "march", "april", "may", "june", "july", "august", "september"]
+# the bubble season had two Octobers; "october" is 2019's page
+EXTRA_MONTHS = {2020: ["october-2020"]}
 
 
 def db():
@@ -118,7 +120,7 @@ def phase_schedule(seasons):
         label = season_label(end_year)
         found = 0
 
-        for month in MONTHS:
+        for month in MONTHS + EXTRA_MONTHS.get(end_year, []):
             slug = f"NBA_{end_year}_games-{month}.html"
             cache = os.path.join(SCHED_DIR, slug + ".gz")
 
