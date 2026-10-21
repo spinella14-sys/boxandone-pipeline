@@ -155,6 +155,45 @@ def actors(a):
     return out
 
 
+def _fold(s):
+    import unicodedata
+    s = unicodedata.normalize("NFKD", s or "")
+    return "".join(c for c in s if not unicodedata.combining(c)).lower().replace(".", "").strip()
+
+
+def split_old_subs(acts, home, away, v):
+    """Early 2019-20: "X replaced by Y" rows with no separate "in" row."""
+    subs = [a for a in acts if (a.get("actionType") or "").lower() == "substitution"]
+    if not subs or any((a.get("subType") or "").lower() == "in" for a in subs):
+        return acts
+    roster = {}
+    for side in (home, away):
+        roster[side["teamId"]] = [(p["personId"], _fold(p.get("familyName")), _fold(p.get("firstName")),
+                                   _fold(p.get("name"))) for p in side["players"]]
+    out = []
+    for a in acts:
+        out.append(a)
+        if (a.get("actionType") or "").lower() != "substitution":
+            continue
+        desc = a.get("description") or ""
+        if "replaced by" not in desc:
+            continue
+        who = _fold(desc.split("replaced by", 1)[1])
+        cands = [p for p in roster.get(a.get("teamId"), []) if p[3] == who or p[1] == who
+                 or (p[1] and who.endswith(" " + p[1]) and who[:1] == p[2][:1])]
+        if len(cands) > 1:
+            # two players share the surname: the description's initial decides
+            cands = [p for p in cands if p[3] == who or who.split(" ")[0][:1] == p[2][:1]]
+        if len(cands) != 1:
+            v["sub_in_unresolved"] += 1
+            continue
+        ins = dict(a)
+        ins["subType"] = "in"
+        ins["personId"] = cands[0][0]
+        out.append(ins)
+    return out
+
+
 def walk(gid, pbp, box):
     """-> (stints, validation dict)"""
     g = box["game"]
@@ -168,6 +207,7 @@ def walk(gid, pbp, box):
             box_min[p["personId"]] = (secs((p.get("statistics") or {}).get("minutes")) or 0) / 60.0
     teams = [home["teamId"], away["teamId"]]
     acts = sorted(pbp["game"]["actions"], key=lambda a: (a.get("orderNumber") or 0))
+    acts = split_old_subs(acts, home, away, v_pre := Counter())
     periods = sorted({a["period"] for a in acts if a.get("period")})
 
     v = Counter()
@@ -286,7 +326,10 @@ def walk(gid, pbp, box):
     final = (home.get("score"), away.get("score"))
     v["points_match"] = int(sum(s["pts_h"] for s in stints) == final[0]
                             and sum(s["pts_a"] for s in stints) == final[1])
+    v.update(v_pre)
     reasons = []
+    if v["sub_in_unresolved"]:
+        reasons.append("%d substitutions with an unplaceable incoming name" % v["sub_in_unresolved"])
     if v["off_floor"]:
         reasons.append("%d events off the floor" % v["off_floor"])
     if v["not_5"]:
