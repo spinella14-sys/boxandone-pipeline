@@ -86,7 +86,12 @@ def match_by_box(nba_gid, by_key):
     import bridge_games as BG
     h = BG.norm_team((g.get("homeTeam") or {}).get("teamTricode"))
     a = BG.norm_team((g.get("awayTeam") or {}).get("teamTricode"))
-    return by_key.get((d, h, a))
+    if (d, h, a) in by_key:
+        return by_key[(d, h, a)], False
+    # the 2020 bubble Finals: our index and NBA's disagree on who was "home"
+    if (d, a, h) in by_key:
+        return by_key[(d, a, h)], True
+    return None
 
 
 def stints_for(con, season, nba_gids=None):
@@ -189,11 +194,16 @@ def run(plan, upload):
             continue
         jobs, unmapped, unreliable, nobody = [], [], 0, 0
         for nba_gid, st in games.items():
-            ours = nba_to_ours.get(nba_gid) or match_by_box(nba_gid, by_key)
+            ours, flip = nba_to_ours.get(nba_gid), False
+            if not ours:
+                ours, flip = match_by_box(nba_gid, by_key) or (None, False)
             if not ours:
                 unmapped.append(nba_gid)
                 continue
             rows = units(st, ids)
+            if flip:
+                for r in rows:
+                    r["side"] = "away" if r["side"] == "home" else "home"
             unreliable += not rows[0]["reliable"]
             nobody += sum(r["unmatched"] for r in rows)
             jobs.append((ours, rows))
