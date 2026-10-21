@@ -111,7 +111,8 @@ class Log:
 
 # Steps that call stats.nba.com, or only process what those calls fetched.
 STATS_STEPS = {"ingest_rosters.py", "ingest_preseason.py", "bridge_games.py",
-               "ingest_pbp.py", "bridge_nba_ids.py", "ingest_tracking.py"}
+               "ingest_pbp.py", "bridge_nba_ids.py", "ingest_tracking.py",
+               "ingest_playtypes.py"}
 # (a step given --source reads the CDN instead and always runs)
 _stats_ok = None
 
@@ -161,7 +162,22 @@ def run(log, argv, timeout=5400):
 
 # ---------------------------------------------------------------------------
 
+_MY_LOCK = None     # the lock this run wrote, so it can tell if it still holds it
+
+
+def lock_is_mine(s3, bucket):
+    """True if no run of ours took a lock, or the lock on R2 is still ours."""
+    if _MY_LOCK is None:
+        return True
+    try:
+        held = json.loads(s3.get_object(Bucket=bucket, Key=LOCK_KEY)["Body"].read())
+    except Exception:
+        return False
+    return held == _MY_LOCK
+
+
 def acquire_lock(s3, bucket, log):
+    global _MY_LOCK
     try:
         held = json.loads(s3.get_object(Bucket=bucket, Key=LOCK_KEY)["Body"].read())
         started = datetime.fromisoformat(held["started"].replace("Z", "+00:00"))
@@ -173,14 +189,18 @@ def acquire_lock(s3, bucket, log):
         log("stale lock (%.0f min old) — taking it" % age)
     except Exception:
         pass
-    s3.put_object(Bucket=bucket, Key=LOCK_KEY, Body=json.dumps({
+    _MY_LOCK = {
         "started": datetime.now(timezone.utc).isoformat(),
         "host": os.environ.get("GITHUB_RUN_ID") or os.uname().nodename,
-    }).encode())
+    }
+    s3.put_object(Bucket=bucket, Key=LOCK_KEY, Body=json.dumps(_MY_LOCK).encode())
     return True
 
 
 def release_lock(s3, bucket):
+    # a run that lost its lock while paused must not free the new owner's
+    if not lock_is_mine(s3, bucket):
+        return
     try:
         s3.delete_object(Bucket=bucket, Key=LOCK_KEY)
     except Exception:
@@ -200,6 +220,9 @@ def pull_db(s3, bucket, log):
 
 
 def push_db(s3, bucket, log):
+    if not lock_is_mine(s3, bucket):
+        raise RuntimeError("lost the database lock while paused (laptop asleep?) — "
+                           "another run took over and has the newer database; not pushing")
     log("pushing database (%.0f MB)" % (os.path.getsize(DB_PATH) / 1048576.0))
     from boto3.s3.transfer import TransferConfig
     # four 16 MB parts at a time: a home upload link cannot finish ten at
@@ -656,6 +679,9 @@ def main():
                 if not a.no_pbp:
                     ok &= run(log, ["build_lineups.py", "fetch", "--seasons", season])
                     ok &= run(log, ["build_lineups.py", "build", "--seasons", season])
+                    if new_games:
+                        ok &= run(log, ["export_game_lineups.py", "build",
+                                        "--games", ",".join(new_games)])
 
             log("exporting season aggregates")
             export_season(env, log, season)
@@ -664,6 +690,8 @@ def main():
             ok &= run(log, ["export_games_index.py", "build", "--season", season])
             # NBA.com tracking totals: passing, touches, shots by dribbles
             ok &= run(log, ["ingest_tracking.py", "build", "--season", season])
+            # play types, closest-defender shooting, hustle
+            ok &= run(log, ["ingest_playtypes.py", "build", "--season", season])
 
             # everyone in a new game, plus anyone whose lines changed in a
             # game we already held (a rookie added after his debut)

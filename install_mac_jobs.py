@@ -32,10 +32,12 @@ AGENTS = os.path.expanduser("~/Library/LaunchAgents")
 WRAPPER = os.path.join(HOME, "run_job.sh")
 UID = os.getuid()
 
+# GitHub runs the nightly every morning; the laptop only catches up on what
+# GitHub cannot reach (rosters hourly, tracking and play types once a day).
 JOBS = {
-    "nightly": {"script": "nightly2.py", "when": [{"Hour": 5, "Minute": 7}], "notify": True},
     "hourly": {"script": "hourly.py", "when": [{"Minute": 37}], "notify": False},
 }
+RETIRED = ["nightly"]
 
 WRAP = r'''#!/bin/bash
 # run_job.sh <name> <script> <notify 0|1> <python> — written by install_mac_jobs.py
@@ -46,7 +48,7 @@ LOG="logs/$NAME.log"
 {
   echo ""
   echo "===== $NAME $(date '+%Y-%m-%d %H:%M:%S %Z') ($PY) ====="
-  "$PY" "$SCRIPT" 2>&1 | grep -v -e PythonDeprecationWarning -e 'warnings.warn'
+  "$PY" -u "$SCRIPT" 2>&1 | grep --line-buffered -v -e PythonDeprecationWarning -e 'warnings.warn'
   echo "===== exit ${PIPESTATUS[0]} ====="
 } >> "$LOG"
 # keep the log to its last 5,000 lines
@@ -72,6 +74,16 @@ def launchctl(*args):
 
 
 def install():
+    busy = subprocess.run(["pgrep", "-fl", "nightly2.py|hourly.py"],
+                          capture_output=True, text=True).stdout.strip()
+    if busy:
+        sys.exit("  a job is running right now — installing would stop it mid-run.\n"
+                 "  try again when it finishes:\n    %s" % busy.replace("\n", "\n    "))
+    for name in RETIRED:
+        if os.path.exists(plist_path(name)):
+            launchctl("bootout", "gui/%d" % UID, plist_path(name))
+            os.remove(plist_path(name))
+            print("  %-8s removed (GitHub runs it now)" % name)
     os.makedirs(AGENTS, exist_ok=True)
     os.makedirs(LOGS, exist_ok=True)
     with open(WRAPPER, "w") as f:
@@ -103,7 +115,7 @@ def install():
         r = launchctl("bootstrap", "gui/%d" % UID, path)
         print("  %-8s %s" % (name, "installed" if r.returncode == 0
                              else "FAILED: %s" % (r.stderr or r.stdout).strip()))
-    print("\n  nightly at 05:07, hourly at :37. Logs: ~/boxandone/logs/")
+    print("\n  hourly at :37 while the laptop is open. Logs: ~/boxandone/logs/")
     status()
 
 

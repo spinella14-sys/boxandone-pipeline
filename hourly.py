@@ -64,6 +64,20 @@ def write_log(s3, bucket, log, status):
         pass
 
 
+STATS_STAMP = os.path.join(HOME, "data", ".stats_refreshed")
+
+
+def stats_due():
+    """Tracking and play types once a day, after 4am, whenever the laptop is up."""
+    now = datetime.now()
+    if now.hour < 4:
+        return False
+    try:
+        return open(STATS_STAMP).read().strip() != now.strftime("%Y-%m-%d")
+    except OSError:
+        return True
+
+
 def main():
     env = N.load_env()
     s3 = N.s3c(env)
@@ -88,7 +102,18 @@ def main():
         ok &= N.run(log, ["sync_players_supabase.py"])
         # positions ruled in the site's Positions tool
         ok &= N.run(log, ["positions_supabase.py", "pull"])
-        if fingerprint(season) == before:
+        # season-to-date totals from stats.nba.com: catch up once a day
+        stats_ran = False
+        if stats_due() and N.stats_reachable(log):
+            log("daily stats refresh: tracking and play types")
+            good = N.run(log, ["ingest_tracking.py", "build", "--season", season])
+            good &= N.run(log, ["ingest_playtypes.py", "build", "--season", season])
+            ok &= good
+            stats_ran = True
+            if good:
+                with open(STATS_STAMP, "w") as f:
+                    f.write(datetime.now().strftime("%Y-%m-%d"))
+        if fingerprint(season) == before and not stats_ran:
             log("no change — nothing pushed")
             status = "ok" if ok else "FAIL"
             return
