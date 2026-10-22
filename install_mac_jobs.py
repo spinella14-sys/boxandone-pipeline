@@ -36,6 +36,8 @@ UID = os.getuid()
 # GitHub cannot reach (rosters hourly, tracking and play types once a day).
 JOBS = {
     "hourly": {"script": "hourly.py", "when": [{"Minute": 37}], "notify": False},
+    # per-game tracking and matchups: new games, then a slice of the backfill
+    "tracking": {"script": "ingest_game_tracking.py", "when": [{"Minute": 7}], "notify": False},
 }
 RETIRED = ["nightly"]
 
@@ -74,7 +76,7 @@ def launchctl(*args):
 
 
 def install():
-    busy = subprocess.run(["pgrep", "-fl", "nightly2.py|hourly.py"],
+    busy = subprocess.run(["pgrep", "-fl", "nightly2.py|hourly.py|ingest_game_tracking.py"],
                           capture_output=True, text=True).stdout.strip()
     if busy:
         sys.exit("  a job is running right now — installing would stop it mid-run.\n"
