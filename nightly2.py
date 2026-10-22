@@ -49,6 +49,7 @@ LOCK_KEY = "v2/db/.nightly.lock"
 LOG_PREFIX = "v2/logs/nightly"
 PREFIX = "v2"
 LOCK_STALE_MIN = 120
+LAPTOP_STALE_MIN = 30   # laptop jobs run minutes; longer means a closed lid
 
 
 # ---------------------------------------------------------------------------
@@ -182,7 +183,9 @@ def acquire_lock(s3, bucket, log):
         held = json.loads(s3.get_object(Bucket=bucket, Key=LOCK_KEY)["Body"].read())
         started = datetime.fromisoformat(held["started"].replace("Z", "+00:00"))
         age = (datetime.now(timezone.utc) - started).total_seconds() / 60.0
-        if age < LOCK_STALE_MIN:
+        # a GitHub run names itself by its numeric run id; anything else is the laptop
+        laptop = not str(held.get("host", "")).isdigit()
+        if age < (LAPTOP_STALE_MIN if laptop else LOCK_STALE_MIN):
             log("another run started %.0f min ago (%s) — exiting"
                 % (age, held.get("host", "?")))
             return False
