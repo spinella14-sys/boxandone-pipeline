@@ -78,7 +78,40 @@ def stats_due():
         return True
 
 
+LAPTOP_STAMP = os.path.join(HOME, "data", ".laptop_ran")
+LAPTOP_LIMIT_MIN = 20
+
+
+def laptop_gate():
+    """On the laptop: once a day after 6am, and never longer than the limit."""
+    if os.environ.get("GITHUB_RUN_ID"):
+        return True
+    now = datetime.now()
+    try:
+        if open(LAPTOP_STAMP).read().strip() == now.strftime("%Y-%m-%d"):
+            print("already ran today — nothing to do")
+            return False
+    except OSError:
+        pass
+    if now.hour < 6:
+        print("before 6am — waiting for the morning")
+        return False
+    import signal
+    import threading
+
+    def stop():
+        print("stopped after %d minutes (laptop asleep, or a call that never answered)"
+              % LAPTOP_LIMIT_MIN, flush=True)
+        os.killpg(os.getpgrp(), signal.SIGTERM)
+    t = threading.Timer(LAPTOP_LIMIT_MIN * 60, stop)
+    t.daemon = True
+    t.start()
+    return True
+
+
 def main():
+    if not laptop_gate():
+        return
     env = N.load_env()
     s3 = N.s3c(env)
     bucket = env["R2_BUCKET_NAME"]
@@ -135,6 +168,9 @@ def main():
     finally:
         write_log(s3, bucket, log, status)
         N.release_lock(s3, bucket)
+        if status == "ok" and not os.environ.get("GITHUB_RUN_ID"):
+            with open(LAPTOP_STAMP, "w") as f:
+                f.write(datetime.now().strftime("%Y-%m-%d"))
     if status == "FAIL":
         sys.exit(1)
 
