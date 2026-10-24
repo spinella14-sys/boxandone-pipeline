@@ -62,10 +62,15 @@ def connect():
     """In-memory connection with the hot database attached read-only, so the
     archive Parquet and the live season can be queried as one."""
     import duckdb
-    if not os.path.isdir(CACHE) or not os.listdir(CACHE):
-        sys.exit("  archive cache empty — run: python3 export_full.py sync")
     con = duckdb.connect()
     con.execute("ATTACH '%s' AS hot (READ_ONLY)" % DB_PATH)
+    if not os.path.isdir(CACHE) or not os.listdir(CACHE):
+        # GitHub's runner has no archive: the season under way is all in the
+        # hot database, which is all the nightly asks for
+        print("  no archive cache — hot database only")
+        con.execute("CREATE VIEW ag AS SELECT * FROM hot.games")
+        con.execute("CREATE VIEW ap AS SELECT * FROM hot.play_by_play")
+        return con
     con.execute("""CREATE VIEW ag AS
         SELECT * FROM read_parquet('%s/*/games.parquet', union_by_name=true)
         UNION ALL BY NAME SELECT * FROM hot.games""" % CACHE)
