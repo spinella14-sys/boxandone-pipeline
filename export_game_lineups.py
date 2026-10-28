@@ -151,13 +151,41 @@ def units(stints, ids):
     return rows
 
 
+def stint_rows(stints, ids, flip):
+    """One row per side per stint, under our ids, for the rotation chart."""
+    out = []
+    for (gid, per, s0, s1, secs, hids, aids, hp, ap, hpo, apo, rel) in stints:
+        for side, mine, pf, pa in (("home", hids, hp, ap), ("away", aids, ap, hp)):
+            if flip:
+                side = "away" if side == "home" else "home"
+            ours = [ids.get(int(x)) or "" for x in (mine or "").split(",") if x]
+            out.append({"side": side, "start_s": int(s0 or 0), "end_s": int(s1 or 0),
+                        "player_ids": ",".join(ours), "pts_for": int(pf or 0),
+                        "pts_against": int(pa or 0)})
+    return out
+
+
 COLS = ["side", "player_ids", "nba_ids", "seconds", "stints", "pts_for", "pts_against",
         "poss_for", "poss_against", "started", "closed", "reliable", "unmatched"]
 
 
-def write_one(con_factory, s3, bucket, our_gid, rows):
+def write_one(con_factory, s3, bucket, our_gid, rows, srows=None):
     con = con_factory()
     with tempfile.TemporaryDirectory() as tmp:
+        if srows:
+            sj = os.path.join(tmp, "s.jsonl")
+            with open(sj, "w") as f:
+                for r in srows:
+                    f.write(json.dumps(r) + "\n")
+            sp = os.path.join(tmp, "s.parquet")
+            con.execute("""COPY (SELECT "side"::VARCHAR "side", "start_s"::INTEGER "start_s",
+                                        "end_s"::INTEGER "end_s", "player_ids"::VARCHAR "player_ids",
+                                        "pts_for"::INTEGER "pts_for", "pts_against"::INTEGER "pts_against"
+                                 FROM read_json_auto('%s', format='newline_delimited'))
+                           TO '%s' (FORMAT PARQUET, COMPRESSION ZSTD)""" % (sj, sp))
+            if s3:
+                s3.upload_file(sp, bucket, "v2/games/%s/stints.parquet" % our_gid,
+                               ExtraArgs={"ContentType": "application/octet-stream"})
         jl = os.path.join(tmp, "r.jsonl")
         with open(jl, "w") as f:
             for r in rows:
@@ -206,7 +234,7 @@ def run(plan, upload):
                     r["side"] = "away" if r["side"] == "home" else "home"
             unreliable += not rows[0]["reliable"]
             nobody += sum(r["unmatched"] for r in rows)
-            jobs.append((ours, rows))
+            jobs.append((ours, rows, stint_rows(st, ids, flip)))
         if upload:
             with ThreadPoolExecutor(8) as ex:
                 list(ex.map(lambda j: write_one(duckdb.connect, s3, bucket, *j), jobs))
@@ -218,7 +246,7 @@ def run(plan, upload):
             print("      unmapped NBA ids: %s%s" % (", ".join(unmapped[:8]),
                                                    " …" if len(unmapped) > 8 else ""))
         if jobs and not upload:
-            gid, rows = jobs[0]
+            gid, rows, _ = jobs[0]
             print("      e.g. %s: %d units; most-used home unit %ss, +%d"
                   % (gid, len(rows), rows[0]["seconds"], rows[0]["pts_for"] - rows[0]["pts_against"]))
 
