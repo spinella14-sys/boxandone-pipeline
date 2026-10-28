@@ -632,6 +632,8 @@ def main():
         ey = season_end_year(season)
         clear_schedule_cache(season, log)
         ok &= run(log, ["ingest_games.py", "schedule", "--seasons", "%d:%d" % (ey, ey)])
+        # games NBA's schedule says were played, whatever the schedule page shows
+        ok &= run(log, ["ingest_games.py", "fromschedule"])
         ok &= run(log, ["ingest_games.py", "fetch"])
         ok &= run(log, ["ingest_games.py", "parse"])
         # a debut: Basketball Reference names a player we hold only by NBA id

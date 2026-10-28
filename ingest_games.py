@@ -128,7 +128,9 @@ def phase_schedule(seasons):
                 with gzip.open(cache, "rt", encoding="utf-8") as f:
                     html = f.read()
             else:
-                html = get(session, f"{BASE}/leagues/{slug}")
+                # a one-off query string: the page sits behind a cache that
+                # otherwise hands back a copy from hours earlier
+                html = get(session, f"{BASE}/leagues/{slug}?_={int(time.time())}")
                 polite_sleep()
                 if html is None:
                     continue
@@ -169,6 +171,55 @@ def phase_schedule(seasons):
     grand = con.execute("SELECT COUNT(*) FROM ingest_log").fetchone()[0]
     print(f"\nqueue total: {grand:,} games")
     con.close()
+
+
+# NBA.com writes BKN, PHX, CHA; Basketball Reference's addresses use these
+BBREF_ABBR = {"BKN": "BRK", "PHX": "PHO", "CHA": "CHO"}
+FROM_SCHEDULE_DAYS = 14
+
+
+def phase_from_schedule():
+    """Queue every played game on NBA's schedule that is not yet held, by its
+    Basketball Reference address (date + home team). Independent of the
+    schedule page, so a stale copy of that page cannot hide a game."""
+    from datetime import date, timedelta
+    con = db()
+    try:
+        rows = con.execute("""
+            SELECT s.game_date, s.home_abbr, s.season, s.season_type
+            FROM scheduled_games s
+            WHERE s.season_type IN ('regular', 'playin', 'playoff')
+              AND s.game_date < current_date
+              AND s.game_date >= current_date - ?
+        """, [FROM_SCHEDULE_DAYS]).fetchall()
+    except Exception as e:
+        print(f"  no schedule in the database yet ({str(e)[:60]}) — skipped")
+        con.close()
+        return
+    added = 0
+    for gdate, home, season, stype in rows:
+        abbr = BBREF_ABBR.get(home, home)
+        slug = f"{gdate.strftime('%Y%m%d')}0{abbr}"
+        gid = f"NBA_{slug}"
+        n = con.execute("SELECT COUNT(*) FROM ingest_log WHERE game_id=?", [gid]).fetchone()[0]
+        if n:
+            continue
+        con.execute("""INSERT INTO ingest_log (game_id, league, season, game_date, source_slug, season_type)
+                       VALUES (?, 'NBA', ?, ?, ?, ?)""", [gid, season, gdate, slug, stype])
+        added += 1
+    # a guessed address that never appeared (a neutral-site game listed under
+    # the other team) stops being asked for after two weeks
+    dropped = con.execute("""
+        DELETE FROM ingest_log
+        WHERE NOT fetched AND game_date < current_date - ?
+          AND season IN (SELECT DISTINCT season FROM scheduled_games)
+          AND game_id NOT IN (SELECT game_id FROM games)
+        RETURNING game_id""", [FROM_SCHEDULE_DAYS]).fetchall()
+    con.commit()
+    con.close()
+    print(f"  {len(rows)} played games on NBA's schedule in the last {FROM_SCHEDULE_DAYS} days; "
+          f"{added} not yet queued, now queued"
+          + (f"; {len(dropped)} long-missing addresses dropped" if dropped else ""))
 
 
 # ---------------------------------------------------------------------------
@@ -510,7 +561,7 @@ def phase_status():
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("phase", choices=["schedule", "fetch", "parse", "status"])
+    ap.add_argument("phase", choices=["schedule", "fromschedule", "fetch", "parse", "status"])
     ap.add_argument("--seasons", default="2026:2026",
                     help="end-year range, newest first, e.g. 2026:1980")
     ap.add_argument("--limit", type=int)
@@ -519,6 +570,8 @@ if __name__ == "__main__":
     if a.phase == "schedule":
         hi, lo = (int(x) for x in a.seasons.split(":"))
         phase_schedule(range(hi, lo - 1, -1))
+    elif a.phase == "fromschedule":
+        phase_from_schedule()
     elif a.phase == "fetch":
         phase_fetch(limit=a.limit)
     elif a.phase == "parse":
