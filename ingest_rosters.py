@@ -326,17 +326,9 @@ def cmd_build(con, season):
              d["player_id"], d.get("score"), d.get("why")])
 
     placed = [d for d in decided if d["player_id"] and d["decision"] != "stage"]
-    # replace today's snapshot: run hourly, a mid-day trade must not leave
-    # the player listed on both teams for the day
-    con.execute("DELETE FROM team_rosters WHERE as_of = ?", [today])
-    con.executemany("""
-        INSERT INTO team_rosters (as_of, season, team_abbr, player_id, jersey,
-               position_raw, height_in, weight_lb, experience, school, source)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'nba')
-        ON CONFLICT (as_of, team_abbr, player_id) DO NOTHING""",
-        [(today, season, d["team_abbr"], d["player_id"], d["jersey"],
-          d["position_raw"], d["height_in"], d["weight_lb"], d["experience"],
-          d["school"]) for d in placed])
+    # The daily snapshot now comes from ingest_rosters_bbref.py, which runs
+    # online every night; this feed (laptop only) keeps the identity work above
+    # and no longer writes team_rosters, so the two never overwrite one day.
 
     con.commit()
     print("\n  created  %d new players" % len(creating))

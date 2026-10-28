@@ -109,6 +109,33 @@ def laptop_gate():
     return True
 
 
+def tx_hash(season):
+    import duckdb
+    con = duckdb.connect(N.DB_PATH, read_only=True)
+    try:
+        rows = con.execute("SELECT transaction_id, raw_text FROM transactions WHERE season = ? "
+                           "ORDER BY 1", [season]).fetchall()
+    except Exception:
+        rows = []
+    con.close()
+    return hashlib.sha1(repr(rows).encode()).hexdigest()
+
+
+def roster_today():
+    """Is there a Basketball Reference snapshot for today (Eastern) yet?"""
+    import duckdb
+    from zoneinfo import ZoneInfo
+    today = datetime.now(ZoneInfo("America/New_York")).date()
+    con = duckdb.connect(N.DB_PATH, read_only=True)
+    try:
+        n = con.execute("SELECT COUNT(*) FROM team_rosters WHERE as_of = ? AND source = 'bbref'",
+                        [today]).fetchone()[0]
+    except Exception:
+        n = 0
+    con.close()
+    return n > 0
+
+
 def main():
     if not laptop_gate():
         return
@@ -130,8 +157,13 @@ def main():
             return
         before = fingerprint(season)
         ok = True
+        tx_before = tx_hash(season)
         ok &= N.run(log, ["ingest_transactions.py", "build", "--season", season, "--force"])
         ok &= N.run(log, ["ingest_rosters.py", "build", "--season", season])
+        # rosters only move through transactions: refresh them when the
+        # transactions page changed, or when today has no snapshot yet
+        if tx_hash(season) != tx_before or not roster_today():
+            ok &= N.run(log, ["ingest_rosters_bbref.py", "build"])
         ok &= N.run(log, ["sync_players_supabase.py"])
         # positions ruled in the site's Positions tool
         ok &= N.run(log, ["positions_supabase.py", "pull"])

@@ -648,6 +648,8 @@ def main():
         # so a rookie exists before his first preseason box score arrives.
         rows_before = box_keys(season)
         ok &= run(log, ["ingest_rosters.py", "build", "--season", season])
+        # the daily roster snapshot, from Basketball Reference: runs on GitHub
+        ok &= run(log, ["ingest_rosters_bbref.py", "build"])
         # new players must exist in Supabase before a scout can tag them
         ok &= run(log, ["sync_players_supabase.py"])
         ok &= run(log, ["ingest_schedule.py", "build"])
