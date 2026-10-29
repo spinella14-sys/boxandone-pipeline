@@ -692,6 +692,8 @@ def main():
                     if new_games:
                         ok &= run(log, ["export_game_lineups.py", "build",
                                         "--games", ",".join(new_games)])
+                    # RAPM for the season so far (F5)
+                    ok &= run(log, ["compute_rapm.py", "build", "--season", season])
 
             log("exporting season aggregates")
             export_season(env, log, season)
