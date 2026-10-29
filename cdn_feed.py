@@ -178,7 +178,9 @@ def translate(pbp, box):
         desc = a.get("descriptor") or ""
         if t == "game":
             continue
-        res = a.get("shotResult") or ""
+        res = (a.get("shotResult") or "").strip(" :")       # 2019-20 writes ": Made" in some games
+        res = {"made": "Made", "missed": "Missed"}.get(res.lower(), res)
+        st = re.sub(r"^(\d+)\s*of\s*(\d+)$", r"\1 of \2", st) if t == "freethrow" else st
         pid = a.get("personId") or 0
         tid = a.get("teamId") or 0
         value = None

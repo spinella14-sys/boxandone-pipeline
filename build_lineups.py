@@ -243,7 +243,8 @@ def tally(st, a, home_id, teams):
     if tid not in teams:
         return
     mine, theirs = (st["fh"], st["fa"]) if tid == home_id else (st["fa"], st["fh"])
-    made = (a.get("shotResult") or "") == "Made"
+    # 2019-20 writes ": Made" in some games
+    made = (a.get("shotResult") or "").strip(" :").lower() == "made"
     if t in ("2pt", "3pt"):
         mine["fga"] += 1
         mine["fgm"] += made
