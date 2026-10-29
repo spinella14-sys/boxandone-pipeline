@@ -233,6 +233,50 @@ def _lookahead(pa, i, cands, tid):
     return None
 
 
+FACTORS = ("fgm", "fga", "fg3m", "fg3a", "ftm", "fta", "orb", "drb", "tov", "ast", "stl", "blk")
+
+
+def tally(st, a, home_id, teams):
+    """Count one action into the stint's per-side box score."""
+    t = (a.get("actionType") or "").lower()
+    tid = a.get("teamId")
+    if tid not in teams:
+        return
+    mine, theirs = (st["fh"], st["fa"]) if tid == home_id else (st["fa"], st["fh"])
+    made = (a.get("shotResult") or "") == "Made"
+    if t in ("2pt", "3pt"):
+        mine["fga"] += 1
+        mine["fgm"] += made
+        if t == "3pt":
+            mine["fg3a"] += 1
+            mine["fg3m"] += made
+        if made and a.get("assistPersonId"):
+            mine["ast"] += 1
+        if not made and a.get("blockPersonId"):
+            theirs["blk"] += 1
+    elif t == "freethrow":
+        mine["fta"] += 1
+        mine["ftm"] += made
+    elif t == "rebound" and a.get("personId"):      # player rebounds, as the box score counts them
+        sub = (a.get("subType") or "").lower()
+        if sub == "offensive":
+            mine["orb"] += 1
+        elif sub == "defensive":
+            mine["drb"] += 1
+    elif t == "turnover":
+        mine["tov"] += 1
+        if a.get("stealPersonId"):
+            theirs["stl"] += 1
+
+
+def factor_cols(s):
+    out = {}
+    for side, key in (("home", "fh"), ("away", "fa")):
+        for k in FACTORS:
+            out["%s_%s" % (side, k)] = int(s.get(key, {}).get(k, 0))
+    return out
+
+
 def walk(gid, pbp, box):
     """-> (stints, validation dict)"""
     g = box["game"]
@@ -258,7 +302,8 @@ def walk(gid, pbp, box):
     def new_stint(per, at, on):
         return {"period": per, "start": at, "end": at,
                 "home": tuple(sorted(on[home["teamId"]])), "away": tuple(sorted(on[away["teamId"]])),
-                "s0": tuple(score), "poss_h": 0, "poss_a": 0}
+                "s0": tuple(score), "poss_h": 0, "poss_a": 0,
+                "fh": Counter(), "fa": Counter()}
 
     def close(st, at):
         st["end"] = at
@@ -327,6 +372,8 @@ def walk(gid, pbp, box):
                 else:
                     st["poss_a"] += 1
                 poss_team = pt
+            # the box score inside the stint (four-factor RAPM, unit lines)
+            tally(st, a, home["teamId"], teams)
             t = (a.get("actionType") or "").lower()
             if t == "substitution":
                 pid, tid = a.get("personId"), a.get("teamId")
@@ -404,6 +451,13 @@ def walk(gid, pbp, box):
            "poss_est_h": round(est["h"], 1), "poss_est_a": round(est["a"], 1),
            "reliable": not reasons, "reasons": "; ".join(reasons),
            "unplaced": ", ".join(sorted((v_pre.get("unplaced") or {}).keys()))}
+    fm = True
+    for key, side in (("fh", home), ("fa", away)):
+        s = side.get("statistics") or {}
+        for k, b in (("fga", "fieldGoalsAttempted"), ("fgm", "fieldGoalsMade"),
+                     ("fg3a", "threePointersAttempted"), ("fta", "freeThrowsAttempted")):
+            fm &= sum(x[key][k] for x in stints) == (s.get(b) or 0)
+    val["factors_match"] = bool(fm)
     return stints, val
 
 
@@ -541,7 +595,7 @@ def cmd_build(seasons, upload=True):
                     "away_ids": ",".join(str(x) for x in s["away"]),
                     "home_pts": s["pts_h"], "away_pts": s["pts_a"],
                     "home_poss": s["poss_h"], "away_poss": s["poss_a"],
-                    "reliable": val["reliable"]})
+                    "reliable": val["reliable"], **factor_cols(s)})
         if not vals:
             print("  %s: no games on file — run fetch first" % season)
             continue
@@ -559,6 +613,10 @@ def cmd_build(seasons, upload=True):
               "possessions %.3f x box estimate, %.0f min of unbridged players"
               % (season, len(vals), rel, 100.0 * rel / len(vals), len(stints), len(players),
                  ratio, sum(unresolved.values())))
+        fm = [v for v in vals if "factors_match" in v]
+        if fm:
+            print("      shooting tallies match the box score in %d of %d games"
+                  % (sum(1 for v in fm if v["factors_match"]), len(fm)))
         files = {
             "%s.parquet" % season: (stints, list(stints[0].keys()) if stints else []),
             "%s_games.parquet" % season: (vals, sorted({k for v in vals for k in v})),

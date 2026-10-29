@@ -94,6 +94,21 @@ def match_by_box(nba_gid, by_key):
     return None
 
 
+FACTORS = ("fgm", "fga", "fg3m", "fg3a", "ftm", "fta", "orb", "drb", "tov", "ast", "stl", "blk")
+FX = list(FACTORS) + ["opp_" + k for k in FACTORS]
+FX_CAST = ", ".join('"%s"::INTEGER "%s"' % (c, c) for c in FX)
+
+
+def fx(own, opp):
+    """Own and opponent tallies as a dict; blank when the lineup file predates them."""
+    out = {}
+    for k, v in zip(FACTORS, own or ()):
+        out[k] = v
+    for k, v in zip(FACTORS, opp or ()):
+        out["opp_" + k] = v
+    return out
+
+
 def stints_for(con, season, nba_gids=None):
     path = os.path.join(LINEUPS, "%s.parquet" % season)
     if not os.path.exists(path):
@@ -102,10 +117,13 @@ def stints_for(con, season, nba_gids=None):
     where = ""
     if nba_gids:
         where = "WHERE game_id IN (%s)" % ",".join("'%s'" % g for g in nba_gids)
+    have = {r[0] for r in con.execute("DESCRIBE SELECT * FROM read_parquet('%s')" % path).fetchall()}
+    fcols = ", ".join(c if c in have else "NULL" for c in
+                      ["%s_%s" % (s, k) for s in ("home", "away") for k in FACTORS])
     rows = con.execute("""SELECT game_id, period, start_s, end_s, seconds, home_ids, away_ids,
-                                 home_pts, away_pts, home_poss, away_poss, reliable
+                                 home_pts, away_pts, home_poss, away_poss, reliable, %s
                           FROM read_parquet('%s') %s ORDER BY game_id, period, start_s"""
-                       % (path, where)).fetchall()
+                       % (fcols, path, where)).fetchall()
     out = defaultdict(list)
     for r in rows:
         out[r[0]].append(r)
@@ -121,10 +139,12 @@ def units(stints, ids):
     agg = {}
     first = stints[0]
     last = stints[-1]
-    for (gid, per, s0, s1, secs, hids, aids, hp, ap, hpo, apo, rel) in stints:
-        for side, mine, theirs, pf, pa, qf, qa in (
-                ("home", hids, aids, hp, ap, hpo, apo),
-                ("away", aids, hids, ap, hp, apo, hpo)):
+    for row in stints:
+        (gid, per, s0, s1, secs, hids, aids, hp, ap, hpo, apo, rel) = row[:12]
+        fh, fa = row[12:12 + len(FACTORS)], row[12 + len(FACTORS):]
+        for side, mine, theirs, pf, pa, qf, qa, own, opp in (
+                ("home", hids, aids, hp, ap, hpo, apo, fh, fa),
+                ("away", aids, hids, ap, hp, apo, hpo, fa, fh)):
             key = (side, ukey(mine))
             u = agg.setdefault(key, {"side": side, "seconds": 0, "stints": 0, "pts_for": 0,
                                      "pts_against": 0, "poss_for": 0, "poss_against": 0,
@@ -135,6 +155,11 @@ def units(stints, ids):
             u["pts_against"] += pa or 0
             u["poss_for"] += qf or 0
             u["poss_against"] += qa or 0
+            for k, v in fx(own, opp).items():
+                if v is not None:
+                    u[k] = (u.get(k) or 0) + v
+                else:
+                    u.setdefault(k, None)
     opened = {("home", ukey(first[5])),
               ("away", ukey(first[6]))}
     closed = {("home", ukey(last[5])),
@@ -154,14 +179,17 @@ def units(stints, ids):
 def stint_rows(stints, ids, flip):
     """One row per side per stint, under our ids, for the rotation chart."""
     out = []
-    for (gid, per, s0, s1, secs, hids, aids, hp, ap, hpo, apo, rel) in stints:
-        for side, mine, pf, pa in (("home", hids, hp, ap), ("away", aids, ap, hp)):
+    for row in stints:
+        (gid, per, s0, s1, secs, hids, aids, hp, ap, hpo, apo, rel) = row[:12]
+        fh, fa = row[12:12 + len(FACTORS)], row[12 + len(FACTORS):]
+        for side, mine, pf, pa, own, opp in (("home", hids, hp, ap, fh, fa),
+                                             ("away", aids, ap, hp, fa, fh)):
             if flip:
                 side = "away" if side == "home" else "home"
             ours = [ids.get(int(x)) or "" for x in (mine or "").split(",") if x]
             out.append({"side": side, "start_s": int(s0 or 0), "end_s": int(s1 or 0),
                         "player_ids": ",".join(ours), "pts_for": int(pf or 0),
-                        "pts_against": int(pa or 0)})
+                        "pts_against": int(pa or 0), **fx(own, opp)})
     return out
 
 
@@ -180,16 +208,17 @@ def write_one(con_factory, s3, bucket, our_gid, rows, srows=None):
             sp = os.path.join(tmp, "s.parquet")
             con.execute("""COPY (SELECT "side"::VARCHAR "side", "start_s"::INTEGER "start_s",
                                         "end_s"::INTEGER "end_s", "player_ids"::VARCHAR "player_ids",
-                                        "pts_for"::INTEGER "pts_for", "pts_against"::INTEGER "pts_against"
+                                        "pts_for"::INTEGER "pts_for", "pts_against"::INTEGER "pts_against",
+                                        %s
                                  FROM read_json_auto('%s', format='newline_delimited'))
-                           TO '%s' (FORMAT PARQUET, COMPRESSION ZSTD)""" % (sj, sp))
+                           TO '%s' (FORMAT PARQUET, COMPRESSION ZSTD)""" % (FX_CAST, sj, sp))
             if s3:
                 s3.upload_file(sp, bucket, "v2/games/%s/stints.parquet" % our_gid,
                                ExtraArgs={"ContentType": "application/octet-stream"})
         jl = os.path.join(tmp, "r.jsonl")
         with open(jl, "w") as f:
             for r in rows:
-                f.write(json.dumps({c: r[c] for c in COLS}) + "\n")
+                f.write(json.dumps({c: r.get(c) for c in COLS + FX}) + "\n")
         pq = os.path.join(tmp, "l.parquet")
         con.execute("""COPY (SELECT "side"::VARCHAR "side", "player_ids"::VARCHAR "player_ids",
                                     "nba_ids"::VARCHAR "nba_ids", "seconds"::INTEGER "seconds",
@@ -197,9 +226,9 @@ def write_one(con_factory, s3, bucket, our_gid, rows, srows=None):
                                     "pts_against"::INTEGER "pts_against", "poss_for"::INTEGER "poss_for",
                                     "poss_against"::INTEGER "poss_against", "started"::BOOLEAN "started",
                                     "closed"::BOOLEAN "closed", "reliable"::BOOLEAN "reliable",
-                                    "unmatched"::INTEGER "unmatched"
+                                    "unmatched"::INTEGER "unmatched", %s
                              FROM read_json_auto('%s', format='newline_delimited'))
-                       TO '%s' (FORMAT PARQUET, COMPRESSION ZSTD)""" % (jl, pq))
+                       TO '%s' (FORMAT PARQUET, COMPRESSION ZSTD)""" % (FX_CAST, jl, pq))
         if s3:
             s3.upload_file(pq, bucket, "v2/games/%s/lineups.parquet" % our_gid,
                            ExtraArgs={"ContentType": "application/octet-stream"})
