@@ -120,15 +120,29 @@ def parse_game(events):
     cur = None          # the possession being built
     poss_num = 0
     last_shot_team = None   # whose miss is on the glass right now
+    next_start = "period_start"   # how the next possession begins
+    last_to_live = False
+
+    def score(n):
+        # points on the first chance, or after an offensive rebound bought another
+        cur["points"] += n
+        if cur["orebs"]:
+            cur["pts_after_oreb"] += n
+        else:
+            cur["pts_first"] += n
 
     def close(reason, action, secs):
-        nonlocal cur
+        nonlocal cur, next_start
         if cur and cur["off_team"]:
             cur["end_action"] = action
             cur["end_secs"] = secs
             cur["end_reason"] = reason
             out.append(cur)
         cur = None
+        next_start = {"made_fg": "after_score", "made_ft": "after_score",
+                      "def_rebound": "def_rebound",
+                      "turnover": "live_turnover" if last_to_live else "dead_turnover",
+                      }.get(reason, "period_start")
 
     def open_poss(team, action, secs):
         nonlocal cur, poss_num
@@ -137,7 +151,8 @@ def parse_game(events):
         poss_num += 1
         cur = {"period": period, "poss_num": poss_num, "off_team": team,
                "def_team": None, "start_action": action, "start_secs": secs,
-               "points": 0}
+               "points": 0, "start_type": next_start, "orebs": 0,
+               "pts_first": 0, "pts_after_oreb": 0}
 
     for i, e in enumerate(events):
         at = (e.get("action_type") or "").lower()
@@ -151,6 +166,7 @@ def parse_game(events):
             period = e.get("period")
             poss_num = 0
             last_shot_team = None
+            next_start = "period_start"
 
         if at == "period" or at == "timeout" or at == "instant replay":
             continue
@@ -164,7 +180,7 @@ def parse_game(events):
 
         if at == "made shot":
             if cur and cur["off_team"] == team:
-                cur["points"] += (e.get("shot_value") or 2)
+                score(e.get("shot_value") or 2)
                 # An and-one belongs to the SAME possession, so look ahead: if
                 # the next live event is a free throw by this team, the basket
                 # did not end anything and the free throw will close it.
@@ -184,13 +200,16 @@ def parse_game(events):
             # from whether the rebounding team is the one that just missed
             if last_shot_team and team:
                 if team == last_shot_team:
-                    pass                      # offensive — possession continues
+                    # offensive — the possession continues with a new chance
+                    if cur and cur["off_team"] == team:
+                        cur["orebs"] += 1
                 else:
                     close("def_rebound", action, secs)
                     open_poss(team, action, secs)
             last_shot_team = None
 
         elif at == "turnover":
+            last_to_live = st in ("Bad Pass", "Lost Ball")
             if cur and cur["off_team"] == team:
                 close("turnover", action, secs)
             last_shot_team = None
@@ -198,7 +217,7 @@ def parse_game(events):
         elif at == "free throw":
             made = ft_made(e)
             if cur and cur["off_team"] == team and made:
-                cur["points"] += 1
+                score(1)
             if is_last_ft(st):
                 if made:
                     close("made_ft", action, secs)
