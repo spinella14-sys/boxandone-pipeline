@@ -92,11 +92,36 @@ FACTORS = ("fgm", "fga", "fg3m", "fg3a", "ftm", "fta", "orb", "drb", "tov", "ast
 NEED = ("fgm", "fga", "fg3m", "ftm", "orb", "drb", "tov")
 
 
-def load_obs(paths):
+def bad_tally_games(season, s3, bucket, tmp):
+    """Games whose stint tallies don't add up to the box score (build_lineups)."""
+    import duckdb
+    local = os.path.join(LINEUPS, "%s_games.parquet" % season)
+    path = local if os.path.exists(local) else None
+    if not path and s3:
+        path = os.path.join(tmp, "games_%s.parquet" % season)
+        try:
+            s3.download_file(bucket, "v2/lineups/%s_games.parquet" % season, path)
+        except Exception:
+            return set()
+    if not path:
+        return set()
+    con = duckdb.connect()
+    have = {r[0] for r in con.execute("DESCRIBE SELECT * FROM read_parquet(?)", [path]).fetchall()}
+    if "factors_match" not in have:
+        return set()
+    return {r[0] for r in con.execute(
+        "SELECT game_id FROM read_parquet(?) WHERE factors_match = false", [path]).fetchall()}
+
+
+MIN_FACTOR_R2 = 0.80
+
+
+def load_obs(paths, bad=frozenset()):
     """Two observations per stint: (offence ids, defence ids, offence is home,
     points, possessions, seconds, game). Returns (obs, tallies): tallies runs
     parallel to obs as (offence's, defence's) dicts, or is None when any file
-    predates the per-stint box score."""
+    predates the per-stint box score. A game in `bad` gets None entries: it
+    counts for RAPM but not for the factor split."""
     import duckdb
     con = duckdb.connect()
     obs, tal = [], []
@@ -122,11 +147,11 @@ def load_obs(paths):
             if hpo:
                 obs.append((h, a, 1, hp or 0, hpo, secs or 0, gid))
                 if tal is not None:
-                    tal.append((ht, at))
+                    tal.append(None if gid in bad else (ht, at))
             if apo:
                 obs.append((a, h, 0, ap or 0, apo, secs or 0, gid))
                 if tal is not None:
-                    tal.append((at, ht))
+                    tal.append(None if gid in bad else (at, ht))
     return obs, tal
 
 
@@ -145,7 +170,7 @@ def factor_targets(obs, tal):
     """{factor: (y, w)} per observation."""
     out = {}
     for name, f, _ in FACTOR_DEFS:
-        vals = [f(o, d, ob[4]) for ob, (o, d) in zip(obs, tal)]
+        vals = [f(t[0], t[1], ob[4]) if t else (0.0, 0.0) for ob, t in zip(obs, tal)]
         out[name] = (np.array([v[0] for v in vals]), np.array([float(v[1]) for v in vals]))
     return out
 
@@ -154,7 +179,10 @@ def factor_worth(obs, tal):
     """Points per 100 possessions per unit of each factor, fitted on team-games.
     Returns {factor: slope} in the factor's own units (a rate, not a percent)."""
     agg = {}
-    for ob, (o, d) in zip(obs, tal):
+    for ob, t in zip(obs, tal):
+        if t is None:
+            continue
+        o, d = t
         k = (ob[6], ob[2])
         a = agg.setdefault(k, {"pts": 0, "poss": 0, "fgm": 0, "fga": 0, "fg3m": 0, "ftm": 0,
                                "orb": 0, "opp_drb": 0, "tov": 0})
@@ -260,9 +288,14 @@ def fit(obs, tal=None, folds=5, seed=7):
     fold = np.array([gfold[o[6]] for o in obs])
     coef, lam, mu = ridge_cv(cols, y, w, home, n_cols, n_p, fold, folds)
 
-    factors, worth = {}, None
+    factors, worth, skipped = {}, None, None
     if tal is not None:
         worth = factor_worth(obs, tal)
+        if worth and worth["r2"] < MIN_FACTOR_R2:
+            skipped = worth["r2"]
+            worth = None
+        else:
+            skipped = None
         if worth:
             for name, (fy, fw) in factor_targets(obs, tal).items():
                 c, fl, fm = ridge_cv(cols, fy, fw, home, n_cols, n_p, fold, folds, FACTOR_LAMBDAS)
@@ -295,6 +328,10 @@ def fit(obs, tal=None, folds=5, seed=7):
     if factors:
         meta["factors"] = {k: {"lambda": v[1], "mean": round(v[2], 4)} for k, v in factors.items()}
         meta["worth"] = {k: round(v, 2) for k, v in worth.items()}
+    if skipped is not None:
+        meta["factors_skipped_r2"] = round(skipped, 2)
+    if tal is not None:
+        meta["factor_games_left_out"] = len({ob[6] for ob, t in zip(obs, tal) if t is None})
     return out, meta
 
 
@@ -312,7 +349,10 @@ def run_season(season, s3, bucket, tmp, ids, names, upload=True):
         paths = [p for p in (stint_file(s, s3, bucket, tmp, upload) for s in span) if p]
         if not paths:
             continue
-        obs, tal = load_obs(paths)
+        bad = set()
+        for s in span:
+            bad |= bad_tally_games(s, s3, bucket, tmp)
+        obs, tal = load_obs(paths, bad)
         if len(obs) < 2000:
             print("  %s %s: only %d observations — skipped" % (season, window, len(obs)))
             continue
@@ -326,8 +366,14 @@ def run_season(season, s3, bucket, tmp, ids, names, upload=True):
                   "OREB %+.0f, FT %+.0f (R² %.2f)"
                   % ("/".join(str(m["factors"][k]["lambda"]) for k in ("efg", "tov", "orb", "ft")),
                      wv["efg"], wv["tov"], wv["orb"], wv["ft"], wv["r2"]))
+        elif m.get("factors_skipped_r2") is not None:
+            print("            factors: NOT published — they explain only R² %.2f of team-game scoring"
+                  % m["factors_skipped_r2"])
         else:
             print("            factors: not in these lineup files — rebuild lineups for the split")
+        if m.get("factor_games_left_out"):
+            print("            (%d games left out of the split: tallies don't match the box score)"
+                  % m["factor_games_left_out"])
         for r in res:
             rows.append(dict(r, season=season, window=window, player_id=ids.get(r["nba_id"]),
                              full_name=names.get(ids.get(r["nba_id"])), lam=m["lambda"],
