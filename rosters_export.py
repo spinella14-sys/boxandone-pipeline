@@ -95,6 +95,47 @@ ORDER BY r.team_abbr, p.full_name
 """
 
 
+# every roster spell of a season: islands of consecutive snapshots per (team, player)
+SEASON_SQL = """
+WITH d AS (
+    SELECT as_of, ROW_NUMBER() OVER (ORDER BY as_of) AS i
+    FROM (SELECT DISTINCT as_of FROM hot.team_rosters WHERE season = '%(season)s')
+),
+r AS (
+    SELECT t.team_abbr, t.player_id, t.jersey, d.as_of, d.i
+    FROM hot.team_rosters t JOIN d ON d.as_of = t.as_of
+    WHERE t.season = '%(season)s'
+),
+isl AS (
+    SELECT *, i - ROW_NUMBER() OVER (PARTITION BY team_abbr, player_id ORDER BY i) AS grp FROM r
+),
+spell AS (
+    SELECT team_abbr, player_id, MIN(as_of) AS first_as_of, MAX(as_of) AS last_as_of,
+           MAX(i) AS last_i, arg_max(jersey, i) AS jersey
+    FROM isl GROUP BY team_abbr, player_id, grp
+)
+SELECT '%(season)s' AS season, s.team_abbr, s.player_id, p.full_name,
+       n.source_id AS nba_id, p.position, s.jersey,
+       s.first_as_of, s.last_as_of, nx.as_of AS until
+FROM spell s
+JOIN hot.players p ON p.player_id = s.player_id
+LEFT JOIN hot.player_identifiers n ON n.player_id = s.player_id AND n.source = 'nba'
+LEFT JOIN d nx ON nx.i = s.last_i + 1
+ORDER BY s.team_abbr, p.full_name, s.first_as_of
+"""
+
+
+def export_season(con, s3, bucket, season):
+    """v2/rosters/{season}.parquet — every roster spell of the season."""
+    with tempfile.TemporaryDirectory() as tmp:
+        p = os.path.join(tmp, "season.parquet")
+        con.execute("COPY (%s) TO '%s' (FORMAT PARQUET, COMPRESSION ZSTD)"
+                    % (SEASON_SQL % {"season": season}, p))
+        n = con.execute("SELECT COUNT(*) FROM read_parquet('%s')" % p).fetchone()[0]
+        s3.upload_file(p, bucket, "%s/rosters/%s.parquet" % (PREFIX, season))
+    return n
+
+
 def export_current(con, s3, bucket):
     latest = _latest(con)
     if not latest:
@@ -105,6 +146,12 @@ def export_current(con, s3, bucket):
                     % (CURRENT_SQL % latest[0], p))
         n = con.execute("SELECT COUNT(*) FROM read_parquet('%s')" % p).fetchone()[0]
         s3.upload_file(p, bucket, "%s/rosters/current.parquet" % PREFIX)
+    # and the season's spells, for rosters as they stood on any day
+    try:
+        spells = export_season(con, s3, bucket, latest[1])
+        print("  rosters/%s.parquet: %d roster spells" % (latest[1], spells))
+    except Exception as e:                       # never let this stop the nightly
+        print("  rosters/%s.parquet not written: %s" % (latest[1], str(e)[:120]))
     return latest[0], n
 
 
