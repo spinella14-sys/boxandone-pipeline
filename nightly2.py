@@ -344,11 +344,14 @@ def export_changed_players(env, log, season, player_ids):
                     # has the current one, so rows are merged rather than replaced
                     con.execute("""
                         COPY (SELECT * FROM read_parquet('%s')
-                              WHERE season <> '%s'
+                              -- every season the new rows cover is replaced,
+                              -- not only the current one: the hot database
+                              -- can hold more than one season
+                              WHERE season NOT IN (SELECT DISTINCT season FROM read_parquet('%s'))
                               UNION ALL BY NAME
                               SELECT * FROM read_parquet('%s'))
                         TO '%s' (FORMAT PARQUET, COMPRESSION ZSTD)"""
-                        % (old, season, new, out))
+                        % (old, new, new, out))
                 else:
                     out = new
                 s3.upload_file(out, bucket, key)
