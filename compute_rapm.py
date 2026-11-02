@@ -89,7 +89,7 @@ def stint_file(season, s3, bucket, tmp, upload):
 
 
 FACTORS = ("fgm", "fga", "fg3m", "fg3a", "ftm", "fta", "orb", "drb", "tov", "ast", "stl", "blk")
-NEED = ("fgm", "fga", "fg3m", "ftm", "orb", "drb", "tov")
+NEED = ("fgm", "fga", "fg3m", "fta", "ftm", "orb", "drb", "tov")
 
 
 def bad_tally_games(season, s3, bucket, tmp):
@@ -155,22 +155,29 @@ def load_obs(paths, bad=frozenset()):
     return obs, tal
 
 
-# name, rate (offence's tallies, defence's tallies, possessions) -> (value, weight),
-# and the sign that makes "more of this" good for the offence
+# the six factors (three a side): name, rate (offence's tallies, defence's
+# tallies, possessions, points) -> (value, weight), and the sign that makes
+# "more of this" good for the offence. ft is a diagnostic: fitted and shown in
+# its own units, but it carries no points value (it added nothing beside TS%).
+def _tsa(o):
+    return o["fga"] + 0.44 * o["fta"]
+
+
 FACTOR_DEFS = (
-    ("efg", lambda o, d, q: ((o["fgm"] + 0.5 * o["fg3m"]) / o["fga"], o["fga"]) if o["fga"] else (0.0, 0.0), 1),
-    ("tov", lambda o, d, q: (o["tov"] / q, q) if q else (0.0, 0.0), -1),
-    ("orb", lambda o, d, q: (o["orb"] / (o["orb"] + d["drb"]), o["orb"] + d["drb"])
-                            if o["orb"] + d["drb"] else (0.0, 0.0), 1),
-    ("ft", lambda o, d, q: (o["ftm"] / o["fga"], o["fga"]) if o["fga"] else (0.0, 0.0), 1),
+    ("ts", lambda o, d, q, p: (p / (2 * _tsa(o)), _tsa(o)) if _tsa(o) else (0.0, 0.0), 1),
+    ("tov", lambda o, d, q, p: (o["tov"] / q, q) if q else (0.0, 0.0), -1),
+    ("orb", lambda o, d, q, p: (o["orb"] / (o["orb"] + d["drb"]), o["orb"] + d["drb"])
+                               if o["orb"] + d["drb"] else (0.0, 0.0), 1),
+    ("ft", lambda o, d, q, p: (o["ftm"] / o["fga"], o["fga"]) if o["fga"] else (0.0, 0.0), 1),
 )
+CORE = ("ts", "tov", "orb")
 
 
 def factor_targets(obs, tal):
     """{factor: (y, w)} per observation."""
     out = {}
     for name, f, _ in FACTOR_DEFS:
-        vals = [f(t[0], t[1], ob[4]) if t else (0.0, 0.0) for ob, t in zip(obs, tal)]
+        vals = [f(t[0], t[1], ob[4], ob[3]) if t else (0.0, 0.0) for ob, t in zip(obs, tal)]
         out[name] = (np.array([v[0] for v in vals]), np.array([float(v[1]) for v in vals]))
     return out
 
@@ -185,18 +192,18 @@ def factor_worth(obs, tal):
         o, d = t
         k = (ob[6], ob[2])
         a = agg.setdefault(k, {"pts": 0, "poss": 0, "fgm": 0, "fga": 0, "fg3m": 0, "ftm": 0,
-                               "orb": 0, "opp_drb": 0, "tov": 0})
+                               "fta": 0, "orb": 0, "opp_drb": 0, "tov": 0})
         a["pts"] += ob[3]
         a["poss"] += ob[4]
-        for x in ("fgm", "fga", "fg3m", "ftm", "orb", "tov"):
+        for x in ("fgm", "fga", "fg3m", "ftm", "fta", "orb", "tov"):
             a[x] += o[x]
         a["opp_drb"] += d["drb"]
     X, y, w = [], [], []
     for a in agg.values():
         if a["poss"] < 40 or not a["fga"] or not (a["orb"] + a["opp_drb"]):
             continue
-        X.append([1.0, (a["fgm"] + 0.5 * a["fg3m"]) / a["fga"], a["tov"] / a["poss"],
-                  a["orb"] / (a["orb"] + a["opp_drb"]), a["ftm"] / a["fga"]])
+        X.append([1.0, a["pts"] / (2 * (a["fga"] + 0.44 * a["fta"])), a["tov"] / a["poss"],
+                  a["orb"] / (a["orb"] + a["opp_drb"])])
         y.append(100.0 * a["pts"] / a["poss"])
         w.append(a["poss"])
     if len(X) < 50:
@@ -205,8 +212,7 @@ def factor_worth(obs, tal):
     beta, *_ = np.linalg.lstsq(X * w[:, None], y * w, rcond=None)
     pred = X @ beta
     r2 = 1 - np.sum((w * (y - pred)) ** 2) / np.sum((w * (y - np.average(y, weights=w ** 2))) ** 2)
-    return {"efg": float(beta[1]), "tov": float(beta[2]), "orb": float(beta[3]),
-            "ft": float(beta[4]), "r2": float(r2)}
+    return {"ts": float(beta[1]), "tov": float(beta[2]), "orb": float(beta[3]), "r2": float(r2)}
 
 
 def design(obs, index):
@@ -320,8 +326,9 @@ def fit(obs, tal=None, folds=5, seed=7):
             fo, fd = c[i], c[n_p + i]          # raw: his offences' rate, his defences' opponents' rate
             row["o_%s" % name] = round(100.0 * sign[name] * float(fo), 3)
             row["d_%s" % name] = round(-100.0 * sign[name] * float(fd), 3)
-            row["o_%s_pts" % name] = round(worth[name] * float(fo), 3)
-            row["d_%s_pts" % name] = round(-worth[name] * float(fd), 3)
+            if name in worth:                   # ft is a diagnostic: no points value
+                row["o_%s_pts" % name] = round(worth[name] * float(fo), 3)
+                row["d_%s_pts" % name] = round(-worth[name] * float(fd), 3)
         out.append(row)
     meta = {"lambda": lam, "home": round(float(coef[-1]), 3), "mean": round(mu, 3),
             "obs": len(obs), "players": n_p}
@@ -362,10 +369,10 @@ def run_season(season, s3, bucket, tmp, ids, names, upload=True):
               % (season, window, m["obs"], m["players"], m["lambda"], m["home"], m["mean"]))
         if m.get("factors"):
             wv = m["worth"]
-            print("            factors: lambda %s · worth per 100 poss: eFG %+.0f, TOV %+.0f, "
-                  "OREB %+.0f, FT %+.0f (R² %.2f)"
-                  % ("/".join(str(m["factors"][k]["lambda"]) for k in ("efg", "tov", "orb", "ft")),
-                     wv["efg"], wv["tov"], wv["orb"], wv["ft"], wv["r2"]))
+            print("            six factors: lambda %s (ft %s) · worth per 100 poss: TS %+.0f, TOV %+.0f, "
+                  "OREB %+.0f (R² %.2f)"
+                  % ("/".join(str(m["factors"][k]["lambda"]) for k in CORE), m["factors"]["ft"]["lambda"],
+                     wv["ts"], wv["tov"], wv["orb"], wv["r2"]))
         elif m.get("factors_skipped_r2") is not None:
             print("            factors: NOT published — they explain only R² %.2f of team-game scoring"
                   % m["factors_skipped_r2"])
@@ -385,20 +392,20 @@ def show(rows, window="1y", n=15, min_min=1000):
     pool = [r for r in rows if r["window"] == window and r["minutes"] >= min_min]
     pool.sort(key=lambda r: -r["rapm"])
     print("\n  %s, %d+ minutes: best" % (window, min_min))
-    fx = pool and "o_efg_pts" in pool[0]
+    fx = pool and "o_ts_pts" in pool[0]
     if fx:
         print("    %-24s %6s   %5s  %5s   %s" % ("", "RAPM", "O", "D",
-              "offence: eFG  TOV  OREB  FT   |  defence: eFG  TOV  OREB  FT   (points per 100)"))
+              "offence: TS   TOV  OREB  |  defence: TS   TOV  OREB   (points per 100)"))
     for r in pool[:n]:
         line = ("    %-24s %+6.2f   O %+5.2f  D %+5.2f   %5.0f min"
                 % ((r["full_name"] or r["nba_id"])[:24], r["rapm"], r["o_rapm"], r["d_rapm"], r["minutes"]))
         if fx:
-            line += "   " + " ".join("%+5.1f" % r["o_%s_pts" % k] for k in ("efg", "tov", "orb", "ft"))
-            line += "  | " + " ".join("%+5.1f" % r["d_%s_pts" % k] for k in ("efg", "tov", "orb", "ft"))
+            line += "   " + " ".join("%+5.1f" % r["o_%s_pts" % k] for k in CORE)
+            line += "  | " + " ".join("%+5.1f" % r["d_%s_pts" % k] for k in CORE)
         print(line)
     if fx:
-        so = np.array([sum(r["o_%s_pts" % k] for k in ("efg", "tov", "orb", "ft")) for r in pool])
-        sd = np.array([sum(r["d_%s_pts" % k] for k in ("efg", "tov", "orb", "ft")) for r in pool])
+        so = np.array([sum(r["o_%s_pts" % k] for k in CORE) for r in pool])
+        sd = np.array([sum(r["d_%s_pts" % k] for k in CORE) for r in pool])
         o = np.array([r["o_rapm"] for r in pool])
         d = np.array([r["d_rapm"] for r in pool])
         print("  factor points vs RAPM: offence r=%.2f (slope %.2f), defence r=%.2f (slope %.2f)"
