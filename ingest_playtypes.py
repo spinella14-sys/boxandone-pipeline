@@ -129,6 +129,9 @@ def long_rows(key, kind, headers, rows):
             for c in ("PTS", "FGM", "FGA", "FGMX"):
                 if d.get(c) is not None:
                     m[key + "_" + c.lower()] += float(d[c])
+            # eFG% weighted by attempts, so a traded player's teams add up
+            if d.get("EFG_PCT") is not None and d.get("FGA") is not None:
+                m[key + "_efgw"] += float(d["EFG_PCT"]) * float(d["FGA"])
             # rates are per possession; keep the counts so teams add up
             for c, name in (("TOV_POSS_PCT", "tov"), ("SF_POSS_PCT", "sf"),
                             ("PLUSONE_POSS_PCT", "and1"), ("SCORE_POSS_PCT", "score"),
