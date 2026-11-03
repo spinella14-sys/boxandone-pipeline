@@ -360,7 +360,7 @@ def export_changed_players(env, log, season, player_ids):
     con.close()
 
 
-def rebuild_registry_and_manifest(env, log):
+def rebuild_registry_and_manifest(env, log, nightly=False):
     """Career totals and the manifest are summed from the thirty season files,
     which is far cheaper than reading the archive and gives the same answer."""
     sys.path.insert(0, HOME)
@@ -472,8 +472,17 @@ def rebuild_registry_and_manifest(env, log):
         games = {r[0]: int(r[1] or 0) for r in rows}
         box = con.execute("SELECT COUNT(*) FROM hot.player_game_box").fetchone()[0]
         pbp = con.execute("SELECT COUNT(*) FROM hot.play_by_play").fetchone()[0]
+        # when the nightly job last finished: set by the nightly only, carried
+        # over unchanged when the hourly job rewrites the manifest
+        prev_nightly = None
+        try:
+            prev = json.loads(s3.get_object(Bucket=bucket, Key="%s/manifest.json" % PREFIX)["Body"].read())
+            prev_nightly = prev.get("nightly_at")
+        except Exception:
+            pass
         man = {
             "written_at": datetime.now(timezone.utc).isoformat(),
+            "nightly_at": datetime.now(timezone.utc).isoformat() if nightly else prev_nightly,
             "prefix": PREFIX,
             "seasons": [{"season": r[0], "games": int(r[1] or 0)} for r in rows],
             "players_with_games": con.execute(
@@ -732,7 +741,7 @@ def main():
         ok &= run(log, ["positions_supabase.py", "pull"])
         try:
             log("rebuilding registry and manifest")
-            rebuild_registry_and_manifest(env, log)
+            rebuild_registry_and_manifest(env, log, nightly=True)
             export_rosters(env, log)
         except Exception as e:
             ok = False
