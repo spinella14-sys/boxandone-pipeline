@@ -80,14 +80,20 @@ def polite_sleep():
     time.sleep(REQUEST_DELAY + random.uniform(0, JITTER))
 
 
+LAST_STATUS = None      # what the last request got back, for the fetch log
+
+
 def get(session, url, tries=4):
+    global LAST_STATUS
     for attempt in range(tries):
         try:
             r = session.get(url, timeout=60)
         except Exception as e:
+            LAST_STATUS = "network error"
             print(f"    network error: {e}")
             time.sleep(10 * (attempt + 1))
             continue
+        LAST_STATUS = f"HTTP {r.status_code}"
         if r.status_code == 200:
             r.encoding = "utf-8"
             return r.text
@@ -183,15 +189,19 @@ def phase_from_schedule():
     Basketball Reference address (date + home team). Independent of the
     schedule page, so a stale copy of that page cannot hide a game."""
     from datetime import date, timedelta
+    from zoneinfo import ZoneInfo
+    # the runner keeps UTC: by its clock tonight's games are "yesterday's"
+    # from 7 or 8pm Eastern, before any of them has finished
+    today_et = datetime.now(ZoneInfo("America/New_York")).date()
     con = db()
     try:
         rows = con.execute("""
             SELECT s.game_date, s.home_abbr, s.season, s.season_type
             FROM scheduled_games s
             WHERE s.season_type IN ('regular', 'playin', 'playoff')
-              AND s.game_date < current_date
-              AND s.game_date >= current_date - ?
-        """, [FROM_SCHEDULE_DAYS]).fetchall()
+              AND s.game_date < ?
+              AND s.game_date >= ?
+        """, [today_et, today_et - timedelta(days=FROM_SCHEDULE_DAYS)]).fetchall()
     except Exception as e:
         print(f"  no schedule in the database yet ({str(e)[:60]}) — skipped")
         con.close()
@@ -304,8 +314,11 @@ def phase_fetch(limit=None):
                 html = get(session, f"{BASE}/boxscores/{slug}.html")
                 polite_sleep()
                 if html is None:
-                    pending_err.append((game_id, "not found"))
+                    why = LAST_STATUS or "no response"
+                    pending_err.append((game_id, why))
                     fail += 1
+                    if fail <= 5:
+                        print(f"    {slug}: {why}")
                 else:
                     os.makedirs(os.path.dirname(path), exist_ok=True)
                     with gzip.open(path, "wt", encoding="utf-8") as f:
@@ -323,6 +336,9 @@ def phase_fetch(limit=None):
         flush(pending_ok, pending_err, final=True)
 
     print(f"\n  fetched {done:,}, failed {fail}")
+    if rows and done == 0 and fail == len(rows):
+        print("  every pending game failed to download — the run is marked failed")
+        sys.exit(2)
 
 # ---------------------------------------------------------------------------
 # PHASE 3 — parse
