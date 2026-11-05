@@ -184,6 +184,100 @@ BBREF_ABBR = {"BKN": "BRK", "PHX": "PHO", "CHA": "CHO"}
 FROM_SCHEDULE_DAYS = 14
 
 
+
+# ---------------------------------------------------------------------------
+# NBA's own box score, for when Basketball Reference will not serve a game
+# ---------------------------------------------------------------------------
+
+CDN_BOX_DIR = os.path.join(os.environ.get("BOXANDONE_HOME", os.path.expanduser("~/boxandone")),
+                           "raw", "boxscores_cdn")
+TRICODE = {v: k for k, v in BBREF_ABBR.items()}       # BRK -> BKN, and so on
+
+
+def cdn_path(slug):
+    return os.path.join(CDN_BOX_DIR, slug[:4], f"{slug}.json.gz")
+
+
+def nba_ids_by_slug(con):
+    """Our Basketball Reference address for every scheduled game -> its NBA id."""
+    try:
+        rows = con.execute("""SELECT game_date, home_abbr, nba_game_id FROM scheduled_games
+                              WHERE nba_game_id IS NOT NULL""").fetchall()
+    except Exception:
+        return {}
+    return {f"{d:%Y%m%d}0{BBREF_ABBR.get(h, h)}": str(g) for d, h, g in rows if d and h}
+
+
+def fetch_cdn_box(nba_id):
+    """NBA's final box score as JSON text, or None (not final, not published)."""
+    if not nba_id:
+        return None
+    try:
+        import cdn_feed as C
+        box = C.load(nba_id, "box")
+    except Exception as e:
+        print(f"    NBA box score {nba_id}: {str(e)[:80]}")
+        return None
+    g = (box or {}).get("game") or {}
+    if str(g.get("gameStatus")) != "3":
+        return None
+    import json
+    return json.dumps(box)
+
+
+def _clock_secs(txt):
+    m = re.match(r"PT(\d+)M([\d.]+)S", txt or "")
+    return int(round(int(m.group(1)) * 60 + float(m.group(2)))) if m else None
+
+
+def parse_cdn_box(box, slug):
+    """NBA's box score -> (game_dict, player_rows) in parse_box_html's shape,
+    with nba_id in place of bbref_id."""
+    g = box["game"]
+    gdate = datetime.strptime(slug[:8], "%Y%m%d").date()
+    sides = {}
+    for key in ("homeTeam", "awayTeam"):
+        t = g.get(key) or {}
+        sides[key] = BBREF_ABBR.get(t.get("teamTricode"), t.get("teamTricode"))
+    home_abbr, away_abbr = sides["homeTeam"], sides["awayTeam"]
+    players = []
+    for key in ("homeTeam", "awayTeam"):
+        t = g.get(key) or {}
+        abbr = sides[key]
+        opp = away_abbr if key == "homeTeam" else home_abbr
+        for p in t.get("players") or []:
+            if str(p.get("status", "")).upper() == "INACTIVE":
+                continue
+            base = {"bbref_id": None, "nba_id": str(p.get("personId")), "name": p.get("name"),
+                    "team_abbr": abbr, "opp_abbr": opp, "is_home": key == "homeTeam"}
+            if str(p.get("played")) != "1":
+                players.append({**base, "started": False, "played": False,
+                                "dnp_reason": p.get("notPlayingDescription") or "Did Not Play",
+                                "seconds_played": None})
+                continue
+            s = p.get("statistics") or {}
+            pm = s.get("plusMinusPoints")
+            players.append({**base, "started": str(p.get("starter")) == "1", "played": True,
+                            "dnp_reason": None, "seconds_played": _clock_secs(s.get("minutes")),
+                            "fgm": s.get("fieldGoalsMade"), "fga": s.get("fieldGoalsAttempted"),
+                            "fg3m": s.get("threePointersMade"), "fg3a": s.get("threePointersAttempted"),
+                            "ftm": s.get("freeThrowsMade"), "fta": s.get("freeThrowsAttempted"),
+                            "orb": s.get("reboundsOffensive"), "drb": s.get("reboundsDefensive"),
+                            "trb": s.get("reboundsTotal"), "ast": s.get("assists"),
+                            "stl": s.get("steals"), "blk": s.get("blocks"),
+                            "tov": s.get("turnovers"), "pf": s.get("foulsPersonal"),
+                            "pts": s.get("points"),
+                            "plus_minus": int(round(pm)) if pm is not None else None})
+    game = {
+        "game_id": f"NBA_{slug}", "league": "NBA", "game_date": gdate,
+        "home_abbr": home_abbr, "away_abbr": away_abbr,
+        "home_score": (g.get("homeTeam") or {}).get("score"),
+        "away_score": (g.get("awayTeam") or {}).get("score"),
+        "source_game_id": slug,
+        "source_url": f"https://www.nba.com/game/{g.get('gameId')}/box-score",
+    }
+    return game, players
+
 def phase_from_schedule():
     """Queue every played game on NBA's schedule that is not yet held, by its
     Basketball Reference address (date + home team). Independent of the
@@ -252,7 +346,9 @@ def phase_fetch(limit=None):
         SELECT game_id, source_slug FROM ingest_log
         WHERE NOT fetched ORDER BY game_date DESC
     """).fetchall()
+    nba_ids = nba_ids_by_slug(con)
     con.close()
+    from_cdn = 0
 
     if limit:
         rows = rows[:limit]
@@ -308,18 +404,32 @@ def phase_fetch(limit=None):
     try:
         for i, (game_id, slug) in enumerate(rows, 1):
             path = box_path(slug)
-            if os.path.exists(path):
+            if os.path.exists(path) or os.path.exists(cdn_path(slug)):
                 pending_ok.append(game_id)
             else:
                 html = get(session, f"{BASE}/boxscores/{slug}.html")
                 polite_sleep()
+                cdn = None
                 if html is None:
+                    # Basketball Reference would not serve it: NBA's own box score
+                    cdn = fetch_cdn_box(nba_ids.get(slug))
+                    if cdn:
+                        p2 = cdn_path(slug)
+                        os.makedirs(os.path.dirname(p2), exist_ok=True)
+                        with gzip.open(p2, "wt", encoding="utf-8") as f:
+                            f.write(cdn)
+                        pending_ok.append(game_id)
+                        done += 1
+                        from_cdn += 1
+                if html is None and not cdn:
                     why = LAST_STATUS or "no response"
+                    if not nba_ids.get(slug):
+                        why += ", not on NBA's schedule"
                     pending_err.append((game_id, why))
                     fail += 1
                     if fail <= 5:
                         print(f"    {slug}: {why}")
-                else:
+                elif html is not None:
                     os.makedirs(os.path.dirname(path), exist_ok=True)
                     with gzip.open(path, "wt", encoding="utf-8") as f:
                         f.write(html)
@@ -335,7 +445,9 @@ def phase_fetch(limit=None):
     finally:
         flush(pending_ok, pending_err, final=True)
 
-    print(f"\n  fetched {done:,}, failed {fail}")
+    print(f"\n  fetched {done:,}, failed {fail}"
+          + (f" ({from_cdn} from NBA's box score — Basketball Reference would not serve them)"
+             if from_cdn else ""))
     if rows and done == 0 and fail == len(rows):
         print("  every pending game failed to download — the run is marked failed")
         sys.exit(2)
@@ -464,6 +576,8 @@ def phase_parse(limit=None):
         "SELECT source_id, player_id FROM player_identifiers WHERE source='bbref'"
     ).fetchall())
     print(f"  registry: {len(idmap):,} bbref IDs")
+    nbamap = {str(k): v for k, v in con.execute(
+        "SELECT source_id, player_id FROM player_identifiers WHERE source='nba'").fetchall()}
 
     rows = con.execute("""
         SELECT game_id, source_slug, season,
@@ -481,15 +595,21 @@ def phase_parse(limit=None):
 
     for game_id, slug, season, stype in rows:
         path = box_path(slug)
-        if not os.path.exists(path):
+        cpath = cdn_path(slug)
+        if not os.path.exists(path) and not os.path.exists(cpath):
             con.execute("UPDATE ingest_log SET fetched=FALSE WHERE game_id=?", [game_id])
             continue
 
-        with gzip.open(path, "rt", encoding="utf-8") as f:
-            html = f.read()
-
         try:
-            g, plist = parse_box_html(html, slug)
+            if os.path.exists(path):
+                with gzip.open(path, "rt", encoding="utf-8") as f:
+                    g, plist = parse_box_html(f.read(), slug)
+                src_name = "bbref"
+            else:
+                import json
+                with gzip.open(cpath, "rt", encoding="utf-8") as f:
+                    g, plist = parse_cdn_box(json.load(f), slug)
+                src_name = "cdn"
         except Exception as e:
             con.execute("UPDATE ingest_log SET parse_error=? WHERE game_id=?",
                         [str(e)[:200], game_id])
@@ -504,23 +624,25 @@ def phase_parse(limit=None):
             INSERT INTO games (game_id, league, season, game_date, season_type,
                                home_abbr, away_abbr, home_score, away_score,
                                source, source_game_id, source_url, box_complete)
-            VALUES (?,?,?,?,?,?,?,?,?,'bbref',?,?,TRUE)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,TRUE)
             ON CONFLICT (game_id) DO NOTHING
         """, [g["game_id"], "NBA", season, g["game_date"], stype, g["home_abbr"],
-              g["away_abbr"], g["home_score"], g["away_score"],
+              g["away_abbr"], g["home_score"], g["away_score"], src_name,
               g["source_game_id"], g["source_url"]])
 
         for p in plist:
-            pid = idmap.get(p["bbref_id"])
+            sid = p.get("bbref_id") or p.get("nba_id")
+            ssrc = "bbref" if p.get("bbref_id") else "nba"
+            pid = idmap.get(sid) if ssrc == "bbref" else nbamap.get(sid)
             if not pid:
                 unknown += 1
-                unknown_ids[p["bbref_id"]] = p["name"]
+                unknown_ids[sid] = p["name"]
                 con.execute("""
                     INSERT INTO staging_players
                       (source, source_id, raw_name, raw_name_norm, raw_team,
                        raw_league, match_status)
-                    VALUES ('bbref',?,?,LOWER(?),?, 'NBA','pending')
-                """, [p["bbref_id"], p["name"], p["name"], p["team_abbr"]])
+                    VALUES (?,?,?,LOWER(?),?, 'NBA','pending')
+                """, [ssrc, sid, p["name"], p["name"], p["team_abbr"]])
                 continue
 
             con.execute("""
@@ -528,14 +650,14 @@ def phase_parse(limit=None):
                   (player_id, game_id, team_abbr, opp_abbr, is_home, started, played,
                    dnp_reason, seconds_played, fgm, fga, fg3m, fg3a, ftm, fta,
                    orb, drb, trb, ast, stl, blk, tov, pf, pts, plus_minus, source)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'bbref')
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT (player_id, game_id) DO NOTHING
             """, [pid, g["game_id"], p["team_abbr"], p["opp_abbr"], p["is_home"],
                   p["started"], p["played"], p["dnp_reason"], p["seconds_played"],
                   p.get("fgm"), p.get("fga"), p.get("fg3m"), p.get("fg3a"),
                   p.get("ftm"), p.get("fta"), p.get("orb"), p.get("drb"),
                   p.get("trb"), p.get("ast"), p.get("stl"), p.get("blk"),
-                  p.get("tov"), p.get("pf"), p.get("pts"), p.get("plus_minus")])
+                  p.get("tov"), p.get("pf"), p.get("pts"), p.get("plus_minus"), src_name])
             box_rows += 1
 
         con.execute("UPDATE ingest_log SET parsed=TRUE, box_rows=?, parse_error=NULL, "
