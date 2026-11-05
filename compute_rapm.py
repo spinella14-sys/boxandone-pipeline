@@ -45,6 +45,21 @@ LAMBDAS = [250, 500, 1000, 2000, 3000, 5000, 8000, 12000]
 FIRST = "2019-20"     # stints exist from here
 
 
+
+def newer_from_r2(local, s3, bucket, key):
+    """Bring R2's copy down over the local one when R2's is newer. True if the
+    local file is now current (or there is no R2 copy to compare)."""
+    try:
+        remote = s3.head_object(Bucket=bucket, Key=key)["LastModified"].timestamp()
+    except Exception:
+        return True
+    if not os.path.exists(local) or remote > os.path.getmtime(local) + 60:
+        os.makedirs(os.path.dirname(local), exist_ok=True)
+        s3.download_file(bucket, key, local)
+        print("  stints: R2's copy is newer — downloaded %s" % os.path.basename(local))
+        return False
+    return True
+
 def season_label(y):
     return "%d-%s" % (y, str(y + 1)[2:])
 
@@ -75,7 +90,9 @@ def stint_file(season, s3, bucket, tmp, upload):
     local = os.path.join(LINEUPS, "%s.parquet" % season)
     key = "v2/lineups/%s.parquet" % season
     if os.path.exists(local):
-        if s3 and upload:
+        # only send the local copy up if it is the newer one: a laptop's
+        # stints must never replace the nightly's fresher ones
+        if s3 and newer_from_r2(local, s3, bucket, key) and upload:
             s3.upload_file(local, bucket, key)
         return local
     if not s3:

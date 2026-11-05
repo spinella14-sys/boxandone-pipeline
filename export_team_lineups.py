@@ -51,6 +51,21 @@ SUMS = ["seconds", "stints", "pts_for", "pts_against", "poss_for", "poss_against
 TYPES = {"002": "regular", "004": "playoff", "005": "playin"}
 
 
+
+def newer_from_r2(local, s3, bucket, key):
+    """Bring R2's copy down over the local one when R2's is newer. True if the
+    local file is now current (or there is no R2 copy to compare)."""
+    try:
+        remote = s3.head_object(Bucket=bucket, Key=key)["LastModified"].timestamp()
+    except Exception:
+        return True
+    if not os.path.exists(local) or remote > os.path.getmtime(local) + 60:
+        os.makedirs(os.path.dirname(local), exist_ok=True)
+        s3.download_file(bucket, key, local)
+        print("  stints: R2's copy is newer — downloaded %s" % os.path.basename(local))
+        return False
+    return True
+
 def season_list(a):
     if a.season:
         return [a.season]
@@ -62,6 +77,9 @@ def season_list(a):
 def stints_file(season, s3=None, bucket=None):
     path = os.path.join(LINEUPS, "%s.parquet" % season)
     if os.path.exists(path):
+        if s3 is not None:
+            # the nightly keeps R2's copy current; a laptop's copy may be weeks old
+            newer_from_r2(path, s3, bucket, "%s/lineups/%s.parquet" % (PREFIX, season))
         return path
     if s3 is None:
         return None
