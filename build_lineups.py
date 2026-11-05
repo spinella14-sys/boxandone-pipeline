@@ -68,8 +68,39 @@ def seasons_from(spec):
     return ["%d-%s" % (y, str(y + 1)[2:]) for y in range(min(a, b), max(a, b) + 1)]
 
 
+
+def played_ids(season):
+    """Ids of every game the league schedule shows as played: dated before
+    today in Eastern time. Empty if the schedule is not in the database."""
+    try:
+        import duckdb
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        today = datetime.now(ZoneInfo("America/New_York")).date()
+        con = duckdb.connect(DB_PATH, read_only=True)
+        try:
+            rows = con.execute("""
+                SELECT nba_game_id FROM scheduled_games
+                WHERE season = ? AND game_date < ?
+                  AND season_type IN ('regular', 'playin', 'playoff')
+                ORDER BY nba_game_id""", [season, today]).fetchall()
+        finally:
+            con.close()
+        return [str(r[0]) for r in rows if r[0]]
+    except Exception as e:
+        print("    schedule not readable (%s) — guessing ids" % str(e)[:80])
+        return []
+
 def candidate_ids(season):
-    """Every id NBA could have used: regular season, play-in, playoffs."""
+    """Every id NBA could have used: regular season, play-in, playoffs —
+    led by the ids the schedule shows as played, in case they fall outside
+    the guessed runs."""
+    played = played_ids(season)
+    seen = set(played)
+    return played + [g for g in _guessed_ids(season) if g not in seen]
+
+
+def _guessed_ids(season):
     yy = season[2:4]
     ids = ["002%s0%04d" % (yy, n) for n in range(1, 1231)]
     ids += ["005%s00%d%d1" % (yy, r, s) for r in (1, 2) for s in range(4)]
@@ -107,6 +138,14 @@ def cmd_fetch(seasons):
                 missing -= stale
                 print("    %d %s ids were wrongly listed as missing — cleared" % (len(stale), season))
         ids = [g for g in candidate_ids(season) if g not in missing]
+        played = set(played_ids(season)) if live else set()
+        if live and played:
+            nums = sorted(int(g[5:]) for g in played if g.startswith("002"))
+            gaps = [(a, b) for a, b in zip(nums, nums[1:]) if b - a > 1]
+            print("    schedule: %d games played, regular-season ids %s to %s%s" % (
+                len(played), nums[0] if nums else "-", nums[-1] if nums else "-",
+                (", gaps after " + ", ".join("%d (+%d)" % (a, b - a - 1) for a, b in gaps[:6]))
+                if gaps else ", no gaps"))
         streak = 0
         have = new = gone = failed = 0
         t0 = time.time()
@@ -115,14 +154,17 @@ def cmd_fetch(seasons):
                 have += 1
                 continue
             try:
-                if live and gid[2] == "2" and streak >= 15:
+                if live and gid[2] == "2" and streak >= 15 and gid not in played:
                     continue            # past the last game played so far
                 pbp = C.load(gid, "pbp")
                 if not pbp:
                     # in the season under way, an absent id is usually a game
                     # not played yet: never remember it as missing
                     if live:
-                        streak += gid[2] == "2"
+                        if gid in played:
+                            print("    %s: played per the schedule, not published yet" % gid)
+                        else:
+                            streak += gid[2] == "2"
                     else:
                         missing.add(gid)
                     gone += 1
