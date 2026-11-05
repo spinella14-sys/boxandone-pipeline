@@ -98,6 +98,14 @@ def cmd_fetch(seasons):
     os.makedirs(C.RAW, exist_ok=True)
     for season in seasons:
         live = season == current_season()
+        if live:
+            # the missing list is never applied to the season under way: an id
+            # absent today is usually a game not played yet. Clear any that a
+            # run before that rule put there.
+            stale = {g for g in candidate_ids(season)} & missing
+            if stale:
+                missing -= stale
+                print("    %d %s ids were wrongly listed as missing — cleared" % (len(stale), season))
         ids = [g for g in candidate_ids(season) if g not in missing]
         streak = 0
         have = new = gone = failed = 0
@@ -574,8 +582,9 @@ def cmd_build(seasons, upload=True):
     missing = load_missing()
     for season in seasons:
         stints, vals = [], []
+        live = season == current_season()
         for gid in candidate_ids(season):
-            if gid in missing:
+            if gid in missing and not live:
                 continue
             pbp, box = C.load(gid, "pbp", fetch=False), C.load(gid, "box", fetch=False)
             if not pbp or not box:
