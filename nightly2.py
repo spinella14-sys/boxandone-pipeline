@@ -457,6 +457,10 @@ def rebuild_registry_and_manifest(env, log, nightly=False):
                 WHERE season_type='regular'
                 GROUP BY 1
               ) s ON s.player_id = p.player_id
+              -- one row per player id: a second NBA or Basketball Reference
+              -- id, or a second automatic position, must not list him twice
+              QUALIFY ROW_NUMBER() OVER (PARTITION BY p.player_id
+                                         ORDER BY n.source_id, i.source_id) = 1
             ) TO '%s' (FORMAT PARQUET, COMPRESSION ZSTD)""")
         con.execute(sql % (glob, reg))
         import rosters_export as RX
@@ -708,6 +712,8 @@ def main():
                     ok &= run(log, ["compute_rapm.py", "build", "--season", season])
                     # each team's shots, both ends, for the team page
                     ok &= run(log, ["export_team_shots.py", "build", "--season", season, "--hot"])
+                    # each team's lineup combinations, 5-man down to 2-man
+                    ok &= run(log, ["export_team_lineups.py", "build", "--season", season])
 
             log("exporting season aggregates")
             export_season(env, log, season)
