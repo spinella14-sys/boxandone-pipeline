@@ -743,6 +743,12 @@ def main():
         # Signings and waivers happen on days without games, so who is on
         # which team is rebuilt every night. A failure here is logged and the
         # run still pushes the database, so the night's ingest is not lost.
+        # the G League: NBA's stats site, through the Cloudflare relay on
+        # GitHub. Before the registry, so new G League players reach it tonight.
+        log("G League")
+        ok &= run(log, ["ingest_gleague.py", "players", "--current"])
+        ok &= run(log, ["ingest_gleague.py", "run", "--season", season])
+
         # positions ruled in the site's Positions tool, before the registry
         ok &= run(log, ["positions_supabase.py", "pull"])
         try:
