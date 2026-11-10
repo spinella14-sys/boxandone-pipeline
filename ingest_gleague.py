@@ -32,7 +32,8 @@ and all-star games are left out of the season totals.
 
     python3 ingest_gleague.py players --sync              # the all-time player list
     python3 ingest_gleague.py run --season 2026-27 --sync # schedule, fetch, parse, export
-    python3 ingest_gleague.py backfill --seasons 2005-06:2025-26 --sync
+    python3 ingest_gleague.py download --seasons 2005-06:2025-26   # hours; no lock; resumable
+    python3 ingest_gleague.py backfill --seasons 2005-06:2025-26 --sync   # then: short, locked
 
   --sync (on the Mac) takes the nightly's lock, pulls the working database
   from R2, writes, and pushes it back, so the nightly never overwrites the
@@ -243,8 +244,20 @@ def cmd_players(current_only=False, relay=False):
 # ---------------------------------------------------------------------------
 
 def schedule_rows(season, relay=False):
-    """Every game of a season: from the league schedule, or for older seasons
-    the team game logs."""
+    """Every game of a season. A finished season's schedule is saved the first
+    time it is read and comes from disk after that."""
+    import nightly2 as N
+    saved = os.path.join(RAW, season, "schedule.json.gz")
+    if season != N.current_season() and os.path.exists(saved):
+        return read_cache(saved)
+    games = _schedule_rows(season, relay)
+    if games and season != N.current_season():
+        write_cache(saved, games)
+    return games
+
+
+def _schedule_rows(season, relay=False):
+    """From the league schedule, or for older seasons the team game logs."""
     j = stats_get("scheduleleaguev2", {"LeagueID": LEAGUE, "Season": season}, relay)
     games = []
     for d in ((j or {}).get("leagueSchedule") or {}).get("gameDates") or []:
@@ -332,21 +345,7 @@ def cmd_fetch(con, season, limit=None, relay=False):
         season, len(todo), " through the relay" if use_relay(relay) else ""))
     done = failed = 0
     for i, gid in enumerate(todo, 1):
-        ok = True
-        for kind, ep, params in (
-                ("box", "boxscoretraditionalv3", {"GameID": gid, "StartPeriod": 0, "EndPeriod": 0,
-                                                  "StartRange": 0, "EndRange": 0, "RangeType": 0}),
-                ("pbp", "playbyplayv3", {"GameID": gid, "StartPeriod": 0, "EndPeriod": 0})):
-            path = cache_path(season, gid, kind)
-            if os.path.exists(path):
-                continue
-            j = stats_get(ep, params, relay)
-            time.sleep(DELAY)
-            if j is None or (kind == "box" and not (j.get("boxScoreTraditional") or {}).get("homeTeam")):
-                if kind == "box":
-                    ok = False
-                continue                          # play-by-play is a bonus; the box score is the game
-            write_cache(path, j)
+        ok = fetch_game(season, gid, relay)
         if ok:
             con.execute("UPDATE gl_games SET fetched = TRUE, error = NULL WHERE game_id = ?", [gid])
             done += 1
@@ -359,6 +358,47 @@ def cmd_fetch(con, season, limit=None, relay=False):
     con.commit()
     print("  %s: fetched %d, failed %d" % (season, done, failed))
     return done
+
+
+def fetch_game(season, gid, relay=False):
+    """A game's box score and play-by-play to disk, unless already there. True
+    if the box score is on disk afterwards."""
+    for kind, ep, params in (
+            ("box", "boxscoretraditionalv3", {"GameID": gid, "StartPeriod": 0, "EndPeriod": 0,
+                                              "StartRange": 0, "EndRange": 0, "RangeType": 0}),
+            ("pbp", "playbyplayv3", {"GameID": gid, "StartPeriod": 0, "EndPeriod": 0})):
+        path = cache_path(season, gid, kind)
+        if os.path.exists(path):
+            continue
+        j = stats_get(ep, params, relay)
+        time.sleep(DELAY)
+        if j is None or (kind == "box" and not (j.get("boxScoreTraditional") or {}).get("homeTeam")):
+            continue                              # play-by-play is a bonus; the box score is the game
+        write_cache(path, j)
+    return os.path.exists(cache_path(season, gid, "box"))
+
+
+def cmd_download(seasons, relay=False):
+    """Every finished game of these seasons to disk. No database, no lock;
+    stop and restart freely."""
+    for season in seasons:
+        games = [g for g in schedule_rows(season, relay) if g["status"] == 3]
+        have = sum(1 for g in games if os.path.exists(cache_path(season, g["game_id"], "box")))
+        todo = [g["game_id"] for g in games if not os.path.exists(cache_path(season, g["game_id"], "box"))]
+        print("  %s: %d finished games, %d already saved, %d to download" % (
+            season, len(games), have, len(todo)))
+        t0, got, miss = time.time(), 0, 0
+        for i, gid in enumerate(todo, 1):
+            if fetch_game(season, gid, relay):
+                got += 1
+            else:
+                miss += 1
+            if i % 100 == 0:
+                rate = (time.time() - t0) / i
+                print("    %d/%d  (~%d min left in %s)" % (i, len(todo), rate * (len(todo) - i) / 60, season))
+        pbp = sum(1 for g in games if os.path.exists(cache_path(season, g["game_id"], "pbp")))
+        print("  %s: %d downloaded, %d with no box score; play-by-play for %d of %d games" % (
+            season, got, miss, pbp, len(games)))
 
 
 # ---------------------------------------------------------------------------
@@ -650,7 +690,7 @@ def run_season(season, limit=None, relay=False, export=True):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["players", "run", "backfill", "check", "sample", "export"])
+    ap.add_argument("cmd", choices=["players", "run", "backfill", "download", "check", "sample", "export"])
     ap.add_argument("--season")
     ap.add_argument("--seasons")
     ap.add_argument("--limit", type=int)
@@ -682,10 +722,16 @@ def main():
             if not N.pull_db(s3, bucket, log):
                 sys.exit("  could not pull the database")
             a.sync = False
+            export_after = a.cmd == "backfill" and not a.no_export
+            if export_after:
+                a.no_export = True          # exports need no lock: after it is released
             dispatch(a)
             N.push_db(s3, bucket, log)
         finally:
             N.release_lock(s3, bucket)
+        if export_after:
+            print("\n  lock released — writing the season files and career game logs")
+            export_seasons(season_list(a.seasons))
         return
     dispatch(a)
 
@@ -704,6 +750,8 @@ def dispatch(a):
         s3, bucket = s3_client()
         cmd_export(con, a.season, s3, bucket)
         con.close()
+    elif a.cmd == "download":
+        cmd_download(season_list(a.seasons) if a.seasons else [a.season], a.relay)
     elif a.cmd == "run":
         run_season(a.season, a.limit, a.relay, not a.no_export)
     elif a.cmd == "backfill":
@@ -714,15 +762,22 @@ def dispatch(a):
             print("\n== %s" % s)
             run_season(s, a.limit, a.relay, export=False)
         if not a.no_export:
-            con = db()
-            s3, bucket = s3_client()
-            for s in seasons:
-                cmd_export(con, s, s3, bucket, players=[])
-            everyone = [r[0] for r in con.execute(
-                "SELECT DISTINCT player_id FROM gl_player_game WHERE player_id IS NOT NULL").fetchall()]
-            export_players(con, everyone, s3, bucket)
-            print("  career game logs: %d players" % len(everyone))
-            con.close()
+            export_seasons(seasons)
+
+
+def export_seasons(seasons):
+    """Each season's files, then every G League player's career game log once."""
+    con = db()
+    try:
+        s3, bucket = s3_client()
+        for s in seasons:
+            cmd_export(con, s, s3, bucket, players=[])
+        everyone = [r[0] for r in con.execute(
+            "SELECT DISTINCT player_id FROM gl_player_game WHERE player_id IS NOT NULL").fetchall()]
+        export_players(con, everyone, s3, bucket)
+        print("  career game logs: %d players" % len(everyone))
+    finally:
+        con.close()
 
 
 if __name__ == "__main__":
