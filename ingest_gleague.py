@@ -306,7 +306,7 @@ def cmd_schedule(con, season, relay=False):
             if tid:
                 con.execute("""INSERT INTO gl_teams VALUES (?,?,?,?,?)
                                ON CONFLICT (team_id, season) DO UPDATE SET abbr=excluded.abbr,
-                               city=COALESCE(excluded.city, gl_teams.city), name=excluded.name""",
+                               city=COALESCE(excluded.city, gl_teams.city), name=COALESCE(excluded.name, gl_teams.name)""",
                             [tid, season, abbr, city, name])
         con.execute("""
             INSERT INTO gl_games (game_id, season, season_type, label, game_date, home_id, away_id,
@@ -588,6 +588,13 @@ TEAM_SEASON = """
     GROUP BY a.team_id"""
 
 
+# a player's game lines with the game's final score and label
+WITH_SCORES = """
+    SELECT p.* EXCLUDE (person_id), g.home_score, g.away_score, g.label
+    FROM gl_player_game p JOIN gl_games g USING (game_id)
+    WHERE %s ORDER BY p.game_date, p.game_id"""
+
+
 def cmd_export(con, season, s3, bucket, players=None):
     """Season files, then each affected player's career G League game log."""
     import tempfile
@@ -597,8 +604,7 @@ def cmd_export(con, season, s3, bucket, players=None):
             con.execute("COPY (%s) TO '%s' (FORMAT PARQUET, COMPRESSION ZSTD)" % (sql, p))
             s3.upload_file(p, bucket, "%s/gleague/%s" % (PREFIX, key))
         base = "seasons/%s/" % season
-        put("SELECT * FROM gl_player_game WHERE season = '%s' ORDER BY game_date, game_id" % season,
-            base + "player_game.parquet")
+        put(WITH_SCORES % ("p.season = '%s'" % season), base + "player_game.parquet")
         put(PLAYER_SEASON.format(s=season, counted=COUNTED), base + "player_season.parquet")
         put(TEAM_SEASON.format(s=season, counted=COUNTED), base + "team_season.parquet")
         put("SELECT * EXCLUDE (fetched, parsed, error, updated_at) FROM gl_games WHERE season = '%s' "
@@ -624,8 +630,8 @@ def export_players(con, players, s3, bucket):
         jobs = []
         for pid in players:
             p = os.path.join(tmp, "%s.parquet" % pid)
-            con.execute("COPY (SELECT * EXCLUDE (person_id) FROM gl_player_game WHERE player_id = '%s' "
-                        "ORDER BY game_date, game_id) TO '%s' (FORMAT PARQUET, COMPRESSION ZSTD)" % (pid, p))
+            con.execute("COPY (%s) TO '%s' (FORMAT PARQUET, COMPRESSION ZSTD)"
+                        % (WITH_SCORES % ("p.player_id = '%s'" % pid), p))
             jobs.append((p, "%s/gleague/players/%s/gamelog.parquet" % (PREFIX, pid)))
         with ThreadPoolExecutor(12) as ex:
             list(ex.map(lambda j: s3.upload_file(j[0], bucket, j[1]), jobs))
