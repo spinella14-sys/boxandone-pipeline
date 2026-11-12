@@ -666,6 +666,9 @@ def main():
         ok &= run(log, ["ingest_rosters.py", "build", "--season", season])
         # the daily roster snapshot, from Basketball Reference: runs on GitHub
         ok &= run(log, ["ingest_rosters_bbref.py", "build"])
+        # names settled in the Review tool, before new players go to Supabase
+        if not run(log, ["review_queue.py", "apply"]):
+            log("review step failed — the rest of the night carries on")
         # new players must exist in Supabase before a scout can tag them
         ok &= run(log, ["sync_players_supabase.py"])
         ok &= run(log, ["ingest_schedule.py", "build"])
@@ -753,6 +756,9 @@ def main():
         log("two-way tracker")
         if not run(log, ["ingest_twoway.py", "run", "--season", season]):
             log("two-way tracker step failed — the rest of the night carries on")
+        # the Review tool's queue, with whatever tonight could not match
+        if not run(log, ["review_queue.py", "export"]):
+            log("review queue export failed — the rest of the night carries on")
 
         # positions ruled in the site's Positions tool, before the registry
         ok &= run(log, ["positions_supabase.py", "pull"])
