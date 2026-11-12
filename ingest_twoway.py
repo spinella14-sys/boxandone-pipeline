@@ -60,6 +60,10 @@ CREATE TABLE IF NOT EXISTS twoway_list (
     snap_date DATE, season VARCHAR, name VARCHAR, player_id VARCHAR,
     nba_abbr VARCHAR, nba_team VARCHAR, gl_team VARCHAR, gl_team_id BIGINT,
     PRIMARY KEY (snap_date, name));
+CREATE TABLE IF NOT EXISTS nba_movement (
+    txn_key VARCHAR PRIMARY KEY, txn_date DATE, season VARCHAR, kind VARCHAR,
+    txn_type VARCHAR, description VARCHAR, person_id VARCHAR, player_id VARCHAR,
+    team_id BIGINT, team_abbr VARCHAR, seen_at TIMESTAMP);
 CREATE TABLE IF NOT EXISTS nba_active (
     nba_game_id VARCHAR, person_id VARCHAR, team_abbr VARCHAR, game_date DATE,
     season VARCHAR, active BOOLEAN, played BOOLEAN, reason VARCHAR,
@@ -361,6 +365,90 @@ def cmd_active(con, season):
 # the tracker
 # ---------------------------------------------------------------------------
 
+MOVEMENT_PATH = "/js/data/playermovement/NBA_Player_Movement.json"
+TEAM_IDS = {37: "ATL", 38: "BOS", 39: "CLE", 40: "NOP", 41: "CHI", 42: "DAL", 43: "DEN", 44: "GSW",
+            45: "HOU", 46: "LAC", 47: "LAL", 48: "MIA", 49: "MIL", 50: "MIN", 51: "BKN", 52: "NYK",
+            53: "ORL", 54: "IND", 55: "PHI", 56: "PHX", 57: "POR", 58: "SAC", 59: "SAS", 60: "OKC",
+            61: "TOR", 62: "UTA", 63: "MEM", 64: "WAS", 65: "DET", 66: "CHA"}
+
+
+def fetch_movement():
+    """NBA.com's player-movement feed: through the relay on GitHub, directly elsewhere."""
+    from curl_cffi import requests as cr
+    relay = os.environ.get("NBA_RELAY_URL")
+    if relay and os.environ.get("GITHUB_ACTIONS"):
+        url = relay.rstrip("/") + MOVEMENT_PATH
+        headers = {"x-relay-token": os.environ.get("NBA_RELAY_TOKEN", "")}
+    else:
+        url = "https://stats.nba.com" + MOVEMENT_PATH
+        headers = {"Referer": "https://www.nba.com/", "Origin": "https://www.nba.com"}
+    for attempt in range(3):
+        try:
+            r = cr.get(url, headers=headers, impersonate="chrome", timeout=60)
+            if r.status_code == 200:
+                return r.json()["NBA_Player_Movement"]["rows"]
+            print("    player movement: HTTP %s" % r.status_code)
+        except Exception as e:
+            print("    player movement: %s" % str(e)[:70])
+        time.sleep(5 * (attempt + 1))
+    return None
+
+
+def season_of(d):
+    """July onward belongs to the season that starts that fall."""
+    y = d.year if d.month >= 7 else d.year - 1
+    return "%d-%02d" % (y, (y + 1) % 100)
+
+
+def movement_kind(t, desc):
+    two = "two-way" in desc.lower()
+    if t == "Signing":
+        return "twoway_sign" if two else "sign"
+    if t == "ContractConverted":
+        return "convert_to_twoway" if re.search(r"to a two-way", desc, re.I) else "convert_to_standard"
+    return {"Waive": "waive", "AwardOnWaivers": "claim", "Trade": "trade"}.get(t, (t or "other").lower())
+
+
+def parse_movement(rows):
+    out = []
+    for r in rows:
+        try:
+            d = datetime.strptime(str(r["TRANSACTION_DATE"])[:10], "%Y-%m-%d").date()
+            pid = str(int(float(r.get("PLAYER_ID") or 0))) or None
+            tid = int(float(r.get("TEAM_ID") or 0))
+        except Exception:
+            continue
+        desc = (r.get("TRANSACTION_DESCRIPTION") or "").strip()
+        key = hashlib.md5(("%s|%s|%s" % (d, pid, desc)).encode()).hexdigest()[:16]
+        out.append({"txn_key": key, "txn_date": d, "season": season_of(d),
+                    "kind": movement_kind(r.get("Transaction_Type"), desc), "txn_type": r.get("Transaction_Type"),
+                    "description": desc, "person_id": None if pid == "0" else pid,
+                    "team_id": tid or None, "team_abbr": TEAM_IDS.get(tid - 1610612700) if tid else None})
+    return out
+
+
+def cmd_movement(con, rows=None, write=True):
+    rows = rows if rows is not None else fetch_movement()
+    if not rows:
+        print("  player movement: feed unavailable — nothing changed")
+        return False
+    parsed = parse_movement(rows)
+    if not write:
+        return parsed
+    ids = dict(con.execute("SELECT source_id, player_id FROM player_identifiers WHERE source = 'nba'").fetchall())
+    before = con.execute("SELECT COUNT(*) FROM nba_movement").fetchone()[0]
+    for r in parsed:
+        con.execute("""INSERT INTO nba_movement VALUES (?,?,?,?,?,?,?,?,?,?, now())
+                       ON CONFLICT (txn_key) DO UPDATE SET player_id = COALESCE(excluded.player_id, nba_movement.player_id)""",
+                    [r["txn_key"], r["txn_date"], r["season"], r["kind"], r["txn_type"], r["description"],
+                     r["person_id"], ids.get(r["person_id"]), r["team_id"], r["team_abbr"]])
+    con.commit()
+    s = con.execute("""SELECT COUNT(*), COUNT(player_id), MIN(txn_date) FROM nba_movement""").fetchone()
+    print("  player movement: %d rows (%d new) back to %s; %d matched to a player by NBA id" % (
+        s[0], s[0] - before, s[2], s[1]))
+    return True
+
+
 def season_bounds(con, season):
     r = con.execute("""SELECT MIN(game_date), MAX(game_date) FROM scheduled_games
                        WHERE season = ? AND season_type = 'regular'""", [season]).fetchone()
@@ -393,7 +481,17 @@ def signing_dates(con, season):
     except Exception:
         rows = []
     for pid, d, team in rows:
-        out[pid] = (d, BBREF.get(team, team))
+        out[pid] = (d, BBREF.get(team, team), "Basketball Reference")
+    # NBA.com's feed, by person id, wins where it has the signing
+    try:
+        rows = con.execute("""
+            SELECT player_id, txn_date, team_abbr FROM nba_movement
+            WHERE season = ? AND kind IN ('twoway_sign', 'convert_to_twoway') AND player_id IS NOT NULL
+            ORDER BY txn_date""", [season]).fetchall()
+    except Exception:
+        rows = []
+    for pid, d, team in rows:
+        out[pid] = (d, team, "NBA.com")
     return out
 
 
@@ -413,7 +511,7 @@ def build_tracker(con, season):
             SELECT name, player_id, nba_abbr, nba_team, gl_team, gl_team_id
             FROM twoway_list WHERE snap_date = ? ORDER BY nba_abbr, name""", [snap]).fetchall():
         s = signed.get(pid)
-        sign_date, sign_src = (s[0], "transaction") if s and (not abbr or s[1] == abbr) else (None, None)
+        sign_date, sign_src = (s[0], s[2]) if s and (not abbr or s[1] == abbr) else (None, None)
         if not sign_date:
             fs = first_seen.get((name, abbr))
             sign_date, sign_src = (fs, "first seen on the list") if fs and start and fs > start else (None, "before the season")
@@ -504,6 +602,7 @@ def run(season):
     con = db()
     try:
         cmd_transactions(con, season)
+        cmd_movement(con)
         cmd_list(con, season)
         cmd_active(con, season)
         env = N.load_env()
@@ -514,12 +613,23 @@ def run(season):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["run", "sample"])
+    ap.add_argument("cmd", choices=["run", "sample", "movement"])
     ap.add_argument("--season")
     ap.add_argument("--sync", action="store_true")
     a = ap.parse_args()
     if a.cmd == "sample":
         cmd_sample()
+        return
+    if a.cmd == "movement":
+        from collections import Counter
+        rows = cmd_movement(None, write=False) or []
+        season = a.season or current_season()
+        this = [r for r in rows if r["season"] == season]
+        print("  %d rows, %s to %s" % (len(rows), min(r["txn_date"] for r in rows), max(r["txn_date"] for r in rows)))
+        print("  rows by season:", ", ".join("%s %d" % kv for kv in sorted(Counter(r["season"] for r in rows).items())))
+        print("  %s by kind: %s" % (season, Counter(r["kind"] for r in this).most_common()))
+        for r in [r for r in this if r["kind"] in ("twoway_sign", "convert_to_twoway", "convert_to_standard")][:8]:
+            print("    %s %-20s %-4s %s" % (r["txn_date"], r["kind"], r["team_abbr"], r["description"][:90]))
         return
     season = a.season or current_season()
     if not a.sync:
