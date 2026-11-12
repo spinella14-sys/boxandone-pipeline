@@ -45,7 +45,7 @@ os.chdir(HOME)
 
 DATA = os.path.join(HOME, "data")
 PREFIX = "v2"
-TX_URL = "https://gleague.nba.com/transactions"
+TX_URL = "https://basketball.realgm.com/gleague/transactions/league"   # gleague.nba.com stopped after 2023-24
 LIST_URL = "https://gleague.nba.com/twowayplayers"
 LIMIT = 50
 DEADLINE = "03-04"            # month-day of the two-way signing deadline
@@ -77,6 +77,8 @@ def db():
     for s in DDL.split(";"):
         if s.strip():
             con.execute(s)
+    for col in ("realgm_id VARCHAR", "nba_team VARCHAR", "source VARCHAR"):
+        con.execute("ALTER TABLE gl_transactions ADD COLUMN IF NOT EXISTS " + col)
     return con
 
 
@@ -159,59 +161,67 @@ class Names:
 # G League transactions
 # ---------------------------------------------------------------------------
 
-DATE_RE = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{2}|\d{4})\b[:\s-]*(.*)$")
-NAME = r"(?P<name>[A-Z][^()]+?)"
-PATTERNS = [
-    ("assign", NAME + r" \((?P<from>[^)]+)\) was assigned to the (?P<to>.+?)\.?$"),
-    ("recall", NAME + r" \((?P<from>[^)]+)\) was recalled by the (?P<to>.+?)\.?$"),
-    ("call_up", NAME + r"(?: \((?P<from>[^)]+)\))? was Called Up to the (?P<to>.+?) on an? (?P<contract>.+?) Contract\.?$"),
-    ("convert", NAME + r" had his Two-Way Contract terminated and signed a standard NBA Contract with the (?P<to>.+?)\.?$"),
-    ("twoway_end", NAME + r" had his Two-Way Contract terminated(?: by the (?P<from>.+?))?\.?$"),
-    ("waive", NAME + r" was waived by the (?P<from>.+?)\.?$"),
-    ("gl_sign", NAME + r" signs? an NBA G League [Cc]ontract\.?$"),
-    ("acquire", NAME + r"(?: \((?P<from>[^)]+)\))? was (?:re-)?acquired (?P<contract>.*?)by the (?P<to>.+?)\.?$"),
-    ("activate", NAME + r" was activated (?:off the .+? by|by) the (?P<to>.+?)\.?$"),
-    ("injury", NAME + r" was added to the (?P<contract>.+?) list by the (?P<to>.+?)\.?$"),
-    ("trade", NAME + r".*\btraded\b.*$"),
+REALGM = "https://basketball.realgm.com"
+MONTHS = {m: i + 1 for i, m in enumerate("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split())}
+
+# each sentence with its links replaced by {P} (the player) and {T} (a team);
+# the teams fill from_team / to_team in the order named below
+FORMS = [
+    ("rights_trade", r"\{P\} was inactive and had his rights acquired by the \{T\} from the ?\{?T?\}? ?in a trade", ("to", "from")),
+    ("gl_trade", r"\{P\} was acquired by the \{T\} from the ?\{?T?\}? ?in a trade", ("to", "from")),
+    ("return_from_callup", r"\{P\} returned to the \{T\} after an NBA call up", ("to",)),
+    ("returned", r"\{P\} returned to the \{T\}", ("to",)),
+    ("gl_waive", r"The \{T\} placed the contract of \{P\} on waivers", ("from",)),
+    ("twoway_sign", r"\{P\} signed a two-way contract with the \{T\} and \{T\}", ("nba", "to")),
+    ("allocate", r"\{P\}, whose NBA Rights is held by the ?\{?T?\}?,? was allocated to the \{T\}", ("to",)),
+    ("allocate", r"\{P\} was allocated to the \{T\}(?: from the \{T\})?", ("to", "nba")),
+    ("deallocate", r"\{P\} was deallocated from the \{T\}", ("from",)),
+    ("tryout", r"\{P\} tried out with the \{T\}", ("to",)),
+    ("draft", r"The ?\{?T?\}? ?selected \{P\} in Round (\d+) with Pick (\d+) in the (\d+) (Annual|International) G League Draft", ("to",)),
+    ("assign", r"The \{T\} assigned \{P\} to the \{T\}", ("nba", "to")),
+    ("recall", r"The \{T\} recalled \{P\} from the \{T\}", ("nba", "from")),
+    ("call_up", r"The \{T\} called up \{P\} from the \{T\}", ("nba", "from")),
+    ("twoway_end", r"The \{T\} ended the two-way contract of \{P\}", ("nba",)),
+    ("gl_terminate", r"The G League terminated the contract of \{P\} from the ?\{?T?\}?", ("from",)),
+    ("pool_claim", r"The \{T\} claimed \{P\} from the player pool", ("to",)),
+    ("gl_claim", r"The \{T\} made a successful waiver claim for the contract of \{P\}", ("to",)),
+    ("deactivate", r"The \{T\} deactivated \{P\}", ("from",)),
 ]
 
 
-def classify(line):
-    for kind, pat in PATTERNS:
-        m = re.match(pat, line)
-        if m:
-            d = m.groupdict()
-            return kind, d.get("name", "").strip(), (d.get("from") or "").strip() or None, \
-                (d.get("to") or "").strip() or None, (d.get("contract") or "").strip() or None
-    low = line.lower()
-    for kind, word in (("injury", "injury"), ("trade", "traded"), ("remove", "removed"),
-                       ("buyout", "bought out"), ("international", "international duty")):
-        if word in low:
-            return kind, None, None, None, None
-    return "other", None, None, None, None
-
-
 def parse_transactions(html):
-    out, day = [], None
-    for line in lines_of(html):
-        m = DATE_RE.match(line.strip("* "))
-        if m:
-            mo, dy, yr = (int(x) for x in m.groups()[:3])
-            yr = yr + 2000 if yr < 100 else yr
-            try:
-                day = date(yr, mo, dy)
-            except ValueError:
-                day = None
-            line = m.group(4).strip()          # a move written on the date's own line
-            if not line:
+    """RealGM's log: an <h3> per date, then one <li> sentence per move."""
+    out = []
+    for block in re.split(r"(?i)<h3[^>]*>", html)[1:]:
+        m = re.match(r"\s*([A-Z][a-z]{2}) (\d{1,2}), (\d{4})", block)
+        if not m or m.group(1) not in MONTHS:
+            continue
+        day = date(int(m.group(3)), MONTHS[m.group(1)], int(m.group(2)))
+        block = re.split(r"(?i)<h[123][^>]*>", block)[0]
+        for li in re.findall(r"(?is)<li>(.*?)</li>", block):
+            pm = re.search(r'<a href="/player/[^"]*/(\d+)"[^>]*>(.*?)</a>', li)
+            if not pm:
                 continue
-        if day is None or len(line) < 20 or line.upper().startswith("NO TRANSACTIONS"):
-            continue
-        if not re.search(r"\b(was|were|signs?|had|has)\b", line):
-            continue
-        kind, name, frm, to, contract = classify(line)
-        out.append({"txn_date": day, "kind": kind, "name": name, "from_team": frm,
-                    "to_team": to, "contract": contract, "raw_text": line})
+            teams = [htmllib.unescape(re.sub(r"<[^>]+>", "", t)).strip()
+                     for t in re.findall(r"(?is)<a href=['\"](?!/player/)[^'\"]*['\"][^>]*>(.*?)</a>", li)]
+            form = re.sub(r'(?is)<a href="/player/[^"]*"[^>]*>.*?</a>', "{P}", li)
+            form = re.sub(r"(?is)<a [^>]*>.*?</a>", "{T}", form)
+            form = re.sub(r"\s+", " ", htmllib.unescape(re.sub(r"<[^>]+>", "", form))).strip()
+            raw = re.sub(r"\s+", " ", htmllib.unescape(re.sub(r"<[^>]+>", "", li))).strip()
+            row = {"txn_date": day, "kind": "other", "name": htmllib.unescape(pm.group(2)).strip(),
+                   "realgm_id": pm.group(1), "from_team": None, "to_team": None, "nba_team": None,
+                   "detail": None, "raw_text": raw}
+            for kind, pat, roles in FORMS:
+                fm = re.match(pat, form)
+                if not fm:
+                    continue
+                row["kind"] = kind
+                for role, team in zip(roles, teams):
+                    row[{"to": "to_team", "from": "from_team", "nba": "nba_team"}[role]] = team
+                if kind == "draft":
+                    row["detail"] = "%s draft %s, round %s, pick %s" % (fm.group(4), fm.group(3), fm.group(1), fm.group(2))
+                break
+            out.append(row)
     return out
 
 
@@ -221,16 +231,22 @@ def cmd_transactions(con, season, html=None):
         print("  transactions: page unavailable — nothing changed")
         return False
     rows = parse_transactions(html)
+    if not rows:
+        print("  transactions: page fetched but no moves parsed — layout may have changed; nothing written")
+        return False
     names = Names(con, season)
     new = 0
     for r in rows:
         tid = hashlib.md5(("%s|%s" % (r["txn_date"], r["raw_text"])).encode()).hexdigest()[:16]
-        pid = names.match(r["name"], r["from_team"], r["to_team"]) if r["name"] else None
+        pid = names.match(r["name"])
         n0 = con.execute("SELECT COUNT(*) FROM gl_transactions WHERE txn_id = ?", [tid]).fetchone()[0]
-        con.execute("""INSERT INTO gl_transactions VALUES (?,?,?,?,?,?,?,?,?,?, now())
+        con.execute("""INSERT INTO gl_transactions
+                         (txn_id, txn_date, season, kind, name, player_id, from_team, to_team, contract,
+                          raw_text, seen_at, realgm_id, nba_team, source)
+                       VALUES (?,?,?,?,?,?,?,?,?,?, now(), ?,?, 'realgm')
                        ON CONFLICT (txn_id) DO UPDATE SET player_id = COALESCE(gl_transactions.player_id, excluded.player_id)""",
-                    [tid, r["txn_date"], season, r["kind"], r["name"], pid, r["from_team"], r["to_team"],
-                     r["contract"], r["raw_text"]])
+                    [tid, r["txn_date"], season_of(r["txn_date"]), r["kind"], r["name"], pid, r["from_team"],
+                     r["to_team"], r["detail"], r["raw_text"], r["realgm_id"], r["nba_team"]])
         new += 0 if n0 else 1
     con.commit()
     kinds = {}
@@ -506,6 +522,10 @@ def build_tracker(con, season):
     first_seen = dict(((r[0], r[1]), r[2]) for r in con.execute("""
         SELECT name, nba_abbr, MIN(snap_date) FROM twoway_list WHERE season = ? GROUP BY ALL""", [season]).fetchall())
     nba_ids = dict(con.execute("SELECT player_id, source_id FROM player_identifiers WHERE source='nba'").fetchall())
+    where = {pid: ("G League" if kind == "assign" else "NBA", d) for pid, kind, d in con.execute("""
+        SELECT player_id, arg_max(kind, txn_date), MAX(txn_date) FROM gl_transactions
+        WHERE season = ? AND player_id IS NOT NULL AND kind IN ('assign', 'recall', 'call_up')
+        GROUP BY player_id""", [season]).fetchall()}
     rows = []
     for name, pid, abbr, nba_team, gl_team, gl_id in con.execute("""
             SELECT name, player_id, nba_abbr, nba_team, gl_team, gl_team_id
@@ -536,6 +556,7 @@ def build_tracker(con, season):
             "team_games_left": len(upcoming),
             "limit_date": hits,                      # if active every game from here
             "can_reach_limit": bool(left is not None and left <= len(upcoming)),
+            "where": where.get(pid, (None, None))[0], "where_since": where.get(pid, (None, None))[1],
         })
     meta = {"season": season, "snapshot": str(snap), "season_start": str(start), "season_end": str(end),
             "deadline": str(deadline), "days_to_deadline": (deadline - today).days, "limit": LIMIT,
@@ -584,9 +605,14 @@ def cmd_sample():
     h = fetch(TX_URL)
     rows = parse_transactions(h or "")
     print("  transactions page: %d moves parsed" % len(rows))
-    for r in rows[:12]:
-        print("    %s  %-10s %-24s %s -> %s %s" % (r["txn_date"], r["kind"], r["name"], r["from_team"],
-                                                  r["to_team"], r["contract"] or ""))
+    from collections import Counter
+    print("  by kind:", Counter(r["kind"] for r in rows).most_common())
+    seen = set()
+    for r in rows:
+        if r["kind"] not in seen:
+            seen.add(r["kind"])
+            print("    %s  %-18s %-24s %s -> %s  nba %s %s" % (r["txn_date"], r["kind"], r["name"], r["from_team"],
+                                                        r["to_team"], r["nba_team"], r["detail"] or ""))
     other = [r["raw_text"] for r in rows if r["kind"] == "other"][:6]
     if other:
         print("  not recognised:", *other, sep="\n    ")
