@@ -749,6 +749,11 @@ def main():
         ok &= run(log, ["ingest_gleague.py", "players", "--current"])
         ok &= run(log, ["ingest_gleague.py", "run", "--season", season])
 
+        # Two-Way Tracker: G League transactions, the two-way list, NBA active lists
+        log("two-way tracker")
+        if not run(log, ["ingest_twoway.py", "run", "--season", season]):
+            log("two-way tracker step failed — the rest of the night carries on")
+
         # positions ruled in the site's Positions tool, before the registry
         ok &= run(log, ["positions_supabase.py", "pull"])
         try:
