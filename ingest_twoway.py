@@ -610,6 +610,8 @@ def cmd_export(con, season, s3, bucket):
             s3.upload_file(p, bucket, "%s/%s" % (PREFIX, key))
         put_sql("SELECT * EXCLUDE (seen_at) FROM gl_transactions WHERE season = '%s' ORDER BY txn_date DESC, raw_text" % season,
                 "gleague/transactions/%s.parquet" % season)
+        put_sql("SELECT * EXCLUDE (seen_at) FROM gl_transactions ORDER BY txn_date DESC, raw_text",
+                "gleague/transactions/all.parquet")
         if rows:
             p = os.path.join(tmp, "tracker.json")
             with open(p, "w") as f:
