@@ -67,8 +67,8 @@ HEADERS = {
 DELAY = 0.6             # between requests: polite, and the Worker is per-request anyway
 
 # NBA game ids carry the season type in their first three digits
-TYPES = {"201": "preseason", "202": "regular", "203": "special", "204": "playoff",
-         "205": "tipoff", "206": "showcase"}
+TYPES = {"201": "preseason", "202": "regular", "203": "allstar", "204": "playoff",
+         "205": "tipoff", "206": "showcase", "207": "showcase"}
 # left out of season totals (still stored)
 NOT_COUNTED = ("preseason", "allstar")
 
@@ -178,13 +178,30 @@ def s3_client():
 # players
 # ---------------------------------------------------------------------------
 
-def cmd_players(current_only=False, relay=False):
-    """Bring every G League player into the registry by NBA.com person id."""
+def cmd_players(current_only=False, relay=False, from_boxes=False):
+    """Bring every G League player into the registry by NBA.com person id —
+    from NBA.com's list, or (from_boxes) from box lines that have no player."""
     import ingest_rosters as R
     season = "2026-27"
-    j = stats_get("commonallplayers", {"IsOnlyCurrentSeason": 1 if current_only else 0,
-                                       "LeagueID": LEAGUE, "Season": season}, relay)
     people = []
+    if from_boxes:
+        con = db()
+        try:
+            rows = con.execute("""
+                SELECT person_id, arg_max(name, game_date), arg_max(team_abbr, game_date)
+                FROM gl_player_game WHERE player_id IS NULL AND person_id IS NOT NULL
+                  AND person_id NOT IN ('0', 'None')
+                GROUP BY person_id""").fetchall()
+        finally:
+            con.close()
+        for pid, name, team in rows:
+            if name and name.strip():
+                people.append({"nba_id": str(pid), "name": name, "name_norm": R.norm(name),
+                               "team_abbr": team, "birthdate": None, "height_in": None, "school": None})
+        j = None
+    else:
+        j = stats_get("commonallplayers", {"IsOnlyCurrentSeason": 1 if current_only else 0,
+                                           "LeagueID": LEAGUE, "Season": season}, relay)
     for r in rows_of(j):
         name = r.get("DISPLAY_FIRST_LAST") or ""
         if not r.get("PERSON_ID") or not name.strip():
@@ -696,7 +713,8 @@ def run_season(season, limit=None, relay=False, export=True):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["players", "run", "backfill", "download", "check", "sample", "export"])
+    ap.add_argument("cmd", choices=["players", "run", "backfill", "download", "check", "sample", "export",
+                                    "repair"])
     ap.add_argument("--season")
     ap.add_argument("--seasons")
     ap.add_argument("--limit", type=int)
@@ -716,7 +734,7 @@ def main():
     # On the Mac, the working database's master copy is in R2: take the lock,
     # pull it, write, push it back. The nightly does this itself, so it calls
     # without --sync.
-    writes = a.cmd in ("players", "run", "backfill")
+    writes = a.cmd in ("players", "run", "backfill", "repair")
     if a.sync and writes:
         import nightly2 as N
         env = N.load_env()
@@ -728,7 +746,7 @@ def main():
             if not N.pull_db(s3, bucket, log):
                 sys.exit("  could not pull the database")
             a.sync = False
-            export_after = a.cmd == "backfill" and not a.no_export
+            export_after = a.cmd in ("backfill", "repair") and not a.no_export
             if export_after:
                 a.no_export = True          # exports need no lock: after it is released
             dispatch(a)
@@ -737,13 +755,17 @@ def main():
             N.release_lock(s3, bucket)
         if export_after:
             print("\n  lock released — writing the season files and career game logs")
-            export_seasons(season_list(a.seasons))
+            export_seasons(season_list(a.seasons) if a.seasons else all_seasons())
         return
     dispatch(a)
 
 
 def dispatch(a):
-    if a.cmd == "players":
+    if a.cmd == "repair":
+        cmd_repair()
+        if not a.no_export:
+            export_seasons(all_seasons())
+    elif a.cmd == "players":
         cmd_players(a.current, a.relay)
     elif a.cmd == "sample":
         cmd_sample(a.game, a.relay)
@@ -769,6 +791,37 @@ def dispatch(a):
             run_season(s, a.limit, a.relay, export=False)
         if not a.no_export:
             export_seasons(seasons)
+
+
+def cmd_repair():
+    """Name the game types we had not, and register the people with box lines
+    but no player record."""
+    con = db()
+    try:
+        for code, t in (("203", "allstar"), ("207", "showcase")):
+            n = con.execute("SELECT COUNT(*) FROM gl_games WHERE substr(game_id, 1, 3) = ? "
+                            "AND season_type <> ?", [code, t]).fetchone()[0]
+            con.execute("UPDATE gl_games SET season_type = ? WHERE substr(game_id, 1, 3) = ?", [t, code])
+            con.execute("UPDATE gl_player_game SET season_type = ? WHERE substr(game_id, 1, 3) = ?", [t, code])
+            print("  %s games refiled as %s: %d" % (code, t, n))
+        con.commit()
+        before = con.execute("SELECT COUNT(DISTINCT person_id) FROM gl_player_game WHERE player_id IS NULL").fetchone()[0]
+    finally:
+        con.close()
+    print("  people with box lines but no player record: %d" % before)
+    cmd_players(from_boxes=True)
+    con = db()
+    after = con.execute("SELECT COUNT(DISTINCT person_id) FROM gl_player_game WHERE player_id IS NULL").fetchone()[0]
+    con.close()
+    print("  still without a record (staged for review): %d" % after)
+
+
+def all_seasons():
+    con = db()
+    try:
+        return [r[0] for r in con.execute("SELECT DISTINCT season FROM gl_games ORDER BY season").fetchall()]
+    finally:
+        con.close()
 
 
 def export_seasons(seasons):
