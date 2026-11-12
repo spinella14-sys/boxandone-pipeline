@@ -131,10 +131,13 @@ def build_queue(con):
 
     # staged ids
     for src, sid, name, bd, team, league, n, first, last, proposed, score, why in con.execute("""
-            SELECT source, source_id, raw_name, raw_birthdate, raw_team, raw_league, occurrences,
-                   first_seen, last_seen, proposed_player_id, match_score, match_reasons
+            SELECT source, source_id, arg_max(raw_name, last_seen), MAX(raw_birthdate),
+                   arg_max(raw_team, last_seen), arg_max(raw_league, last_seen), SUM(occurrences),
+                   MIN(first_seen), MAX(last_seen), arg_max(proposed_player_id, last_seen),
+                   MAX(match_score), arg_max(match_reasons, last_seen)
             FROM staging_players WHERE match_status = 'pending'
-            ORDER BY last_seen DESC""").fetchall():
+            GROUP BY source, source_id
+            ORDER BY MAX(last_seen) DESC""").fetchall():
         key = "%s:%s" % (src, sid)
         if key in gone or not name:
             continue
