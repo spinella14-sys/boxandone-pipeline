@@ -813,6 +813,8 @@ LEFT JOIN fin f ON f.season = r.season
 ORDER BY r.team_id, r.season"""
 
 LOGO_URLS = [
+    "https://ak-static.cms.nba.com/wp-content/uploads/logos/nbagleague/{tid}/primary/L/logo.svg",
+    "https://ak-static.cms.nba.com/wp-content/uploads/logos/nbagleague/{tid}/primary/D/logo.svg",
     "https://cdn.nba.com/logos/gleague/{tid}/primary/L/logo.svg",
     "https://cdn.nba.com/logos/gleague/{tid}/global/L/logo.svg",
     "https://cdn.nba.com/logos/gleague/{tid}/primary/D/logo.svg",
