@@ -78,6 +78,10 @@ CREATE TABLE IF NOT EXISTS gl_rosters (
     position VARCHAR, height_in INTEGER, weight_lb INTEGER, birthdate DATE, age DOUBLE,
     experience VARCHAR, school VARCHAR, how_acquired VARCHAR,
     PRIMARY KEY (as_of, team_id, person_id));
+CREATE TABLE IF NOT EXISTS gl_standings_ev (
+    as_of DATE, season VARCHAR, event VARCHAR, team_id BIGINT, conference VARCHAR, division VARCHAR,
+    playoff_rank INTEGER, division_rank INTEGER, w INTEGER, l INTEGER,
+    PRIMARY KEY (as_of, season, event, team_id));
 CREATE TABLE IF NOT EXISTS gl_standings (
     as_of DATE, season VARCHAR, team_id BIGINT, conference VARCHAR, division VARCHAR,
     playoff_rank INTEGER, w INTEGER, l INTEGER,
@@ -764,23 +768,35 @@ def cmd_rosters(con, season, relay=False):
           "" if not empty else " (none returned for %s)" % ", ".join(empty[:8])))
 
 
+STANDING_TYPES = [("regular", "Regular Season"), ("tipoff", "Showcase"),
+                  ("tipoff", "Tip-Off Tournament"), ("playoff", "Playoffs")]
+
+
 def cmd_standings(con, season, relay=False):
-    """NBA.com's standings: conference, division, playoff seed."""
-    j = stats_get("leaguestandingsv3", {"LeagueID": LEAGUE, "Season": season,
-                                        "SeasonType": "Regular Season"}, relay)
-    rows = rows_of(j, "Standings")
-    if not rows:
-        print("  standings: none from NBA.com — the page computes them from the games")
-        return
+    """NBA.com's standings for each event: conference or region, division, seed."""
     today = datetime.now().date()
-    con.execute("DELETE FROM gl_standings WHERE as_of = ? AND season = ?", [today, season])
-    for r in rows:
-        con.execute("INSERT INTO gl_standings VALUES (?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING",
-                    [today, season, r.get("TeamID"), r.get("Conference"), r.get("Division"),
-                     r.get("PlayoffRank"), r.get("WINS"), r.get("LOSSES")])
+    got = set()
+    for event, stype in STANDING_TYPES:
+        if event in got:
+            continue
+        j = stats_get("leaguestandingsv3", {"LeagueID": LEAGUE, "Season": season, "SeasonType": stype}, relay)
+        time.sleep(DELAY)
+        rows = [r for r in rows_of(j, "Standings") if r.get("TeamID")]
+        if not rows:
+            print("  standings %-18s none" % ("'%s':" % stype))
+            continue
+        got.add(event)
+        con.execute("DELETE FROM gl_standings_ev WHERE as_of = ? AND season = ? AND event = ?", [today, season, event])
+        for r in rows:
+            con.execute("INSERT INTO gl_standings_ev VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING",
+                        [today, season, event, r.get("TeamID"), r.get("Conference") or None,
+                         r.get("Division") or None, r.get("PlayoffRank"), r.get("DivisionRank"),
+                         r.get("WINS"), r.get("LOSSES")])
+        confs = sorted({str(r["Conference"]) for r in rows if r.get("Conference")})
+        divs = sorted({str(r["Division"]) for r in rows if r.get("Division")})
+        print("  standings %-18s %d teams; conferences %s; divisions %s" % (
+            "'%s':" % stype, len(rows), ", ".join(confs) or "-", ", ".join(divs) or "-"))
     con.commit()
-    confs = sorted({str(r.get("Conference")) for r in rows if r.get("Conference")})
-    print("  standings: %d teams%s" % (len(rows), " — " + ", ".join(confs) if confs else ""))
 
 
 HISTORY = """
@@ -883,8 +899,8 @@ def cmd_team_files(con, season, s3, bucket):
                WHERE r.season = '%s'
                QUALIFY r.as_of = MAX(r.as_of) OVER (PARTITION BY r.team_id)
                ORDER BY r.team_id, r.name""" % season, "rosters/%s.parquet" % season)
-        put("""SELECT * FROM gl_standings WHERE season = '%s'
-               QUALIFY as_of = MAX(as_of) OVER (PARTITION BY team_id)""" % season,
+        put("""SELECT * FROM gl_standings_ev WHERE season = '%s'
+               QUALIFY as_of = MAX(as_of) OVER (PARTITION BY team_id, event)""" % season,
             "standings/%s.parquet" % season)
         put(HISTORY.format(current=season), "history.parquet")
     print("  team files: rosters, standings, history")
