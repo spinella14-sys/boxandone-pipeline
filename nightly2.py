@@ -751,6 +751,9 @@ def main():
         log("G League")
         ok &= run(log, ["ingest_gleague.py", "players", "--current"])
         ok &= run(log, ["ingest_gleague.py", "run", "--season", season])
+        # G League rosters, standings, franchise history, logos
+        if not run(log, ["ingest_gleague.py", "teams", "--season", season]):
+            log("G League teams step failed — the rest of the night carries on")
 
         # Two-Way Tracker: G League transactions, the two-way list, NBA active lists
         log("two-way tracker")
