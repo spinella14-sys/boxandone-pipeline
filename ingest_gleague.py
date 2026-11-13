@@ -169,6 +169,8 @@ def db():
     for stmt in DDL.split(";"):
         if stmt.strip():
             con.execute(stmt)
+    for col in ("tip_utc VARCHAR", "status_text VARCHAR", "arena VARCHAR"):
+        con.execute("ALTER TABLE gl_games ADD COLUMN IF NOT EXISTS " + col)
     return con
 
 
@@ -293,7 +295,9 @@ def _schedule_rows(season, relay=False):
             label = " ".join(x for x in (g.get("gameLabel"), g.get("gameSubLabel")) if x) or None
             games.append({
                 "game_id": str(g["gameId"]), "game_date": gd, "status": g.get("gameStatus"),
-                "label": label,
+                "label": label, "tip_utc": g.get("gameDateTimeUTC") or g.get("gameDateUTC"),
+                "status_text": (g.get("gameStatusText") or "").strip() or None,
+                "arena": ", ".join(x for x in (g.get("arenaName"), g.get("arenaCity")) if x) or None,
                 "home": (h.get("teamId"), h.get("teamTricode"), h.get("teamCity"), h.get("teamName"), h.get("score")),
                 "away": (a.get("teamId"), a.get("teamTricode"), a.get("teamCity"), a.get("teamName"), a.get("score")),
             })
@@ -336,14 +340,19 @@ def cmd_schedule(con, season, relay=False):
                             [tid, season, abbr, city, name])
         con.execute("""
             INSERT INTO gl_games (game_id, season, season_type, label, game_date, home_id, away_id,
-                   home_abbr, away_abbr, home_score, away_score, status, updated_at)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?, now())
+                   home_abbr, away_abbr, home_score, away_score, status, updated_at,
+                   tip_utc, status_text, arena)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?, now(), ?,?,?)
             ON CONFLICT (game_id) DO UPDATE SET
                 status = excluded.status, game_date = excluded.game_date, label = excluded.label,
                 home_score = excluded.home_score, away_score = excluded.away_score,
+                tip_utc = COALESCE(excluded.tip_utc, gl_games.tip_utc),
+                status_text = COALESCE(excluded.status_text, gl_games.status_text),
+                arena = COALESCE(excluded.arena, gl_games.arena),
                 updated_at = now()""",
             [g["game_id"], season, stype, g["label"], g["game_date"] or None, g["home"][0], g["away"][0],
-             g["home"][1], g["away"][1], g["home"][4], g["away"][4], g["status"]])
+             g["home"][1], g["away"][1], g["home"][4], g["away"][4], g["status"],
+             g.get("tip_utc"), g.get("status_text"), g.get("arena")])
     final = sum(1 for g in games if g["status"] == 3)
     kinds = {}
     for g in games:
