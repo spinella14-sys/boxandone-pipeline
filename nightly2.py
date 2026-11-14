@@ -759,6 +759,9 @@ def main():
         log("two-way tracker")
         if not run(log, ["ingest_twoway.py", "run", "--season", season]):
             log("two-way tracker step failed — the rest of the night carries on")
+        # Years of Service and two-way eligibility, for everyone
+        if not run(log, ["build_service.py", "build"]):
+            log("eligibility step failed — the rest of the night carries on")
         # the Review tool's queue, with whatever tonight could not match
         if not run(log, ["review_queue.py", "export"]):
             log("review queue export failed — the rest of the night carries on")
