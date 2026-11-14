@@ -10,6 +10,10 @@ on:
     # and the gate below runs only the one that is 5am Eastern today.
     - cron: '7 9 * * *'      # 5:07am EDT (March-November)
     - cron: '7 10 * * *'     # 5:07am EST (November-March)
+    # Backups, in case GitHub skips or delays the run above: about 7am and
+    # 8am Eastern. Each exits at once if this morning's run already succeeded.
+    - cron: '7 12 * * *'
+    - cron: '7 13 * * *'
   workflow_dispatch:        # so it can be triggered by hand
 
 concurrency:
@@ -21,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       skip: ${{ steps.slot.outputs.skip }}
+      backup: ${{ steps.slot.outputs.backup }}
     steps:
       - id: slot
         run: |
@@ -31,8 +36,11 @@ jobs:
             if [ "$zone" = "EDT" ] && [ "$slot" = "7 10 * * *" ]; then skip=true; fi
             if [ "$zone" = "EST" ] && [ "$slot" = "7 9 * * *" ]; then skip=true; fi
           fi
-          echo "Eastern zone $zone, trigger '$slot', skip=$skip"
+          backup=false
+          if [ "$slot" = "7 12 * * *" ] || [ "$slot" = "7 13 * * *" ]; then backup=true; fi
+          echo "Eastern zone $zone, trigger '$slot', skip=$skip, backup=$backup"
           echo "skip=$skip" >> "$GITHUB_OUTPUT"
+          echo "backup=$backup" >> "$GITHUB_OUTPUT"
 
   run:
     needs: gate
@@ -101,6 +109,7 @@ jobs:
           NBA_RELAY_URL: ${{ secrets.NBA_RELAY_URL }}
           NBA_RELAY_TOKEN: ${{ secrets.NBA_RELAY_TOKEN }}
           BOXANDONE_HOME: /home/runner/boxandone
+          NIGHTLY_BACKUP: ${{ needs.gate.outputs.backup }}
         run: python ~/boxandone/nightly2.py
 
       # A run GitHub kills at its time limit never reaches its own cleanup;

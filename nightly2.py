@@ -585,6 +585,20 @@ def touch_supabase(env, log):
         log("supabase touch failed: %s" % str(e)[:80])
 
 
+def ran_this_morning(s3, bucket):
+    """Did a nightly finish successfully today (UTC), after 3am Eastern?"""
+    day = datetime.now(timezone.utc).strftime("%Y%m%d")
+    try:
+        r = s3.list_objects_v2(Bucket=bucket, Prefix="%s/%s_" % (LOG_PREFIX, day))
+    except Exception:
+        return False
+    for o in r.get("Contents", []):
+        name = os.path.basename(o["Key"])      # 20261114_101532_ok.txt
+        if name.endswith("_ok.txt") and name[9:11] >= "08":
+            return True
+    return False
+
+
 def write_log(s3, bucket, log, ok):
     key = "%s/%s_%s.txt" % (LOG_PREFIX,
                             datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S"),
@@ -624,6 +638,11 @@ def main():
         log("database present: %s" % os.path.exists(DB_PATH))
         log("games held for %s: %d" % (season, len(games_held(season))))
         log("would: schedule, fetch, parse, bridge, pbp, possessions, export, push")
+        return
+
+    # a backup start (7am / 8am Eastern) does nothing if the 5am run succeeded
+    if os.environ.get("NIGHTLY_BACKUP") == "true" and ran_this_morning(s3, bucket):
+        log("backup start: this morning's nightly already succeeded — nothing to do")
         return
 
     if not acquire_lock(s3, bucket, log):
