@@ -918,17 +918,30 @@ def cmd_teams(season, relay=False):
         con.close()
 
 
-def run_season(season, limit=None, relay=False, export=True):
+def run_season(season, limit=None, relay=False, export=True, only_new=False):
+    """The schedule, then any newly final games. only_new (the hourly job):
+    publish only when a game came in, and only that game's players."""
     con = db()
     try:
+        held = lambda: {r[0] for r in con.execute(
+            "SELECT game_id FROM gl_games WHERE season = ? AND parsed", [season]).fetchall()}
+        before = held()
         final = cmd_schedule(con, season, relay)
         con.commit()
         if final:
             cmd_fetch(con, season, limit, relay)
             cmd_parse(con, season)
-        if export:
+        new = sorted(held() - before)
+        if only_new:
+            print("  %s: %d new G League game%s" % (season, len(new), "" if len(new) == 1 else "s"))
+        if export and (new or not only_new):
+            players = None
+            if only_new:
+                players = [r[0] for r in con.execute(
+                    "SELECT DISTINCT player_id FROM gl_player_game WHERE player_id IS NOT NULL "
+                    "AND game_id IN (SELECT unnest(?))", [new]).fetchall()]
             s3, bucket = s3_client()
-            cmd_export(con, season, s3, bucket)
+            cmd_export(con, season, s3, bucket, players)
     finally:
         con.close()
 
@@ -944,6 +957,8 @@ def main():
     ap.add_argument("--relay", action="store_true", help="go through the Worker even on the Mac")
     ap.add_argument("--current", action="store_true", help="players: this season's only")
     ap.add_argument("--no-export", action="store_true")
+    ap.add_argument("--only-new", action="store_true",
+                    help="run: publish only when new games came in (the hourly job)")
     ap.add_argument("--sync", action="store_true",
                     help="on the Mac: lock, pull the database from R2, write, push it back")
     a = ap.parse_args()
@@ -1005,7 +1020,7 @@ def dispatch(a):
     elif a.cmd == "download":
         cmd_download(season_list(a.seasons) if a.seasons else [a.season], a.relay)
     elif a.cmd == "run":
-        run_season(a.season, a.limit, a.relay, not a.no_export)
+        run_season(a.season, a.limit, a.relay, not a.no_export, a.only_new)
     elif a.cmd == "backfill":
         # fetch and parse every season first; then each season's files, and
         # each player's career file once at the end rather than once a season

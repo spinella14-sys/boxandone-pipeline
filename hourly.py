@@ -44,6 +44,7 @@ def fingerprint(season):
            ORDER BY 1, 2""",
         """SELECT player_id, position FROM player_positions
            WHERE source = 'admin' AND ? IS NOT NULL ORDER BY 1""",
+        """SELECT game_id FROM gl_games WHERE season = ? AND parsed ORDER BY 1""",
     ):
         try:
             for row in con.execute(sql, [season]).fetchall():
@@ -167,6 +168,11 @@ def main():
         ok &= N.run(log, ["sync_players_supabase.py"])
         # positions ruled in the site's Positions tool
         ok &= N.run(log, ["positions_supabase.py", "pull"])
+        # G League finals: box scores up within the hour, not at 5am. Through
+        # the relay on GitHub. Its own failure doesn't fail the hour.
+        if os.environ.get("NBA_RELAY_URL") or not os.environ.get("GITHUB_RUN_ID"):
+            if not N.run(log, ["ingest_gleague.py", "run", "--season", season, "--only-new"]):
+                log("G League step failed — the rest of the hour carries on")
         # season-to-date totals from stats.nba.com: catch up once a day
         stats_ran = False
         if stats_due() and N.stats_reachable(log):
