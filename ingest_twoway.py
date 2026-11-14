@@ -94,10 +94,23 @@ def current_season():
 
 def fetch(url):
     from curl_cffi import requests as cr
+    headers = {"Accept": "text/html,application/xhtml+xml"}
+    relay = os.environ.get("NBA_RELAY_URL")
+    if not relay and os.environ.get("GITHUB_ACTIONS"):
+        try:
+            import nightly2 as N
+            env = N.load_env()
+            relay = env.get("NBA_RELAY_URL")
+            os.environ.setdefault("NBA_RELAY_TOKEN", env.get("NBA_RELAY_TOKEN") or "")
+        except Exception:
+            relay = None
+    if relay and os.environ.get("GITHUB_ACTIONS") and url.startswith("https://basketball.realgm.com/"):
+        # RealGM refuses GitHub's machines: ask through the relay
+        url = relay.rstrip("/") + "/realgm" + url[len("https://basketball.realgm.com"):]
+        headers["x-relay-token"] = os.environ.get("NBA_RELAY_TOKEN", "")
     for attempt in range(3):
         try:
-            r = cr.get(url, impersonate="chrome", timeout=40,
-                       headers={"Accept": "text/html,application/xhtml+xml"})
+            r = cr.get(url, impersonate="chrome", timeout=40, headers=headers)
             if r.status_code == 200:
                 return r.text
             print("    %s: HTTP %s" % (url, r.status_code))
