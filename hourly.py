@@ -171,7 +171,7 @@ def main():
         # G League finals: box scores up within the hour, not at 5am. Through
         # the relay on GitHub. Its own failure doesn't fail the hour.
         if os.environ.get("NBA_RELAY_URL") or not os.environ.get("GITHUB_RUN_ID"):
-            if not N.run(log, ["ingest_gleague.py", "run", "--season", season, "--only-new"]):
+            if not N.run(log, ["ingest_gleague.py", "run", "--season", season, "--only-new"], timeout=600):
                 log("G League step failed — the rest of the hour carries on")
         # season-to-date totals from stats.nba.com: catch up once a day
         stats_ran = False

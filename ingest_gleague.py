@@ -115,10 +115,20 @@ def use_relay(force=False):
     return bool(os.environ.get("NBA_RELAY_URL")) and (force or os.environ.get("GITHUB_ACTIONS"))
 
 
-def stats_get(endpoint, params, relay=False, tries=4):
-    """One stats.nba.com call, directly or through the Worker. JSON or None."""
+_FAILED = [0]      # requests in a row that came back with nothing
+
+
+def stats_get(endpoint, params, relay=False, tries=3):
+    """One stats.nba.com call, directly or through the Worker. JSON or None.
+    After two requests in a row fail, the rest of the run's requests are
+    skipped: a source that is down should cost a minute, not the night."""
     from urllib.parse import urlencode
     from curl_cffi import requests as cr
+    if _FAILED[0] >= 2:
+        if _FAILED[0] == 2:
+            print("      NBA.com is not answering — skipping the rest of this run's requests")
+            _FAILED[0] += 1
+        return None
     q = urlencode(params)
     if use_relay(relay):
         url = "%s/stats/%s?%s" % (os.environ["NBA_RELAY_URL"].rstrip("/"), endpoint, q)
@@ -128,20 +138,23 @@ def stats_get(endpoint, params, relay=False, tries=4):
         headers = HEADERS
     for attempt in range(tries):
         try:
-            r = cr.get(url, headers=headers, impersonate="chrome", timeout=60)
+            r = cr.get(url, headers=headers, impersonate="chrome", timeout=30)
         except Exception as e:
             print("      %s: %s" % (endpoint, str(e)[:70]))
-            time.sleep(6 * (attempt + 1))
+            time.sleep(4 * (attempt + 1))
             continue
         if r.status_code == 200:
+            _FAILED[0] = 0
             try:
                 return r.json()
             except Exception:
                 return None
         if r.status_code in (400, 404):
+            _FAILED[0] = 0
             return None
         print("      %s: HTTP %s" % (endpoint, r.status_code))
-        time.sleep(10 * (attempt + 1))
+        time.sleep(5 * (attempt + 1))
+    _FAILED[0] += 1
     return None
 
 

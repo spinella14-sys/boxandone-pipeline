@@ -769,14 +769,14 @@ def main():
         # GitHub. Before the registry, so new G League players reach it tonight.
         log("G League")
         ok &= run(log, ["ingest_gleague.py", "players", "--current"])
-        ok &= run(log, ["ingest_gleague.py", "run", "--season", season])
+        ok &= run(log, ["ingest_gleague.py", "run", "--season", season], timeout=1200)
         # G League rosters, standings, franchise history, logos
-        if not run(log, ["ingest_gleague.py", "teams", "--season", season]):
+        if not run(log, ["ingest_gleague.py", "teams", "--season", season], timeout=1200):
             log("G League teams step failed — the rest of the night carries on")
 
         # Two-Way Tracker: G League transactions, the two-way list, NBA active lists
         log("two-way tracker")
-        if not run(log, ["ingest_twoway.py", "run", "--season", season]):
+        if not run(log, ["ingest_twoway.py", "run", "--season", season], timeout=1200):
             log("two-way tracker step failed — the rest of the night carries on")
         # Years of Service and two-way eligibility, for everyone
         if not run(log, ["build_service.py", "build"]):
