@@ -131,11 +131,20 @@ def stats_get(endpoint, params, relay=False, tries=3):
         return None
     q = urlencode(params)
     if use_relay(relay):
-        url = "%s/stats/%s?%s" % (os.environ["NBA_RELAY_URL"].rstrip("/"), endpoint, q)
+        # the G League's own stats site first: stats.nba.com ignores the relay
+        base = os.environ["NBA_RELAY_URL"].rstrip("/")
         headers = {"x-relay-token": os.environ.get("NBA_RELAY_TOKEN", "")}
-    else:
-        url = "https://stats.nba.com/stats/%s?%s" % (endpoint, q)
-        headers = HEADERS
+        for route in ("gl-stats", "stats"):
+            got = _get(cr, "%s/%s/%s?%s" % (base, route, endpoint, q), headers, endpoint, tries)
+            if got != 404:
+                return got
+        return None
+    got = _get(cr, "https://stats.nba.com/stats/%s?%s" % (endpoint, q), HEADERS, endpoint, tries)
+    return None if got == 404 else got
+
+
+def _get(cr, url, headers, endpoint, tries):
+    """JSON, None (no data / failed), or 404 (this route doesn't offer it)."""
     for attempt in range(tries):
         try:
             r = cr.get(url, headers=headers, impersonate="chrome", timeout=30)
@@ -149,7 +158,10 @@ def stats_get(endpoint, params, relay=False, tries=3):
                 return r.json()
             except Exception:
                 return None
-        if r.status_code in (400, 404):
+        if r.status_code == 404:
+            _FAILED[0] = 0
+            return 404
+        if r.status_code == 400:
             _FAILED[0] = 0
             return None
         print("      %s: HTTP %s" % (endpoint, r.status_code))
