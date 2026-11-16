@@ -45,6 +45,7 @@ def fingerprint(season):
         """SELECT player_id, position FROM player_positions
            WHERE source = 'admin' AND ? IS NOT NULL ORDER BY 1""",
         """SELECT game_id FROM gl_games WHERE season = ? AND parsed ORDER BY 1""",
+        """SELECT txn_id FROM gl_transactions WHERE season = ? ORDER BY 1""",
     ):
         try:
             for row in con.execute(sql, [season]).fetchall():
@@ -173,6 +174,11 @@ def main():
         if os.environ.get("NBA_RELAY_URL") or not os.environ.get("GITHUB_RUN_ID"):
             if not N.run(log, ["ingest_gleague.py", "run", "--season", season, "--only-new"], timeout=600):
                 log("G League step failed — the rest of the hour carries on")
+        # RealGM refuses GitHub and the relay: on the Mac's daily run, read the
+        # G League transaction log (and refresh the two-way tracker with it)
+        if not os.environ.get("GITHUB_RUN_ID"):
+            if not N.run(log, ["ingest_twoway.py", "run", "--season", season], timeout=900):
+                log("two-way / RealGM step failed — the rest of the run carries on")
         # season-to-date totals from stats.nba.com: catch up once a day
         stats_ran = False
         if stats_due() and N.stats_reachable(log):
