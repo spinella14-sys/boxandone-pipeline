@@ -41,7 +41,7 @@ import sys
 import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 HOME = os.environ.get("BOXANDONE_HOME", os.path.expanduser("~/boxandone"))
 sys.path.insert(0, HOME)
@@ -591,34 +591,58 @@ def to_rows(day, names):
 
 
 def load(con, s3, bucket, day_files):
-    """Put the given cached days into the database (each day replaces itself).
-    Returns the set of players whose rows changed."""
+    """Put the given cached days into the database, each day replacing itself,
+    in one statement rather than row by row. Returns the players whose rows
+    changed."""
+    import csv
     names = Names(con, s3, bucket)
-    changed, unmatched, n = set(), {}, 0
+    rows, days, unmatched = [], [], {}
     for path in day_files:
         day = json.load(open(path))
         d = date.fromisoformat(day["date"])
-        rows = to_rows(day, names)
-        before = set(con.execute("""SELECT player_id, team_abbr, player_name, status, reason FROM injury_rows
-                                    WHERE game_date = ?""", [d]).fetchall())
-        after = {(r[7], r[5], r[6], r[8], r[9]) for r in rows}
-        for r in before ^ after:
-            if r[0]:
-                changed.add(r[0])
-        con.execute("DELETE FROM injury_rows WHERE game_date = ?", [d])
-        if rows:
-            con.executemany("INSERT OR REPLACE INTO injury_rows VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", rows)
-        con.execute("INSERT OR REPLACE INTO injury_days VALUES (?,?,?,?,?,?,?,now())",
-                    [d, season_of(d), day["reports"], day["latest"], day["games"], day["expected"],
-                     ", ".join(day["missing"])])
-        for r in rows:
-            if r[6] and not r[7]:
-                unmatched[(r[6], r[5])] = unmatched.get((r[6], r[5]), 0) + 1
-        n += 1
-    print("  loaded %d days; %d players' histories changed" % (n, len(changed)))
+        rows += to_rows(day, names)
+        days.append((d, season_of(d), day["reports"], day["latest"], day["games"], day["expected"],
+                     ", ".join(day["missing"])))
+    dates = sorted({d[0] for d in days})
+    if not dates:
+        return set()
+    con.execute("CREATE OR REPLACE TEMP TABLE _dates AS SELECT UNNEST(?::DATE[]) AS d", [dates])
+    before = set(con.execute("""SELECT player_id, team_abbr, player_name, status, reason, game_date
+                                FROM injury_rows WHERE game_date IN (SELECT d FROM _dates)""").fetchall())
+    after = {(r[7], r[5], r[6], r[8], r[9], r[0]) for r in rows}
+    changed = {r[0] for r in before ^ after if r[0]}
+    with tempfile.TemporaryDirectory() as tmp:
+        for name, data, width in (("rows", rows, 13), ("days", days, 7)):
+            with open(os.path.join(tmp, name + ".csv"), "w", newline="") as f:
+                w = csv.writer(f)
+                for r in data:
+                    w.writerow(["" if v is None else v for v in r])
+        # read_csv reads an empty field as NULL; the report's blanks (a team
+        # that hasn't sent its list has no player) are empty text, as before
+        con.execute("BEGIN")
+        con.execute("DELETE FROM injury_rows WHERE game_date IN (SELECT d FROM _dates)")
+        con.execute("DELETE FROM injury_days WHERE game_date IN (SELECT d FROM _dates)")
+        con.execute("""INSERT INTO injury_rows SELECT DISTINCT ON (c0, c5, c6)
+                         CAST(c0 AS DATE), c1, COALESCE(c2, ''), COALESCE(c3, ''), COALESCE(c4, ''),
+                         COALESCE(c5, ''), COALESCE(c6, ''), c7, COALESCE(c8, ''), COALESCE(c9, ''),
+                         COALESCE(c10, ''), COALESCE(c11, ''), COALESCE(c12, '')
+                       FROM read_csv(?, header=false, all_varchar=true, delim=',', quote='"', escape='"',
+                                     names=['c0','c1','c2','c3','c4','c5','c6','c7','c8','c9','c10','c11','c12'])
+                       """, [os.path.join(tmp, "rows.csv")]) if rows else None
+        con.execute("""INSERT INTO injury_days SELECT CAST(c0 AS DATE), c1, CAST(c2 AS INTEGER), NULLIF(c3, ''),
+                         CAST(c4 AS INTEGER), CAST(c5 AS INTEGER), c6, now()
+                       FROM read_csv(?, header=false, all_varchar=true, delim=',', quote='"', escape='"',
+                                     names=['c0','c1','c2','c3','c4','c5','c6'])""", [os.path.join(tmp, "days.csv")])
+        con.execute("COMMIT")
+    for r in rows:
+        if r[6] and not r[7]:
+            unmatched[(r[6], r[5])] = unmatched.get((r[6], r[5]), 0) + 1
+    held = con.execute("SELECT count(*) FROM injury_rows WHERE game_date IN (SELECT d FROM _dates)").fetchone()[0]
+    print("  loaded %d days, %d rows (%d now held for them); %d players' histories changed" % (
+        len(dates), len(rows), held, len(changed)))
     if unmatched:
         print("  %d names not matched to a player (most listed first):" % len(unmatched))
-        for (nm, t), c in sorted(unmatched.items(), key=lambda kv: -kv[1])[:15]:
+        for (nm, t), c in sorted(unmatched.items(), key=lambda kv: -kv[1])[:20]:
             print("    %-28s %s  %d" % (nm, t, c))
     return changed
 
@@ -933,7 +957,8 @@ def main():
             if a.cmd == "load":
                 files = sorted(os.path.join(DAYS, f) for f in os.listdir(DAYS) if f.endswith(".json"))
                 load(con, s3, bucket, files)
-                export(con, s3, bucket, players="all")
+                total = con.execute("SELECT count(*), count(DISTINCT game_date) FROM injury_rows").fetchone()
+                print("  the database now holds %d injury rows over %d days" % total)
             elif a.cmd == "daily":
                 t = today_et()
                 dates = [date.fromisoformat(a.date)] if a.date else [t] if a.today else [t - timedelta(days=1), t]
@@ -945,10 +970,26 @@ def main():
         finally:
             con.close()
         if a.sync:
+            # the lock is stamped afresh before the upload: a long push from a
+            # home connection must not look abandoned to a GitHub run, which
+            # would take over with the database from before this one
+            if N.lock_is_mine(s3, bucket) and N._MY_LOCK:
+                N._MY_LOCK = dict(N._MY_LOCK, started=datetime.now(timezone.utc).isoformat())
+                s3.put_object(Bucket=bucket, Key=N.LOCK_KEY, Body=json.dumps(N._MY_LOCK).encode())
             N.push_db(s3, bucket, log)
+            if not N.lock_is_mine(s3, bucket):
+                print("  WARNING: another run took the lock during the push — tell Claude")
     finally:
         if a.sync:
             N.release_lock(s3, bucket)
+    if a.cmd == "load":
+        # the file uploads happen after the lock is released: they read only
+        # this machine's copy, and they take a while
+        con = db()
+        try:
+            export(con, s3, bucket, players="all")
+        finally:
+            con.close()
 
 
 if __name__ == "__main__":
