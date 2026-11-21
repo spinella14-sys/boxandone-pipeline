@@ -875,7 +875,8 @@ def cmd_explain(con, name):
                           FROM injury_rows r LEFT JOIN players p USING (player_id)
                           ORDER BY r.game_date""").fetchall()
     want = norm(name)
-    pids = [p for (p, n) in con.execute("SELECT player_id, name FROM players").fetchall() if norm(n) == want]
+    pids = [p for (p, n) in con.execute("SELECT player_id, full_name FROM players").fetchall()
+            if n and norm(n) == want]
     if not pids:
         print("  no player named %r" % name)
         return
