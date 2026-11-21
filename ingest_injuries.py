@@ -658,6 +658,7 @@ CATEGORIES = [
     ("coach", r"coach'?s decision"), ("rest", r"^rest"), ("personal", r"^personal"),
     ("suspension", r"suspension"), ("not_with_team", r"not with team"),
     ("protocols", r"health and safety|protocols"), ("not_submitted", r"not yet submitted"),
+    ("trade", r"trade pending|^trade"),
 ]
 # body parts, most specific first; each with the region it rolls up to
 PARTS = [
@@ -694,7 +695,7 @@ TYPES = [
     ("fracture", "fracture"), ("break", "fracture"), ("stress reaction", "stress reaction"),
     ("dislocation", "dislocation"), ("dislocated", "dislocation"), ("displacement", "dislocation"),
     ("subluxation", "dislocation"), ("cartilage", "cartilage"),
-    ("sprain", "sprain"), ("strain", "strain"), ("strained", "strain"),
+    ("sprain", "sprain"), ("hyperextension", "sprain"), ("strain", "strain"), ("strained", "strain"),
     ("contusion", "contusion"), ("bruise", "contusion"),
     ("tendinitis", "tendinopathy"), ("tendinopathy", "tendinopathy"), ("tendinosis", "tendinopathy"),
     ("tendonitis", "tendinopathy"), ("bursitis", "inflammation"), ("fasciitis", "inflammation"), ("inflammation", "inflammation"),
