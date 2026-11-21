@@ -46,6 +46,8 @@ def fingerprint(season):
            WHERE source = 'admin' AND ? IS NOT NULL ORDER BY 1""",
         """SELECT game_id FROM gl_games WHERE season = ? AND parsed ORDER BY 1""",
         """SELECT txn_id FROM gl_transactions WHERE season = ? ORDER BY 1""",
+        """SELECT game_date, team_abbr, player_name, status, reason FROM injury_rows
+           WHERE season = ? ORDER BY ALL""",
     ):
         try:
             for row in con.execute(sql, [season]).fetchall():
@@ -179,6 +181,14 @@ def main():
         if not os.environ.get("GITHUB_RUN_ID"):
             if not N.run(log, ["ingest_twoway.py", "run", "--season", season], timeout=900):
                 log("two-way / RealGM step failed — the rest of the run carries on")
+        # the injury report: on GitHub today's latest, from 11am to midnight
+        # Eastern; on the Mac's daily run, yesterday's finals and today
+        if os.environ.get("GITHUB_RUN_ID"):
+            hour = __import__("datetime").datetime.now(__import__("zoneinfo").ZoneInfo("America/New_York")).hour
+            if 11 <= hour <= 23 and not N.run(log, ["ingest_injuries.py", "daily", "--today"], timeout=600):
+                log("injury report step failed — the rest of the hour carries on")
+        elif not N.run(log, ["ingest_injuries.py", "daily"], timeout=900):
+            log("injury report step failed — the rest of the run carries on")
         # season-to-date totals from stats.nba.com: catch up once a day
         stats_ran = False
         if stats_due() and N.stats_reachable(log):

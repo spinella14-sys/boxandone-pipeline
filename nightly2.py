@@ -781,6 +781,11 @@ def main():
         # Years of Service and two-way eligibility, for everyone
         if not run(log, ["build_service.py", "build"]):
             log("eligibility step failed — the rest of the night carries on")
+        # the league's injury report: each game's final list from yesterday,
+        # and today's latest
+        log("injury report")
+        if not run(log, ["ingest_injuries.py", "daily"], timeout=900):
+            log("injury report step failed — the rest of the night carries on")
         # the Review tool's queue, with whatever tonight could not match
         if not run(log, ["review_queue.py", "export"]):
             log("review queue export failed — the rest of the night carries on")
