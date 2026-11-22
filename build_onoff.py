@@ -31,7 +31,8 @@ sys.path.insert(0, HOME)
 os.chdir(HOME)
 
 LINEUPS = os.path.join(HOME, "data", "lineups")
-FACTORS = ("fgm", "fga", "fg3m", "fg3a", "ftm", "fta", "orb", "drb", "tov", "ast", "stl", "blk")
+FACTORS = ("fgm", "fga", "fg3m", "fg3a", "ftm", "fta", "orb", "drb", "tov", "ast", "stl", "blk",
+           "rim_fga", "rim_fgm")      # rim counts: stints built after patch_lineups_rim.py
 STATS = ("pts", "poss") + FACTORS
 FIRST = "2019-20"
 
@@ -65,9 +66,13 @@ def build(con, season, path):
         print("  %s: stints carry no box-score tallies — rebuild lineups first" % season)
         return []
 
+    # a tally the stints don't carry (rim counts on an older build) is NULL,
+    # so its rates read blank rather than zero
+    col = lambda side, k: "%s_%s" % (side, k) if "%s_%s" % (side, k) in cols else "CAST(NULL AS BIGINT)"
+
     def side(me, opp):
-        mine = ", ".join("%s_%s AS t_%s" % (me, k, k) for k in FACTORS)
-        theirs = ", ".join("%s_%s AS o_%s" % (opp, k, k) for k in FACTORS)
+        mine = ", ".join("%s AS t_%s" % (col(me, k), k) for k in FACTORS)
+        theirs = ", ".join("%s AS o_%s" % (col(opp, k), k) for k in FACTORS)
         return """SELECT game_id, %s AS team, %s_ids AS ids, seconds / 60.0 AS mins,
                          %s_pts AS t_pts, %s_pts AS o_pts, %s_poss AS t_poss, %s_poss AS o_poss, %s, %s
                   FROM read_parquet('%s') WHERE reliable""" % (me, me, me, opp, me, opp, mine, theirs, path)

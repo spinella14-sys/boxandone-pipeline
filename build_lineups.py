@@ -283,7 +283,20 @@ def _lookahead(pa, i, cands, tid):
     return None
 
 
-FACTORS = ("fgm", "fga", "fg3m", "fg3a", "ftm", "fta", "orb", "drb", "tov", "ast", "stl", "blk")
+FACTORS = ("fgm", "fga", "fg3m", "fg3a", "ftm", "fta", "orb", "drb", "tov", "ast", "stl", "blk",
+           "rim_fga", "rim_fgm")
+
+
+def at_rim(a):
+    """A shot from the restricted area — the shot chart's Rim zone. The feed
+    names the area; where it doesn't, four feet or closer."""
+    area = (a.get("area") or "").lower()
+    if area:
+        return area.startswith("restricted")
+    try:
+        return float(a.get("shotDistance")) <= 4
+    except (TypeError, ValueError):
+        return False
 
 
 def tally(st, a, home_id, teams):
@@ -301,6 +314,9 @@ def tally(st, a, home_id, teams):
         if t == "3pt":
             mine["fg3a"] += 1
             mine["fg3m"] += made
+        elif at_rim(a):
+            mine["rim_fga"] += 1
+            mine["rim_fgm"] += made
         if made and a.get("assistPersonId"):
             mine["ast"] += 1
         if not made and a.get("blockPersonId"):
@@ -611,6 +627,25 @@ def write_parquet(con, rows, cols, path):
         os.remove(tmp)
 
 
+def lineups_complete(s3, bucket, con, season, n):
+    """False (and says so) when R2 already holds this season with more games
+    than this build found: this machine is missing play-by-play, and a partial
+    season must not replace a full one."""
+    tmp = os.path.join(tempfile.gettempdir(), "r2_%s_games.parquet" % season)
+    try:
+        s3.download_file(bucket, "v2/lineups/%s_games.parquet" % season, tmp)
+        have = con.execute("SELECT COUNT(*) FROM read_parquet(?)", [tmp]).fetchone()[0]
+    except Exception:
+        return True
+    finally:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+    if n < have:
+        print("      NOT uploaded: this build found %d games, R2 has %d — R2's copy kept" % (n, have))
+        return False
+    return True
+
+
 def cmd_build(seasons, upload=True):
     import duckdb
     os.makedirs(OUT, exist_ok=True)
@@ -674,6 +709,8 @@ def cmd_build(seasons, upload=True):
             "%s_games.parquet" % season: (vals, sorted({k for v in vals for k in v})),
             "%s_players.parquet" % season: (players, list(players[0].keys()) if players else []),
         }
+        if s3 and not lineups_complete(s3, bucket, con, season, len(vals)):
+            continue
         for name, (rows, cols) in files.items():
             path = os.path.join(OUT, name)
             if os.path.exists(path):
