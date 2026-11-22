@@ -102,7 +102,8 @@ def candidate_ids(season):
 
 def _guessed_ids(season):
     yy = season[2:4]
-    ids = ["002%s0%04d" % (yy, n) for n in range(1, 1231)]
+    # 2019-20's bubble seeding games ran past the usual 1,230 (to 1318)
+    ids = ["002%s0%04d" % (yy, n) for n in range(1, 1321 if yy == "19" else 1231)]
     ids += ["005%s00%d%d1" % (yy, r, s) for r in (1, 2) for s in range(4)]
     series = {1: 8, 2: 4, 3: 2, 4: 1}
     ids += ["004%s00%d%d%d" % (yy, r, s, g) for r, n in series.items()
