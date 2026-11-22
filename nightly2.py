@@ -727,6 +727,8 @@ def main():
                 if not a.no_pbp:
                     ok &= run(log, ["build_lineups.py", "fetch", "--seasons", season])
                     ok &= run(log, ["build_lineups.py", "build", "--seasons", season])
+                    # on/off totals for both teams, for the team-impact columns
+                    ok &= run(log, ["build_onoff.py", "build", "--seasons", season])
                     if new_games:
                         ok &= run(log, ["export_game_lineups.py", "build",
                                         "--games", ",".join(new_games)])
