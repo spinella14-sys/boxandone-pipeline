@@ -734,6 +734,8 @@ def main():
                                         "--games", ",".join(new_games)])
                     # RAPM for the season so far (F5)
                     ok &= run(log, ["compute_rapm.py", "build", "--season", season])
+                    # RAPM with a box-score prior, for the Models tab
+                    ok &= run(log, ["compute_prior_rapm.py", "build", "--season", season])
                     # each team's shots, both ends, for the team page
                     ok &= run(log, ["export_team_shots.py", "build", "--season", season, "--hot"])
                     # each team's lineup combinations, 5-man down to 2-man
