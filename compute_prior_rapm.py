@@ -264,13 +264,14 @@ def run_season(season, s3, bucket, tmp, ids, names, upload, luck=False):
     return rows, meta
 
 
-def show(rows, window, n=20, min_min=1000):
+def show(rows, window, n=20, min_min=1000, key=None, title=None):
     luck = rows and "lprapm" in rows[0]
-    k = "lprapm" if luck else "prapm"
+    k = key or ("lprapm" if luck else "prapm")
     rows = [dict(r, prapm=r[k], o_prapm=r["o_" + k], d_prapm=r["d_" + k]) for r in rows]
     pool = sorted([r for r in rows if r["window"] == window and r["minutes"] >= min_min], key=lambda r: -r["prapm"])
-    print("\n  %s, %d+ minutes on the floor — %s (prior = shrunk BPM)"
-          % (window, min_min, "LUCK-ADJUSTED box-prior RAPM" if luck else "box-prior RAPM"))
+    print("\n  %s, %d+ minutes on the floor — %s"
+          % (window, min_min, title or ("LUCK-ADJUSTED box-prior RAPM (prior = shrunk BPM)" if luck
+                                        else "box-prior RAPM (prior = shrunk BPM)")))
     print("    %-24s %7s  %6s %6s   %7s   %6s" % ("", "PRAPM", "O", "D", "prior", "min"))
     for r in pool[:n]:
         print("    %-24s %+7.2f  %+6.2f %+6.2f   %+7.2f   %6.0f" % (

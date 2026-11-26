@@ -87,12 +87,14 @@ def load_box(s3, bucket, tmp, seasons):
 
 def spm_fit(s3, bucket, tmp, box_rows):
     """Coefficients mapping per-36 box rates to O and D points per 100, fitted
-    (minutes-weighted) on one-season box-prior RAPM for players with 500+ minutes."""
+    (minutes-weighted) on plain three-year RAPM against the same three
+    seasons' box totals (1,500+ minutes). Plain RAPM, not box-prior RAPM:
+    that one already leans on BPM and would flatter the box score."""
     import duckdb
-    p = os.path.join(tmp, "prapm.parquet")
-    s3.download_file(bucket, "v2/models/prapm.parquet", p)
+    p = os.path.join(tmp, "rapm.parquet")
+    s3.download_file(bucket, "v2/models/rapm.parquet", p)
     target = {(pid, s): (float(o or 0), float(d or 0)) for pid, s, o, d in duckdb.connect().execute(
-        "SELECT player_id, season, o_prapm, d_prapm FROM read_parquet(?) WHERE \"window\" = '1y' "
+        "SELECT player_id, season, o_rapm, d_rapm FROM read_parquet(?) WHERE \"window\" = '3y' "
         "AND player_id IS NOT NULL", [p]).fetchall()}
     agg = {}
     for r in box_rows:
@@ -101,12 +103,14 @@ def spm_fit(s3, bucket, tmp, box_rows):
         a[0] += r[4]
         a[1:] += np.array(r[5:], dtype=float)
     X, yo, yd, w = [], [], [], []
-    for k, a in agg.items():
-        if a[0] < 500 or k not in target:
+    for (pid, s), (o, d) in target.items():
+        span = [R.prev(s, 2), R.prev(s), s]
+        a = sum((agg[(pid, x)] for x in span if (pid, x) in agg), np.zeros(1 + len(BOX)))
+        if a[0] < 1500:
             continue
         X.append(rates(a[1:], a[0]))
-        yo.append(target[k][0])
-        yd.append(target[k][1])
+        yo.append(o)
+        yd.append(d)
         w.append(a[0])
     X, w = np.array(X), np.sqrt(np.array(w))
     Xi = np.hstack([np.ones((len(X), 1)), X])
@@ -115,7 +119,7 @@ def spm_fit(s3, bucket, tmp, box_rows):
     cd = np.linalg.solve(Xi.T @ (Xi * w[:, None] ** 2) + pen, Xi.T @ (np.array(yd) * w ** 2))
     fo, fd = Xi @ co, Xi @ cd
     r2 = lambda y, f: 1 - np.sum(w ** 2 * (y - f) ** 2) / np.sum(w ** 2 * (y - np.average(y, weights=w ** 2)) ** 2)
-    print("  box estimate fitted on %d player-seasons: offence R² %.2f, defence R² %.2f"
+    print("  box estimate fitted on %d three-season spans against plain RAPM: offence R² %.2f, defence R² %.2f"
           % (len(X), r2(np.array(yo), fo), r2(np.array(yd), fd)))
     return co, cd
 
