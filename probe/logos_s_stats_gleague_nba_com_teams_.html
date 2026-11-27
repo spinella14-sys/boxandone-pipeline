@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html xmlns:ng="http://angularjs.org" lang="en" ng-app="stats" ng-strict-di stats-league="20" stats-version="5.1.1" stats-build-date="2026-11-07 05:29 PM">
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+
+    
+      
+    
+
+    <title>NBA G League Stats  | Teams </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"  content="Home of NBA G League Advanced Stats - Official NBA G League Statistics and Advanced Analytics."  />
+
+        <link rel="canonical" href="https://stats.gleague.nba.com/teams/">
+    
+    
+    
+      <meta property="og:url" content="https://stats.gleague.nba.com/teams/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="NBA G League Stats" />
+  <meta property="og:title" content="Teams" />
+  <meta property="og:description" content="Home of NBA G League Advanced Stats - Official NBA G League Statistics and Advanced Analytics." />
+  <meta property="og:image" content="/media/img/touch/stats-icon-152x152.png" />
+  <meta property="og:sport" content="Basketball" />
+  <meta property="og:sports_league" content="NBA G League" />
+
+  
+  
+    <meta name="msapplication-tap-highlight" content="no">
+    <link rel="manifest" href="/manifest.json">
+
+    <meta name="theme-color" content="#1a477b">
+
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="NBA G League Stats">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="NBA G League Stats">
+
+    <link rel="icon" sizes="152x152" href="/media/img/touch/stats-icon-152x152.png">
+    <link rel="apple-touch-icon" href="/media/img/touch/stats-icon-128x128.png" />
+    <link rel="shortcut icon" href="/favicon.png" />
+
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700|Roboto+Condensed" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.typekit.net/spm7doz.css">
+    <link rel="stylesheet" type="text/css" href="/styles/theme.min.css?rev=de21b2b586fd5dee8c5f9acde5e4989b">
+
+    <script>window.nbaStatsRoute = '';</script>
+
+    
+  
+
+  
+
+  
+      
+      
+    
+
+
+  
+    <script>
+      window._esi = {
+        country: "US",
+        tz: "EST",
+        region: "NJ",
+        browser: "MOZILLA",
+        nbarid: "1",
+        nbarn: "United States"
+      };
+    </script>
+  
+
+          <script src="//assets.adobedtm.com/82bf3c13a525/d8dc9bce6a0c/launch-ee21b40bc60d.min.js" async></script>
+    
+    
+  <script >bazadebezolkohpepadr="1001843027"</script><script type="text/javascript" src="https://stats.gleague.nba.com/akam/13/3bb6eac1"  defer></script></head>
+
+  <body>
+
+    <header id="header-ad">
+
+
+
+            <!--Top 728x90 Ad Space-->
+        <script type='text/javascript'>
+          var googletag = googletag || {};
+          googletag.cmd = googletag.cmd || [];
+          (function() {
+            var gads = document.createElement('script');
+            gads.async = true;
+            gads.type = 'text/javascript';
+            var useSSL = 'https:' == document.location.protocol;
+            gads.src = (useSSL ? 'https:' : 'http:') +
+              '//www.googletagservices.com/tag/js/gpt.js';
+            var node = document.getElementsByTagName('script')[0];
+            node.parentNode.insertBefore(gads, node);
+          })();
+        </script>
+
+        <script type='text/javascript'>
+          googletag.cmd.push(function() {
+        var mapping = googletag.sizeMapping().
+        addSize([320, 400], [320, 50]).
+        addSize([320, 700], [320, 50]).
+        addSize([750, 200], [0, 0]).
+        addSize([1050, 200], [728, 90]).build();
+            googletag.defineSlot('/2117/gleague/stats_top', [[320, 50], [728, 90]], 'div-gpt-ad-1708621546795-0').defineSizeMapping(mapping).addService(googletag.pubads());
+            googletag.pubads().enableSingleRequest();
+            googletag.enableServices();
+          });
+        </script>
+
+
+
+        <!-- /2117/gleague/stats_top -->
+        <div id='div-gpt-ad-1708621546795-0'>
+        <script type='text/javascript'>
+        googletag.cmd.push(function() { googletag.display('div-gpt-ad-1708621546795-0'); });
+        </script>
+        </div>
+      <!--End Top 728x90 Ad Space-->
+
+          </header>
+
+    <div class="[ show-for-large ] gleague-nav">
+      <gleague-header class="gleague-header">
+
+  
+
+  <h1 class="nav__logo">
+    <a href="https://gleague.nba.com" class="nav__logo-link">
+      <img class="nav__logo-img" src="/media/img/league/gleague-logo-horiz-dark.svg" alt="NBA G League Logo" title="NBA G League" />
+    </a>
+  </h1>
+
+
+  <div class="nav__sites">
+    <a href="https://nba.com" class="nav__sites-logo-link">
+      <img class="nav__sites-logo-img" src="/media/img/league/nba-logoman.svg" alt="NBA Logo" title="NBA" />
+    </a>
+    <a href="https://wnba.com" class="nav__sites-logo-link">
+      <img class="nav__sites-logo-img" src="/media/img/league/wnba-logo.svg" alt="WNBA Logo" title="WNBA" />
+    </a>
+  </div>
+
+
+  <div class="gleague-header__teams-dropdown row collapse" ng-show="showTeams" ng-cloak>
+      </div>
+
+  <script>
+    window.glteams = null;
+  </script>
+
+</gleague-header>
+    </div>
+
+    <div class="stats-subheader [ show-for-large ]">
+      <div class="sap-flag [ show-for-sap ]">
+        <div class="sap-flag__inner sap-flag__inner--strong">
+          <img class="stats-subheader__brand-logo" title="NBA Advanced Stats" alt="NBA Advanced Stats site wordmark" src="/media/img/league/gleague-stats-logo.png" />
+        </div>
+      </div>
+    </div>
+
+    <main class="stats-container">
+
+      <nav class="stats-dropdown" ng-controller="StatsNavController" ng-show="showSiteNavigation" ng-cloak>
+
+  <section class="dropdown__base">
+
+    <div class="dropdown__item">
+      <h4 class="dropdown__item-header">
+        <a class="dropdown__item-header__link" href="/">Stats Home</a>
+      </h4>
+    </div>
+
+    <!-- players: open -->
+    <div class="dropdown__category--active" ng-show="isPlayerSection">
+      <div class="dropdown__item" ng-click="toggleActiveMenu('player')">
+        <h4 class="dropdown__item-header">
+          <a class="dropdown__item-header__link">{{ player.name }} <i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></a>
+        </h4>
+      </div>
+    </div>
+
+    <section class="dropdown__category" ng-show="isActiveMenu.player">
+      <ul class="dropdown__category-list">
+        <li ng-if="player.sections.stats"><a href="/player/{{ player.id }}/" ng-click="toggleNav();">Profile</a></li>
+        <li ng-if="player.sections.stats"><a href="/player/{{ player.id }}/traditional/"  ng-click="toggleNav();">Traditional</a></li>
+        <li ng-if="player.sections.stats"><a href="/player/{{ player.id }}/advanced/" ng-click="toggleNav();">Advanced</a></li>
+        <li ng-if="player.sections.stats"><a href="/player/{{ player.id }}/misc/" ng-click="toggleNav();">Misc</a></li>
+        <li ng-if="player.sections.stats"><a href="/player/{{ player.id }}/scoring/" ng-click="toggleNav();">Scoring</a></li>
+        <li ng-if="player.sections.stats"><a href="/player/{{ player.id }}/usage/" ng-click="toggleNav();">Usage</a></li>
+        <li ng-if="player.sections.stats"><a href="/player/{{ player.id }}/shooting/" ng-click="toggleNav();">Shooting</a></li>
+        <li><a href="/player/{{ player.id }}/career/">Career</a></li>
+        <li ng-if="player.sections.boxscores && player.sections.boxscoreFlag>=2"><a href="/player/{{ player.id }}/boxscores/" ng-click="toggleNav();">Box Scores</a></li>
+        <li ng-if="player.sections.boxscores && player.sections.boxscoreFlag<=2"><a href="/player/{{ player.id }}/boxscores-traditional/" ng-click="toggleNav();">Advanced Box Scores Traditional</a></li>
+        <li ng-if="player.sections.boxscores && player.sections.boxscoreFlag<=2"><a href="/player/{{ player.id }}/boxscores-advanced/" ng-click="toggleNav();">Advanced Box Scores Advanced</a></li>
+        <li ng-if="player.sections.boxscores && player.sections.boxscoreFlag<=2"><a href="/player/{{ player.id }}/boxscores-misc/" ng-click="toggleNav();">Advanced Box Scores Misc</a></li>
+        <li ng-if="player.sections.boxscores && player.sections.boxscoreFlag<=2"><a href="/player/{{ player.id }}/boxscores-scoring/" ng-click="toggleNav();">Advanced Box Scores Scoring</a></li>
+        <li ng-if="player.sections.boxscores && player.sections.boxscoreFlag<=2"><a href="/player/{{ player.id }}/boxscores-usage/" ng-click="toggleNav();">Advanced Box Scores Usage</a></li>
+      </ul>
+    </section>
+
+    <!-- teams: open -->
+    <div class="dropdown__category--active" ng-show="isTeamSection">
+      <div class="dropdown__item" ng-click="toggleActiveMenu('team')">
+        <h4 class="dropdown__item-header">
+          <a class="dropdown__item-header__link">{{ team.city }} {{ team.name }} <i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></a>
+        </h4>
+      </div>
+    </div>
+
+    <section class="dropdown__category" ng-show="isActiveMenu.team">
+      <ul class="dropdown__category-list">
+        <li><a href="/team/{{ team.id }}/" ng-click="toggleNav();">Profile</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/traditional/" ng-click="toggleNav();">Traditional</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/advanced/" ng-click="toggleNav();">Advanced</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/four-factors/" ng-click="toggleNav();">Four Factors</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/misc/" ng-click="toggleNav();">Misc</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/scoring/" ng-click="toggleNav();">Scoring</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/opponent/" ng-click="toggleNav();">Opponent</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/shooting/" ng-click="toggleNav();">Shooting</a></li>
+
+        <!-- lineups -->
+
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/lineups-traditional/" ng-click="toggleNav();">Lineups Traditional</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/lineups-advanced/" ng-click="toggleNav();">Lineups Advanced</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/lineups-four-factors/" ng-click="toggleNav();">Lineups Four Factors</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/lineups-misc/" ng-click="toggleNav();">Lineups Misc</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/lineups-scoring/" ng-click="toggleNav();">Lineups Scoring</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/lineups-opponent/" ng-click="toggleNav();">Lineups Opponent</a></li>
+
+        <!-- players -->
+
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/players-traditional/" ng-click="toggleNav();">Players Traditional</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/players-advanced/" ng-click="toggleNav();">Players Advanced</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/players-misc/" ng-click="toggleNav();">Players Misc</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/players-scoring/" ng-click="toggleNav();">Players Scoring</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/players-usage/" ng-click="toggleNav();">Players Usage</a></li>
+
+        <!-- on off court -->
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/onoffcourt-traditional/" ng-click="toggleNav();">On/Off Court Traditional</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/onoffcourt-advanced/" ng-click="toggleNav();">On/Off Court Advanced</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/onoffcourt-four-factors/" ng-click="toggleNav();">On/Off Court Four Factors</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/onoffcourt-misc/" ng-click="toggleNav();">On/Off Court Misc</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/onoffcourt-scoring/" ng-click="toggleNav();">On/Off Court Scoring</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/onoffcourt-opponent/" ng-click="toggleNav();">On/Off Court Opponent</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/onoffcourt-summary/" ng-click="toggleNav();">On/Off Court Summary</a></li>
+
+        <!-- history -->
+        <li><a href="/team/{{ team.id }}/boxscores/" ng-click="toggleNav();">Box Scores</a></li>
+
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/boxscores-traditional/" ng-click="toggleNav();">Advanced Box Scores Traditional</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/boxscores-advanced/" ng-click="toggleNav();">Advanced Box Scores Advanced</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/boxscores-four-factors/" ng-click="toggleNav();">Advanced Box Scores Four Factors</a></li>
+        <li ng-if="!team.isSpecial"><a href="/team/{{ team.id }}/boxscores-misc/" ng-click="toggleNav();">Advanced Box Scores Misc</a></li>
+        <li ng-if="!team.isSpecial"s><a href="/team/{{ team.id }}/boxscores-scoring/" ng-click="toggleNav();">Advanced Box Scores Scoring</a></li>
+
+        <li><a href="/team/{{ team.id }}/seasons/" ng-click="toggleNav();">Seasons</a></li>
+        <li><a href="/team/{{ team.id }}/yearoveryear/" ng-click="toggleNav();">Year Over Year</a></li>
+        <!-- <li><a href="/team/{{ team.id }}/franchise-leaders/" ng-click="toggleNav();">Franchise Leaders</a></li> -->
+        <li><a href="/team/{{ team.id }}/historic-roster/" ng-click="toggleNav();">Historic Roster</a></li>
+      </ul>
+    </section>
+
+
+    <!-- on off: open -->
+    <div class="dropdown__category--active" ng-show="isOnOffSection">
+      <div class="dropdown__item" ng-click="toggleActiveMenu('onoff')">
+        <h4 class="dropdown__item-header">
+          <a class="dropdown__item-header__link">On Off Court Compare <i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></a>
+        </h4>
+      </div>
+    </div>
+
+    <section class="dropdown__category" ng-show="isActiveMenu.onoff">
+      <ul class="dropdown__category-list">
+        <li><a href="/vs/" ng-click="toggleNav();">Traditional</a></li>
+        <li><a href="/vs/advanced/" ng-click="toggleNav();">Advanced</a></li>
+        <li><a href="/vs/misc/" ng-click="toggleNav();">Misc</a></li>
+        <li><a href="/vs/scoring/" ng-click="toggleNav();">Scoring</a></li>
+        <li><a href="/vs/four-factors/" ng-click="toggleNav();">Four Factors</a></li>
+        <li><a href="/vs/opponent/" ng-click="toggleNav();">Opponent</a></li>
+      </ul>
+    </section>
+
+    <!-- game: open -->
+    <div class="dropdown__category--active" ng-show="isGameSection">
+      <div class="dropdown__item" ng-click="toggleActiveMenu('game')">
+        <h4 class="dropdown__item-header">
+          <a class="dropdown__item-header__link">{{ game.info }} <i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></a>
+        </h4>
+      </div>
+    </div>
+
+    <section class="dropdown__category" ng-show="isActiveMenu.game">
+      <ul class="dropdown__category-list">
+        <li><a href="/game/{{ game.id }}/">Box Score</a></li>
+        <li><a ng-show="game.sections.advancedStats" href="/game/{{ game.id }}/advanced/" ng-click="toggleNav();">Advanced</a></li>
+        <li><a ng-show="game.sections.advancedStats" href="/game/{{ game.id }}/misc/" ng-click="toggleNav();">Misc</a></li>
+        <li><a ng-show="game.sections.advancedStats" href="/game/{{ game.id }}/scoring/" ng-click="toggleNav();">Scoring</a></li>
+        <li><a ng-show="game.sections.advancedStats" href="/game/{{ game.id }}/usage/" ng-click="toggleNav();">Usage</a></li>
+        <li><a ng-show="game.sections.advancedStats" href="/game/{{ game.id }}/four-factors/" ng-click="toggleNav();">Four Factors</a></li>
+        <li><a ng-show="game.sections.playByPlay" href="/game/{{ game.id }}/playbyplay/" ng-click="toggleNav();">Play By Play</a></li>
+        <li><a ng-show="game.sections.shotchart" href="/game/{{ game.id }}/shotchart/" ng-click="toggleNav();">Shotchart</a></li>
+        <li><a ng-show="game.sections.gameCharts" href="/game/{{ game.id }}/charts/" ng-click="toggleNav();">Game Charts</a></li>
+      </ul>
+    </section>
+
+    <!-- fantasy: open -->
+    <div class="dropdown__category--active" ng-show="isFantasySection">
+      <div class="dropdown__item" ng-click="toggleActiveMenu('fantasy')">
+        <h4 class="dropdown__item-header">
+          <a class="dropdown__item-header__link">Fantasy Compare <i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></a>
+        </h4>
+      </div>
+    </div>
+
+    <section class="dropdown__category" ng-show="isActiveMenu.fantasy">
+      <ul class="dropdown__category-list">
+        <li><a href="/fantasycompare/" ng-click="toggleNav();">Traditional</a></li>
+        <li><a href="/fantasycompare/advanced/" ng-click="toggleNav();">Advanced</a></li>
+        <li><a href="/fantasycompare/misc/" ng-click="toggleNav();">Misc</a></li>
+        <li><a href="/fantasycompare/scoring/" ng-click="toggleNav();">Scoring</a></li>
+      </ul>
+    </section>
+
+    <!-- impact: open -->
+    <div class="dropdown__category--active" ng-show="isImpactSection">
+      <div class="dropdown__item" ng-click="toggleActiveMenu('impact')">
+        <h4 class="dropdown__item-header">
+          <a class="dropdown__item-header__link">Impact <i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></a>
+        </h4>
+      </div>
+    </div>
+
+    <section class="dropdown__category" ng-show="isActiveMenu.impact">
+      <ul class="dropdown__category-list">
+        <li><a href="/impact/{{ impact }}" ng-click="toggleNav();">Traditional</a></li>
+        <li><a href="/impact/advanced/{{ impact }}" ng-click="toggleNav();">Advanced</a></li>
+        <li><a href="/impact/misc/{{ impact }}" ng-click="toggleNav();">Misc</a></li>
+        <li><a href="/impact/scoring/{{ impact }}" ng-click="toggleNav();">Scoring</a></li>
+        <li><a href="/impact/four-factors/{{ impact }}" ng-click="toggleNav();">Four Factors</a></li>
+        <li><a href="/impact/defense/{{ impact }}" ng-click="toggleNav();">Defense</a></li>
+      </ul>
+    </section>
+
+
+    <div class="stats-dropdown__level--base__top"></div>
+
+
+    <!-- players -->
+    <div class="dropdown__item" ng-click="toggleCat('players')" ng-class="{'dropdown__item--active':isCat.players}">
+      <h4 class="dropdown__item-header">Players <i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></h4>
+    </div>
+
+
+    <!-- players - category -->
+    <section class="dropdown__category" ng-show="isCat.players">
+      <ul class="dropdown__category-list">
+        <li><a href="/players/">Players Home</a></li>
+        <li><a href="/players/list/">Player Index</a></li>
+        <li><a href="/players/traditional/">Traditional Stats</a></li>
+        <li><a href="/leaders/">Regular Season Leaders</a></li>
+        <li><a href="/players/advanced-leaders/">Advanced Leaders</a></li>
+        <li ng-hide="isSite2021"><a href="/alltime/">All Time Leaders</a></li>
+
+        <!-- players / general -->
+        <li class="dropdown__item" ng-click="toggleSub(isPlayersSub, 'general')" ng-class="{'dropdown__item--active': isPlayersSub.general}">
+          <a class="dropdown__item-header">General <i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></a>
+        </li>
+
+        <section class="dropdown__subcategory" ng-show="isPlayersSub.general">
+          <ul class="dropdown__subcategory-list">
+            <li><a href="/players/traditional/">Traditional</a></li>
+            <li><a href="/players/advanced/">Advanced</a></li>
+            <li><a href="/players/misc/">Misc</a></li>
+            <li><a href="/players/scoring/">Scoring</a></li>
+            <li><a href="/players/usage/">Usage</a></li>
+            <li><a href="/players/opponent/">Opponent</a></li>
+            <li><a href="/players/defense/">Defense</a></li>
+          </ul>
+        </section>
+
+        <!-- players / clutch -->
+        <li class="dropdown__item" ng-click="toggleSub(isPlayersSub, 'clutch')"  ng-class="{'dropdown__item--active': isPlayersSub.clutch}">
+          <a class="dropdown__item-header">Clutch <i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></a>
+        </li>
+
+        <section class="dropdown__subcategory" ng-show="isPlayersSub.clutch">
+          <ul class="dropdown__subcategory-list">
+            <li><a href="/players/clutch-traditional/">Clutch Traditional</a></li>
+            <li><a href="/players/clutch-advanced/">Clutch Advanced</a></li>
+            <li><a href="/players/clutch-misc/">Clutch Misc</a></li>
+            <li><a href="/players/clutch-scoring/">Clutch Scoring</a></li>
+            <li><a href="/players/clutch-usage/">Clutch Usage</a></li>
+          </ul>
+        </section>
+
+        <li><a href="/players/shooting/">Shooting</a></li>
+        <li><a href="/players/opponent-shooting/">Opponent Shooting</a></li>
+        <li><a href="/players/bio/">Bios</a></li>
+        <li><a href="/players/boxscores/">Box Scores</a></li>
+
+        <!-- players / advanced game logs -->
+        <li class="dropdown__item" ng-click="toggleSub(isPlayersSub, 'advboxscores')" ng-class="{'dropdown__item--active': isPlayersSub.advboxscores}">
+          <a class="dropdown__item-header">Advanced Box Scores <i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></a>
+        </li>
+
+        <section class="dropdown__subcategory" ng-show="isPlayersSub.advboxscores">
+          <ul class="dropdown__subcategory-list">
+            <li><a href="/players/boxscores-traditional/">Traditional</a></li>
+            <li><a href="/players/boxscores-advanced/">Advanced</a></li>
+            <li><a href="/players/boxscores-misc/">Misc</a></li>
+            <li><a href="/players/boxscores-scoring/">Scoring</a></li>
+            <li><a href="/players/boxscores-usage/">Usage</a></li>
+          </ul>
+        </section>
+
+
+      </ul>
+    </section>
+
+    <!-- teams -->
+    <div class="dropdown__item" ng-click="toggleCat('teams')" ng-class="{'dropdown__item--active':isCat.teams}">
+      <h4 class="dropdown__item-header">Teams <i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></h4>
+    </div>
+
+    <section class="dropdown__category" ng-show="isCat.teams">
+      <ul class="dropdown__category-list">
+        <li><a href="/teams/">Teams Home</a></li>
+
+        <!-- teams / general -->
+        <li class="dropdown__item" ng-click="toggleSub(isTeamsSub, 'list')" ng-class="{'dropdown__item--active': isTeamsSub.list}">
+          <a class="dropdown__item-header">All Teams <i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></a>
+        </li>
+
+        <section class="dropdown__subcategory" ng-show="isTeamsSub.list">
+          <ul class="dropdown__subcategory-list">
+            <li ng-repeat="t in teams"><a href="/team/{{ t.id }}/"/>{{ t.city }} {{ t.name }}</a></li>
+          </ul>
+        </section>
+
+        <li><a href="/teams/traditional/">Traditional Stats</a></li>
+        <li><a href="/teams/advanced-leaders/">Advanced Leaders</a></li>
+
+        <!-- teams / general -->
+        <li class="dropdown__item" ng-click="toggleSub(isTeamsSub, 'general')" ng-class="{'dropdown__item--active': isTeamsSub.general}">
+          <a class="dropdown__item-header">General <i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></a>
+        </li>
+
+        <section class="dropdown__subcategory" ng-show="isTeamsSub.general">
+          <ul class="dropdown__subcategory-list">
+            <li><a href="/teams/traditional/">Traditional</a></li>
+            <li><a href="/teams/advanced/">Advanced</a></li>
+            <li><a href="/teams/misc/">Misc</a></li>
+            <li><a href="/teams/four-factors/">Four Factors</a></li>
+            <li><a href="/teams/scoring/">Scoring</a></li>
+            <li><a href="/teams/opponent/">Opponent</a></li>
+            <li><a href="/teams/defense/">Defense</a></li>
+          </ul>
+        </section>
+
+        <!-- clutch -->
+        <li class="dropdown__item" ng-click="toggleSub(isTeamsSub, 'clutch')" ng-class="{'dropdown__item--active': isTeamsSub.clutch}">
+          <a class="dropdown__item-header">Clutch <i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></a>
+        </li>
+
+        <section class="dropdown__subcategory" ng-show="isTeamsSub.clutch">
+          <ul class="dropdown__subcategory-list">
+            <li><a href="/teams/clutch-traditional/">Clutch Traditional</a></li>
+            <li><a href="/teams/clutch-advanced/">Clutch Advanced</a></li>
+            <li><a href="/teams/clutch-misc/">Clutch Misc</a></li>
+            <li><a href="/teams/clutch-four-factors/">Clutch Four Factors</a></li>
+            <li><a href="/teams/clutch-scoring/">Clutch Scoring</a></li>
+            <li><a href="/teams/clutch-opponent/">Clutch Opponent</a></li>
+          </ul>
+        </section>
+
+
+
+
+        <li><a href="/teams/shooting/">Shooting</a></li>
+        <li><a href="/teams/opponent-shooting/">Overall Opponent Shooting</a></li>
+        <li><a href="/teams/boxscores/">Box Scores</a></li>
+
+        <!-- teams / advanced game logs -->
+        <li class="dropdown__item" ng-click="toggleSub(isTeamsSub, 'advboxscores')" ng-class="{'dropdown__item--active': isTeamsSub.advboxscores}">
+          <a class="dropdown__item-header">Advanced Box Scores <i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></a>
+        </li>
+
+        <section class="dropdown__subcategory" ng-show="isTeamsSub.advboxscores">
+          <ul class="dropdown__subcategory-list">
+            <li><a href="/teams/boxscores-traditional/">Traditional</a></li>
+            <li><a href="/teams/boxscores-advanced/">Advanced</a></li>
+            <li><a href="/teams/boxscores-four-factors/">Four Factors</a></li>
+            <li><a href="/teams/boxscores-misc/">Misc</a></li>
+            <li><a href="/teams/boxscores-scoring/">Scoring</a></li>
+          </ul>
+        </section>
+
+
+      </ul>
+    </section>
+
+    <div class="dropdown__separator"></div>
+
+
+    <div class="dropdown__item">
+      <h4 class="dropdown__item-header">
+        <a class="dropdown__item-header__link" href="/players/advanced-leaders/">Advanced Leaders</a>
+      </h4>
+    </div>
+
+
+
+    <div class="dropdown__item">
+      <h4 class="dropdown__item-header">
+        <a class="dropdown__item-header__link" href="/scores/">Scores</a>
+      </h4>
+    </div>
+
+    <div class="dropdown__item">
+      <h4 class="dropdown__item-header">
+        <a class="dropdown__item-header__link" href="/schedule/">Schedule</a>
+      </h4>
+    </div>
+
+    <div class="dropdown__item">
+      <h4 class="dropdown__item-header">
+        <a class="dropdown__item-header__link" href="/standings/">Standings</a>
+      </h4>
+    </div>
+
+    <div class="dropdown__item">
+      <h4 class="dropdown__item-header">
+        <a class="dropdown__item-header__link" href="/projections/">Projections</a>
+      </h4>
+    </div>
+
+    <!-- franchiseleaders  -->
+    <!-- <div class="dropdown__item" ng-click="toggleCat('franchiseleaders');" ng-class="{'dropdown__item--active':isCat.franchiseleaders}">
+      <h4 class="dropdown__item-header">Franchise Leaders<i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></h4>
+    </div> -->
+
+    <!-- category: franchiseleaders -->
+    <!-- <section class="dropdown__category" ng-show="isCat.franchiseleaders">
+      <ul class="dropdown__category-list">
+        <li ng-repeat="t in teams"><a href="/team/{{ t.id }}/franchise-leaders"/>{{ t.city }} {{ t.name }}</a></li>
+      </ul>
+    </section> -->
+
+    <!-- lineups -->
+    <div class="dropdown__item" ng-click="toggleCat('lineups')" ng-class="{'dropdown__item--active':isCat.lineups}">
+      <h4 class="dropdown__item-header">Lineups <i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></h4>
+    </div>
+
+    <!-- category: lineups -->
+    <section class="dropdown__category" ng-show="isCat.lineups">
+      <ul class="dropdown__category-list">
+        <li><a href="/lineups/traditional/">Traditional</a></li>
+        <li><a href="/lineups/advanced/">Advanced</a></li>
+        <li><a href="/lineups/misc/">Misc</a></li>
+        <li><a href="/lineups/four-factors/">Four Factors</a></li>
+        <li><a href="/lineups/scoring/">Scoring</a></li>
+        <li><a href="/lineups/opponent/">Opponent</a></li>
+        <li><a href="/lineups/lineups-tool/">Lineups Tool</a></li>
+      </ul>
+    </section>
+
+    <!-- onoff  -->
+    <div class="dropdown__item" ng-click="toggleCat('onoff');" ng-class="{'dropdown__item--active':isCat.onoff}">
+      <h4 class="dropdown__item-header">On/Off Court by Team <i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></h4>
+    </div>
+
+    <!-- category: onoff -->
+    <section class="dropdown__category" ng-show="isCat.onoff">
+      <ul class="dropdown__category-list">
+        <li ng-repeat="t in teams"><a href="/team/{{ t.id }}/onoffcourt-summary"/>{{ t.city }} {{ t.name }}</a></li>
+      </ul>
+    </section>
+
+
+
+    <!-- tools -->
+    <!-- <div class="dropdown__item" ng-click="toggleCat('tools')" ng-class="{'dropdown__item--active':isCat.tools}">
+      <h4 class="dropdown__item-header">Tools <i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></h4>
+    </div> -->
+
+    <!-- category: tools -->
+    <section class="dropdown__category" ng-show="isCat.tools">
+      <ul class="dropdown__category-list">
+        <!-- <li><a href="/search/player-game/">Player Box Score Search</a></li>
+        <!-- <li><a href="/search/team-game/">Team Box Score Search</a></li> -->
+        <!-- <li><a href="/search/player-streak/">Player Streak Search</a></li> -->
+        <!-- <li><a href="/search/team-streak/">Team Streak Search</a></li> -->
+        <!-- <li><a href="/vs/">Player Compare</a></li> -->
+        <!-- <li><a href="/fantasycompare/">Fantasy Compare</a></li> -->
+        <!-- <li><a href="/impact/">Impact</a></li> -->
+      </ul>
+    </section>
+
+
+    <!-- Stats 101: OTHER -->
+    <div class="dropdown__item" ng-click="toggleCat('other')" ng-class="{'dropdown__item--active':isCat.other}">
+      <h4 class="dropdown__item-header">Stats 101<i class="dropdown__item-header__arrow [ fa / fa-chevron-right / show-for-large ]" aria-hidden="true"></i><i class="dropdown__item-header__arrow [ fa / fa-chevron-down / hide-for-large ]" aria-hidden="true"></i></h4>
+    </div>
+
+    <!-- category: other -->
+    <section class="dropdown__category" ng-show="isCat.other">
+      <ul class="dropdown__category-list">
+        <li ng-hide="isSite2021"><a href="/history/">Franchise History</a></li>
+        <li><a href="/help/statminimums/">Statistical Minimums</a></li>
+        <li><a href="/help/glossary/">Glossary</a></li>
+        <!-- <li><a href="/featuredarchive/">Articles</a></li>
+        <li><a href="/spotlightarchive/">Weekly Stats Archive</a></li> -->
+        <li><a href="/help/faq/">FAQ</a></li>
+        <li><a href="http://videorulebook.nba.com">Video Rulebook</a></li>
+      </ul>
+    </section>
+
+
+  </section>
+
+</nav>
+
+      <div class="nav-container" ng-controller="StatsHeaderController" set-class-scroll-top data-element-class="nav-container--fixed" data-body-class="nav--fixed" ng-cloak>
+
+  <div class="nav-inner">
+    <!-- left: inner nav -->
+    <nav class="nav-inner__menu nav-inner__menu--left" role="navigation">
+      <div class="nav-inner__menu-button" ng-click="toggleNav($event)">
+        <i class="nav-inner__menu-button-icon [ fa fa-bars fa-lg ]" aria-hidden="true"></i>
+        <img class="nav-inner__logo" src="/media/img/league/gleague-logoman.svg" alt="NBA G League Logo" title="G League Stats"/>
+        <span class="nav-inner__wordmark">Advanced Stats</span>
+      </div>
+
+      <div class="nav-inner__menu-item" ng-class="{ active: activeTab=='home' }"><a href="/">Stats Home</a></div>
+      <div class="nav-inner__menu-item" ng-class="{ active: activeTab=='players' }"><a href="/players/">Players</a></div>
+      <div class="nav-inner__menu-item" ng-class="{ active: activeTab=='teams' }"><a href="/teams/">Teams</a></div>
+      <div class="nav-inner__menu-item" ng-class="{ active: activeTab=='scores' }"><a href="/scores/">Scores</a></div>
+      <div class="nav-inner__menu-item" ng-class="{ active: activeTab=='schedule' }"><a href="/schedule/">Schedule</a></div>
+      <div class="nav-inner__menu-item" ng-class="{ active: activeTab=='standings' }"><a href="/standings/">Standings</a></div>
+
+    </nav> <!-- .nav-inner__menu -->
+
+
+    <!-- right: search -->
+    <!-- add active class to test active search state -->
+    <div class="nav-inner__search nav-inner__search--right stats-search" ng-class="{ active: showSearch }" ng-controller="StatsSearchController">
+
+  <!-- search icon, always visible -->
+  <div class="stats-search__top">
+    <input class="stats-search__input" type="text"
+      ng-model="search"
+      ng-keydown="onKeyDown($event)"
+      ng-change="onChange($event)"
+      ng-show="showSearch" />
+    <a class="stats-search__icon" tabindex="0" ng-click="toggleSearch();" ng-keyup="$event.keyCode == 13 ? toggleSearch() : null">
+      <span class="stats-search__icon-text">Search For A Player or Team</span><i class="[ fa / fa-search ]" aria-hidden="true"></i>
+    </a>
+  </div>
+
+  <div class="stats-search__results" ng-show="showResults">
+
+    <div class="stats-search__section stats-search__section--none" ng-show="!hasResults && search.length > 3">
+      <span class="stats-search__no-results">No Results Found</span>
+    </div> <!-- .stats-search__section -->
+
+    <div class="stats-search__section" ng-show="searchResults.length" ng-class="{recent: showRecent}">
+
+      <div class="stats-search__item {{ item.type }}" ng-repeat="item in searchResults | limitTo:maxResults" data-index="{{ $index }}">
+        <div class="stats-search__link" ng-class="{'stats-search__link--active': (activeIndex==$index)}">
+          <a role="button" ng-if="item.type==='tm'" ng-mousedown="onItemClick($event, item, $index);" ng-mouseover="onItemHover($event, item, $index);" href="/team/{{ ::item.id }}/traditional/" class="stats-search__link-anchor">{{ ::item.city }} {{ ::item.name }}</a>
+          <a role="button" ng-if="item.type==='pl' && item.from>=1996" ng-mousedown="onItemClick($event, item, $index);" ng-mouseover="onItemHover($event, item, $index);" href="/player/{{ ::item.id }}/" class="stats-search__link-anchor">{{ ::item.fn }} {{ ::item.ln }}</a>
+          <a role="button" ng-if="item.type==='pl' && item.from<1996" ng-mousedown="onItemClick($event, item, $index);" ng-mouseover="onItemHover($event, item, $index);" href="/player/{{ ::item.id }}/career/" class="stats-search__link-anchor">{{ ::item.fn }} {{ ::item.ln }}</a>
+        </div>
+      </div><!-- .stats-search__item -->
+
+      <div class="stats-search__show-all">
+        <a class="searchbar__results__link searchbar__results__link--more" ng-show="searchResults.length > maxResults" ng-href="/players/list/?s={{ search }}&Historic=1">See More Results</a>
+      </div>
+
+    </div> <!-- .stats-search__section -->
+
+  </div> <!-- .nav-inner__search-results -->
+
+
+</div> <!-- .nav-inner__search -->
+
+
+
+
+  </div>
+
+
+
+</div>
+
+      <div class="stats-container__inner">
+
+<div class="stats-teams-page" data-nav-section="teams">
+
+  <div class="breadcrumbs">
+    <ol class="breadcrumbs__list" itemscope itemtype="http://schema.org/BreadcrumbList">
+      <li itemprop="itemListElement" itemscope
+      itemtype="http://schema.org/ListItem">
+        <a itemscope itemtype="http://schema.org/Thing"
+        itemprop="item" href="/">
+        <span itemprop="name">Stats Home</span></a>
+        <meta itemprop="position" content="1" />
+      </li>
+      /
+      <li itemprop="itemListElement" itemscope
+      itemtype="http://schema.org/ListItem">
+        <a itemscope itemtype="http://schema.org/Thing"
+        itemprop="item" href="/teams/">
+        <span itemprop="name">Teams</span></a>
+        <meta itemprop="position" content="2" />
+      </li>
+    </ol>
+  </div>
+
+  <div class="row">
+    <div class="columns / small-12 / section-view-overlay">
+      <div class="" ng-controller="TeamsLandingCtrl" ng-cloak>
+
+  <div class="home__inner">
+
+    <div class="[ columns / large-12 ]">
+      <div stats-loader="isLoading"></div>
+      <div stats-no-data-msg="noData && !isLoading"></div>
+    </div>
+
+    <div class="landing [ columns large-9 ]" ng-hide="isLoading || noData">
+
+      <!-- league leaders -->
+      <div
+        nba-with
+        nba-with-data-items="league_leaders.items"
+        nba-with-title="{{ ::league_leaders.title }}"
+        nba-with-deeplink="{{ ::league_leaders.deep_link }}"
+        ng-include src="league_leaders.template"
+        class="row"
+        id="{{::league_leaders.uid}}">
+      </div>
+      <!-- end league leaders modules -->
+
+      <!-- teams list -->
+      <div class="stats-team-list"
+ng-init="confs=['Eastern','Western']"
+ng-cloak>
+
+  <div
+    class="row"
+    nba-with
+    ng-include src="'teams_list'">
+  </div>
+
+</div>
+
+<script type="text/ng-template" id="teams_list">
+  <div class="landing__module / landing__leaders" ng-class="{ last: $last }">
+
+    <div class="row / landing__module-header / landing__leaders-header">
+      <h1 class="header-title">Teams List</h1>
+    </div>
+
+    <div class="landing__leaders-body [ row / collapsed ]">
+
+      <section class="landing__leaders-category [ columns / large-12 ]" ng-repeat="(i, conf) in confs">
+
+        <div class="category-header">
+          <h2 class="category-header__name stats-team-list__header">{{ conf }}</h2>
+          <div class="clear"></div>
+        </div>
+
+        <div class="category-body">
+          <div class="category-table">
+
+              <div class="[ columns large-4 ]" ng-class="{ end: $last }" ng-repeat="team in teams | filter:{ 'conference': conf }">
+                <div class="category-table__text">
+                  <a class="stats-team-list__link" ng-href="/team/{{ team.id }}/">
+                    <img team-logo class="stats-team-list__team-logo" abbr="{{ team.abbr }}"/> {{ team.city }} {{ team.name }}
+                  </a>
+                </div>
+              </div>
+
+          </div> <!-- .category-table -->
+        </div> <!-- .category-body -->
+      </section>
+
+    </div>
+
+  </div>
+</script>
+      <!-- end teams list -->
+
+      <div ng-repeat="module in leaders">
+
+        <div
+          class="row"
+          nba-with
+          nba-with-data-items="module.items"
+          nba-with-title="{{ ::module.title }}"
+          nba-with-deeplink="{{ ::module.deep_link }}"
+          ng-include src="module.template"
+          id="{{::module.uid}}">
+        </div>
+
+      </div>
+
+      <!-- more stats -->
+      <div ng-repeat="module in sidebar">
+
+        <div
+          class="row"
+          nba-with
+          nba-with-data-items="module.items"
+          nba-with-title="{{ ::module.title }}"
+          ng-include src="'teams_landing_table'"
+          id="teams_landing_table">
+        </div>
+
+      </div>
+      <!-- end more stats module -->
+
+    </div>
+
+    <!-- right: sidebar -->
+    <div class="landing__sidebar [ columns / large-3 ]" ng-hide="isLoading || noData">
+
+      <!-- jump to -->
+      <div class="[ row / show-for-large ]">
+        <h1 class="sidebar-header">Jump To</h1>
+
+        <ul class="sidebar-module / sidebar__index">
+          <li class="sidebar__index-title">
+            <a href="/teams/traditional/" title="View All Sortable Team Stats">Sortable Team Stats</a>
+          </li>
+          <li class="sidebar__index-title" ng-hide="isSite2021">
+            <a href="https://cms.nba.com/dlstats/wp-content/uploads/sites/66/2022/06/G_League_Ignite_Total_Stats_21_22.pdf" title="Showcase + Ignite Tour Stats">Showcase + Ignite Tour Stats</a>
+          </li>
+          <li class="sidebar__index-title" ng-hide="isSite2021">
+            <a href="http://cms.nba.com/dlstats/wp-content/uploads/sites/66/2022/06/NBA_G_League_Total_Stats_21_22.pdf" title="Showcase + Regular Season Stats">Showcase + Regular Season Stats</a>
+          </li>
+          <li class="sidebar__index-title">
+            <hr/>
+          </li>
+          <li class="sidebar__index-title" ng-repeat="module in modules.teams_landing_inner track by $index">
+            <a ng-click="scrollTo(module.uid)" ng-if="module.template" title="Jump to {{::module.title}}">{{::module.title}}</a>
+          </li>
+
+          <li class="sidebar__index-title">
+            <a ng-click="scrollTo('teams_landing_table')" title="Regular Season Stats">Regular Season Stats</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- more stats -->
+            <!-- end more stats module -->
+
+      <div ng-controller="TeamsBoxscoreSplitsController" data-measure-type="Base">
+        <h1 class="sidebar-header">{{ params.Season }} Season Win %</h1>
+        <stats-winpct-charts gamelogs="stats.rows"></stats-winpct-charts>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- leaders module -->
+<script type="text/ng-template" id="leaders">
+  <div class="landing__module / landing__leaders" ng-class="{ last: $last }">
+
+    <div class="row / landing__module-header / landing__leaders-header">
+      <h1 class="header-title">{{ title }}
+        <a class="header-link" ng-if="deeplink.length" ng-href="{{ deeplink }}"> See All Stats <i class="fa fa-chevron-right header-chevron" aria-hidden="true"></i> </a><span class="header-date">{{ ::date | date:'M/dd/yy'}}</span>
+      </h1>
+    </div>
+
+    <div class="landing__leaders-body [ row / collapsed ]">
+
+      <!-- teams -->
+      <section class="landing__leaders-category [ columns / large-4 / end ]" ng-repeat="category in items" ng-if="category.teamstats.length">
+
+        <div class="category-header">
+          <a ng-if="::category.deep_link.length" ng-href="{{ ::category.deep_link }}">
+            <h2 class="category-header__name">
+              {{ ::category.title }}
+            </h2>
+            <div class="category-header__share" ng-if="category.deep_link.length"><i class="fa fa-share" aria-hidden="true"></i></div>
+            <div class="clear"></div>
+          </a>
+          <h2 ng-if="::!category.deep_link.length">{{ ::category.title }}</h2>
+        </div>
+
+        <div class="category-body">
+          <table class="category-table">
+            <tbody>
+              <tr ng-repeat="team in category.teamstats">
+                <td class="category-table__rank" ng-if="team.rank">{{ ::team.rank }}.</td>
+                <td class="category-table__text">
+                  <a ng-href="/team/{{ ::team.TEAM_ID }}/">{{ ::team.TEAM_CITY }} {{ ::team.TEAM_NAME }}</a>
+                </td>
+                <td class="category-table__value">{{ ::team[category.name] | statNumber:category.permode:category.name }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+  </div>
+</script>
+<!-- end leaders inner module -->
+
+<!--
+  **
+  ** SIDEBAR MODULE: More Stats
+  **
+-->
+
+<script type="text/ng-template" id="teams_landing_sidebar">
+  <h1 class="sidebar-header">{{ ::title }}</h1>
+
+  <div class="sidebar-module / sidebar__leaders" ng-repeat="stat in items">
+    <span class="sidebar__leaders-title"><a href="{{::stat.deep_link}}">{{ ::stat.title }}</a></span>
+    <!-- <span class="sidebar__leaders-info"></span> -->
+    <table class="sidebar__leaders-table">
+      <tbody>
+        <tr ng-repeat="team in stat.teamstats | limitTo:3">
+          <td class="sidebar__leaders-table__text">
+            <a href="/team/{{::team.TEAM_ID}}/" title="View Stats Profile">{{::team.TEAM_NAME}}</a>
+          </td>
+          <td class="sidebar__leaders-table__value">{{ ::team[stat.name] | statNumber:stat.permode:stat.name }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</script>
+<!--
+  **
+  ** /end SIDEBAR MODULE: leaders
+  **
+-->
+
+
+
+<!--
+  **
+  **  MODULE: More Stats Table
+  **
+-->
+<script type="text/ng-template" id="teams_landing_table">
+  <div class="landing__module / landing__leaders" ng-class="{ last: $last }">
+
+    <div class="row / landing__module-header / landing__leaders-header">
+      <h1 class="header-title">{{ title }}
+        <a class="header-link" ng-if="deeplink.length" ng-href="{{ deeplink }}"> See All Stats <i class="fa fa-chevron-right header-chevron" aria-hidden="true"></i> </a><span class="header-date">{{ ::date | date:'M/dd/yy'}}</span>
+      </h1>
+    </div>
+
+    <div class="landing__leaders-body [ row / collapsed ]">
+
+      <!-- teams -->
+      <section class="landing__leaders-category [ columns / large-4 / end ]" ng-repeat="category in items" ng-if="category.teamstats.length">
+
+        <div class="category-header">
+          <a ng-if="::category.deep_link.length" ng-href="{{ ::category.deep_link }}">
+            <h2 class="category-header__name">
+              {{ ::category.title }}
+            </h2>
+            <div class="category-header__share" ng-if="category.deep_link.length"><i class="fa fa-share" aria-hidden="true"></i></div>
+            <div class="clear"></div>
+          </a>
+          <h2 class="category-header__name" ng-if="::!category.deep_link.length">{{ ::category.title }}</h2>
+        </div>
+
+        <div class="category-body">
+          <table class="category-table">
+            <tbody>
+              <tr ng-repeat="team in category.teamstats | limitTo:3">
+                <td class="category-table__rank" ng-if="team.rank">{{ ::team.rank }}.</td>
+                <td class="category-table__text">
+                  <a ng-href="/team/{{ ::team.TEAM_ID }}/">{{ ::team.TEAM_CITY }} {{ ::team.TEAM_NAME }}</a>
+                </td>
+                <td class="category-table__value">{{ ::team[category.name] | statNumber:category.permode:category.name }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+  </div>
+</script>
+
+<!--
+  **
+  ** /end MODULE: More Stats Table
+  **
+-->
+    </div>
+  </div>
+
+</div>
+
+
+      </div> <!-- .stats-container__inner -->
+
+    </main> <!-- .stats-container -->
+
+    <footer>
+      <div class="gl-footer">
+  <div class="gl-footer__inner">
+
+    <div class="row show-for-medium">
+
+    	<div class="columns medium-2 gl-footer__list">
+    		<a class="nba-icon icon-logo" href="//gleague.nba.com">
+          <img src="/media/img/league/gleague-logo-horiz-dark.svg" alt="NBA Gatorade League Logo" title="NBA Gatorade League"></img>
+        </a>
+    	</div>
+
+      <div class="columns medium-2 gl-footer__list">
+  			<h3 class="gl-footer__col-header">League Info</h3>
+  			<ul>
+  				<li><a href="https://gleague.nba.com/schedule/">Schedule</a></li>
+  				<li><a href="https://stats.gleague.nba.com/">Stats</a></li>
+  				<li><a href="https://gleague.nba.com/standings/">Standings</a></li>
+          		<li><a href="https://gleague.nba.com/news-archive/">News Archive</a></li>
+          		<li><a href="https://gleague.nba.com/news/transactions">Transactions</a></li>
+  				<li><a href="https://gleague.nba.com/all-players">Players</a></li>
+         		<li><a href="https://gleague.nba.com/coaches/">Head Coaches</a></li>
+  			</ul>
+  		</div>
+
+      <div class="columns medium-2 gl-footer__list">
+  			<h3 class="gl-footer__col-header">League Events</h3>
+  			<ul>
+			  <li><a href="https://gleague.nba.com/key-dates/">2026-27 Key Dates</a></li>
+			  <li><a href="https://gleague.nba.com/wintershowcase">Winter Showcase</a></li>
+			  <li><a href="https://gleague.nba.com/2026-nba-g-league-draft">2026-27 Draft</a></li>
+				</ul>
+  		</div>
+
+      <div class="columns medium-2 gl-footer__list">
+  			<h3 class="gl-footer__col-header">NBA G League 101</h3>
+  			<ul>
+  				<li><a href="//gleague.nba.com/about/">About the NBA G League</a></li>
+  				<li><a href="http://gleague.nba.com/faq/">FAQ</a></li>
+  				<li><a href="//gleague.nba.com/franchise-map/">Franchise Map</a></li>
+  				<li><a href="//gleague.nba.com/gatorade/">Gatorade Partnership</a></li>
+  				<li><a href="//gleague.nba.com/all-time-callups/">All-Time Call Ups</a></li>
+  				<li><a href="//gleague.nba.com/all-time-nba-assignments/">All-Time NBA Assignments</a></li>
+  			</ul>
+  		</div>
+
+      <div class="columns medium-2 gl-footer__list">
+  			<h3 class="gl-footer__col-header">Connect</h3>
+  			<ul>
+  				<li><a href="//gleague.nba.com/mobile/">NBA G League App</a></li>
+  				<li><a href="http://www.youtube.com/nbadleague">YouTube</a></li>
+  				<li><a href="https://twitter.com/nbagleague">Twitter</a></li>
+  				<li><a href="https://www.facebook.com/nbagleague">Facebook</a></li>
+  				<li><a href="https://www.instagram.com/nbagleague/">Instagram</a></li>
+  			</ul>
+  		</div>
+
+      <div class="columns medium-2 gl-footer__list">
+  			<h3 class="gl-footer__col-header">NBA Info</h3>
+  			<ul>
+  				<li><a href="http://www.nba.com/leaguepass/">NBA League Pass</a></li>
+  				<li><a href="http://www.nba.com/nbatv/">NBA TV</a></li>
+  				<li><a href="http://www.nba.com/allaccess/">NBA All-Access</a></li>
+  				<li><a href="http://gleaguestore.nba.com/">Store</a></li>
+  			</ul>
+  		</div>
+
+    </div> <!-- .row -->
+
+  	<hr class="show-for-medium"/>
+
+  	<div class="nbaLegal">
+  		<div class="row">
+  			<div class="columns medium-8 medium-offset-2">
+  				<p>Copyright © <span id="copyright-year"></span> NBA Media Ventures, LLC. All rights reserved.
+  					No portion of NBA.com may be duplicated, redistributed or manipulated in any form.
+  					By accessing any information beyond this page,
+  					you agree to abide by the
+  					<span class="nbaAdInfo"><a href="http://www.nba.com/news/privacy_policy.html">Privacy Policy</a></span> /
+  					<span class="nbaAdInfo"><a href="http://www.nba.com/news/privacy_policy.html#priv11">Your California Privacy Rights</a></span>
+  					and <span class="nbaAdInfo"><a href="http://www.nba.com/news/termsofuse.html">Terms of Use</a></span>.
+  					<span class="nbaAdInfo">• <a href="http://www.nba.com/adchoices/" class="nbaAdChoices">Ad Choices</a> |
+  					<a href="http://www.turnerdigitalsales.com/?ls=iref:nba:gfooter">Advertise on NBA.com</a> |
+  					<a href="http://www.nba.com/help/site_faq.html">NBA.com Help</a> |
+  					<a href="http://www.nba.com/help/fan_relations_faq.html">Fan Relations FAQ</a> |
+  					<a href="http://www.nba.com/careers/">Career Opportunities</a></span>
+  				</p>
+  				<p>
+  					<span class="nbaAdInfo"><a href="http://www.nba.com">NBA.com</a></span>
+  					is part of Turner Sports Digital, part of the Turner Sports &amp; Entertainment Digital Network.
+  				</p>
+  			</div>
+  		</div>
+  	</div>
+
+    <script>
+    var d = new Date();
+    var year = d.getFullYear();
+    document.getElementById("copyright-year").innerHTML = year;
+    </script>
+
+  </div>
+
+	<p class="ccpa">
+  	<a class="ccpa-link" href="http://www.nba.com/news/privacy_policy.html#California_Privacy_Rights" target="_blank" rel="noreferrer noopener">DO NOT SELL MY PERSONAL INFORMATION</a>
+	</p>
+</div>
+          </footer>
+
+      <script>
+    window.statsDebugInfoEnabled = true;
+    window.statsConfig = {
+     statsBuildVersion: "5.1.1",
+     statsBuildType: "prod",
+     statsBuildDate: "11/7/2026, 5:29:46 PM",
+     statsBranch: "",
+     statsLeagueId: "20",
+     statsLeagueName: "gleague"
+   };
+  </script>
+
+  <script src="/js/data/ptsd/stats_ptsd.js"></script>
+  <script src="/scripts/vendor.min.js"></script>
+  <script src="/scripts/theme.min.js?rev=e3fee0c3579258ce3619511df4050b8a"></script>
+
+
+  <script type="text/javascript">if (typeof _satellite !== 'undefined') { _satellite.pageBottom(); }</script>
+
+    
+<!-- GA and page tracking scripts -->
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', '{{ statsGaKey }}', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<!-- /GA and page tracking scripts -->
+
+
+<!-- BEGIN: NBA analytics package snippet. -->
+<!-- Should be as close the the closing "body" tag as possible. 
+<script>
+	initOmniture();
+	_nba.analytics.setOverride("disableAutoPage",true);
+
+	if (_nba && _nba.settings && _nba.settings.global) {
+	   _nba.settings.global.experience="responsive";
+	}
+</script> -->
+<!-- END: NBA analytics package snippet. -->
+
+      
+  <script type="text/javascript"  src="/Le_s/oz1g/dW48O/t2U/rw/z99zSJV9Yp5aLu/DFcpSVE/ZSB/0YnRuVUg"></script><noscript><img src="https://stats.gleague.nba.com/akam/13/pixel_3bb6eac1?a=dD1iNDU2MWU1NzBlMTk1Y2RlYmJjYTFjMzZjYWFhMWJjNjRhNTAyZGYxJmpzPW9mZg==" style="visibility: hidden; position: absolute; left: -999px; top: -999px;" /></noscript></body>
+</html>

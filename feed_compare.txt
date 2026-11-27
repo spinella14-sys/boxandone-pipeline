@@ -1,0 +1,101 @@
+0022500001  v3 611 rows (584 actionNumbers)  live 707  matched 578
+0022500450  v3 483 rows (462 actionNumbers)  live 542  matched 461
+0022501100  v3 466 rows (443 actionNumbers)  live 541  matched 442
+0042500101  v3 501 rows (469 actionNumbers)  live 567  matched 467
+0042500406  v3 ok  live 403
+0012600001  v3 537 rows (502 actionNumbers)  live 602  matched 502
+
+FIELD AGREEMENT (same actionNumber)
+  period           2450/2450   100.0%   
+  clock            2444/2450    99.8%   0022500001#4 live='PT11M56.00S' v3='PT12M00.00S' | 0022500001#700 live='PT04M58.00S' v3='PT05M00.00S'
+  personId         2252/2450    91.9%   0022500001#4 live=1641708 v3=1631096 | 0022500001#23 live=0 v3=1610612745
+  teamId           2221/2450    90.7%   0022500001#2 live=None v3=0 | 0022500001#4 live=1610612745 v3=1610612760
+  teamTricode      2265/2450    92.4%   0022500001#4 live='HOU' v3='OKC' | 0022500001#23 live='HOU' v3=''
+  playerName       2438/2450    99.5%   0022500001#4 live='Thompson' v3='Holmgren' | 0022500001#414 live='Adams' v3='Dort'
+  actionType         44/2450     1.8%   0022500001#4 live='jumpball' v3='Jump Ball' | 0022500001#8 live='3pt' v3='Missed Shot'
+  subType           340/2450    13.9%   0022500001#4 live='recovered' v3='' | 0022500001#9 live='defensive' v3='Unknown'
+  description        16/2450     0.7%   0022500001#2 live='Period Start' v3='Start of 1st Period (7:44 PM EST)' | 0022500001#4 live='Jump Ball S. Adams vs. C. Holmgren: Tip to A. Thompson' v3='Jump Ball Holmgren vs. Adams: Tip to Thompson'
+  shotResult       2187/2450    89.3%   0022500001#14 live='Made' v3='' | 0022500001#45 live='Made' v3=''
+  shotValue           0/2450     0.0%   0022500001#2 live=None v3=0 | 0022500001#4 live=None v3=0
+  location           44/2450     1.8%   0022500001#4 live=None v3='h' | 0022500001#8 live=None v3='v'
+  shotDistance       88/2450     3.6%   0022500001#2 live=None v3=0 | 0022500001#4 live=None v3=0
+  xLegacy           905/2450    36.9%   0022500001#2 live=None v3=0 | 0022500001#4 live=None v3=0
+  yLegacy           906/2450    37.0%   0022500001#2 live=None v3=0 | 0022500001#4 live=None v3=0
+  isFieldGoal      2450/2450   100.0%   
+  pointsTotal         6/2450     0.2%   0022500001#2 live=None v3=0 | 0022500001#4 live=None v3=0
+  scoreHome         674/2450    27.5%   0022500001#4 live='0' v3='' | 0022500001#8 live='0' v3=''
+  scoreAway         674/2450    27.5%   0022500001#4 live='0' v3='' | 0022500001#8 live='0' v3=''
+
+ACTION TYPES  live (type / subType)  ->  v3 (type / subType)   count
+  rebound      defensive              -> Rebound        Unknown                  346
+  substitution out                    -> Substitution                            244
+  3pt          Jump Shot              -> Missed Shot    Jump Shot                185
+  rebound      offensive              -> Rebound        Unknown                  162
+  foul         personal               -> Foul           Shooting                 114
+  freethrow    1 of 2                 -> Free Throw     Free Throw 1 of 2        110
+  freethrow    2 of 2                 -> Free Throw     Free Throw 2 of 2        110
+  3pt          Jump Shot              -> Made Shot      Jump Shot                 97
+  foul         personal               -> Foul           Personal                  68
+  timeout      full                   -> Timeout        Regular                   56
+  turnover     bad pass               -> Turnover       Bad Pass                  50
+  3pt          Jump Shot              -> Missed Shot    Pullup Jump shot          47
+  turnover     lost ball              -> Turnover       Lost Ball                 39
+  2pt          Layup                  -> Missed Shot    Driving Layup Shot        39
+  2pt          Layup                  -> Made Shot      Driving Layup Shot        38
+  rebound      offensive              -> Rebound        Normal Rebound            34
+  2pt          Jump Shot              -> Made Shot      Pullup Jump shot          28
+  2pt          Jump Shot              -> Missed Shot    Driving Floating Jump Shot    28
+  2pt          Jump Shot              -> Missed Shot    Pullup Jump shot          27
+  period       start                  -> period         start                     22
+  freethrow    1 of 1                 -> Free Throw     Free Throw 1 of 1         22
+  period       end                    -> period         end                       22
+  2pt          Jump Shot              -> Made Shot      Driving Floating Jump Shot    21
+  3pt          Jump Shot              -> Made Shot      Pullup Jump shot          21
+  2pt          DUNK                   -> Made Shot      Running Dunk Shot         19
+  foul         personal               -> Foul           Loose Ball                18
+  2pt          Layup                  -> Made Shot      Running Layup Shot        18
+  2pt          Layup                  -> Missed Shot    Layup Shot                18
+  turnover     offensive foul         -> Turnover       Offensive Foul Turnover    16
+  3pt          Jump Shot              -> Missed Shot    Step Back Jump shot       15
+  2pt          Layup                  -> Made Shot      Driving Finger Roll Layup Shot    15
+  2pt          Layup                  -> Missed Shot    Running Layup Shot        13
+  2pt          Jump Shot              -> Missed Shot    Turnaround Fadeaway shot    13
+  2pt          Layup                  -> Made Shot      Cutting Layup Shot        12
+  2pt          Jump Shot              -> Made Shot      Floating Jump shot        12
+  2pt          Jump Shot              -> Missed Shot    Fadeaway Jump Shot        12
+  turnover     out-of-bounds          -> Turnover       Out of Bounds - Bad Pass Turnover    12
+  foul         offensive              -> Foul           Offensive                 12
+  2pt          Jump Shot              -> Made Shot      Step Back Jump shot       12
+  2pt          Jump Shot              -> Missed Shot    Turnaround Jump Shot      11
+  jumpball     recovered              -> Jump Ball                                10
+  turnover     out-of-bounds          -> Turnover       Out of Bounds Lost Ball Turnover    10
+  2pt          Layup                  -> Made Shot      Putback Layup Shot         9
+  turnover     shot clock             -> Turnover       Shot Clock Turnover        9
+  2pt          Layup                  -> Made Shot      Layup Shot                 9
+  2pt          Layup                  -> Missed Shot    Tip Layup Shot             9
+  3pt          Jump Shot              -> Missed Shot    Running Jump Shot          9
+  2pt          Jump Shot              -> Missed Shot    Floating Jump shot         9
+  2pt          Jump Shot              -> Made Shot      Turnaround Fadeaway shot     8
+  2pt          DUNK                   -> Made Shot      Driving Dunk Shot          8
+  2pt          DUNK                   -> Made Shot      Alley Oop Dunk Shot        8
+  2pt          Jump Shot              -> Missed Shot    Jump Shot                  7
+  2pt          Jump Shot              -> Made Shot      Jump Shot                  7
+  2pt          Jump Shot              -> Missed Shot    Step Back Jump shot        7
+  2pt          Layup                  -> Made Shot      Tip Layup Shot             7
+  2pt          Hook                   -> Made Shot      Driving Hook Shot          7
+  violation    kicked ball            -> Violation      Kicked Ball                6
+  3pt          Jump Shot              -> Made Shot      Running Jump Shot          6
+  2pt          Jump Shot              -> Made Shot      Driving Floating Bank Jump Shot     6
+  3pt          Jump Shot              -> Missed Shot    Running Pull-Up Jump Shot     5
+
+IN LIVE ONLY: {('substitution', 'in'): 305, ('steal', ''): 87, ('substitution', 'out'): 61, ('block', ''): 51, ('game', 'end'): 5}
+IN V3 ONLY:   {('Instant Replay', 'Coach Challenge Overturn Ruling'): 5, ('Instant Replay', 'Replay Center'): 2, ('Instant Replay', 'Ruling Stands'): 1, ('Instant Replay', 'Coach Challenge Support Ruling'): 1, ('Instant Replay', 'Overturn Ruling'): 1}
+
+live keys not in v3: ['area', 'areaDetail', 'assistPersonId', 'assistPlayerNameInitial', 'assistTotal', 'blockPersonId', 'blockPlayerName', 'descriptor', 'edited', 'foulDrawnPersonId', 'foulDrawnPlayerName', 'foulPersonalTotal', 'foulTechnicalTotal', 'isTargetScoreLastPeriod', 'jumpBallLostPersonId', 'jumpBallLostPlayerName', 'jumpBallRecoverdPersonId', 'jumpBallRecoveredName', 'jumpBallWonPersonId', 'jumpBallWonPlayerName', 'officialId', 'orderNumber', 'periodType', 'personIdsFilter', 'possession', 'qualifiers', 'reboundDefensiveTotal', 'reboundOffensiveTotal', 'reboundTotal', 'shotActionNumber', 'side', 'stealPersonId', 'stealPlayerName', 'timeActual', 'turnoverTotal', 'x', 'y']
+v3 keys not in live: ['actionId', 'location', 'shotValue', 'videoAvailable']
+
+LIVE BOX SCORE (0012600001)
+  game keys: ['arena', 'attendance', 'awayTeam', 'duration', 'gameClock', 'gameCode', 'gameEt', 'gameId', 'gameStatus', 'gameStatusText', 'gameTimeAway', 'gameTimeHome', 'gameTimeLocal', 'gameTimeUTC', 'homeTeam', 'officials', 'period', 'regulationPeriods', 'sellout']
+  player keys: ['familyName', 'firstName', 'jerseyNum', 'name', 'nameI', 'oncourt', 'order', 'personId', 'played', 'position', 'starter', 'statistics', 'status']
+  statistics keys: ['assists', 'blocks', 'blocksReceived', 'fieldGoalsAttempted', 'fieldGoalsMade', 'fieldGoalsPercentage', 'foulsDrawn', 'foulsOffensive', 'foulsPersonal', 'foulsTechnical', 'freeThrowsAttempted', 'freeThrowsMade', 'freeThrowsPercentage', 'minus', 'minutes', 'plus', 'plusMinusPoints', 'points', 'pointsFastBreak', 'pointsFromTurnovers', 'pointsInThePaint', 'pointsSecondChance', 'reboundsDefensive', 'reboundsOffensive', 'reboundsTotal', 'steals', 'threePointersAttempted', 'threePointersMade', 'threePointersPercentage', 'turnovers', 'twoPointersAttempted', 'twoPointersMade', 'twoPointersPercentage']
+  example: {"personId": 203952, "position": "SF", "jerseyNum": "22", "starter": "1", "status": "ACTIVE", "name": "Andrew Wiggins", "nameI": "A. Wiggins", "firstName": "Andrew", "familyName": "Wiggins", "order": 1, "oncourt": "0", "played": "1"}

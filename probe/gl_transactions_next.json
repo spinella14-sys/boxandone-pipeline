@@ -1,0 +1,1328 @@
+{
+ "props": {
+  "pageProps": {
+   "page": {
+    "props": {
+     "site": "gleague",
+     "teamId": "gleague",
+     "teamTickets": [
+      {
+       "teamId": "1612709890",
+       "ticket": "https://www.ticketmaster.com/austin-spurs-tickets/artist/998266"
+      },
+      {
+       "teamId": "1612709927",
+       "ticket": "https://www.ticketmaster.com/wisconsin-herd-tickets/artist/2414076?home_away=home"
+      },
+      {
+       "teamId": "1612709905",
+       "ticket": "https://www.ticketmaster.com/coachella-valley-lakers-tickets/artist/4405718"
+      },
+      {
+       "teamId": "1612709929",
+       "ticket": "https://www.ticketmaster.com/college-park-skyhawks-tickets/artist/2669508"
+      },
+      {
+       "teamId": "1612709909",
+       "ticket": "https://www.ticketmaster.com/delaware-blue-coats-tickets/artist/1919066"
+      },
+      {
+       "teamId": "104",
+       "ticket": null
+      },
+      {
+       "teamId": "1612709928",
+       "ticket": "https://www.ticketmaster.com/Capital-City-GoGo-tickets/artist/2543289?home_away=home&CAMEFROM=CFC_MSPORTS_WEB_GGSCHED_2324SGB"
+      },
+      {
+       "teamId": "1612709915",
+       "ticket": "https://www.ticketmaster.com/maine-celtics-tickets/artist/1367353?home_away=home"
+      },
+      {
+       "teamId": "1612709921",
+       "ticket": "https://www.ticketmaster.com/long-island-nets-tickets/artist/2283758?brand=linets"
+      },
+      {
+       "teamId": "1612709934",
+       "ticket": "https://www.ticketmaster.com/artist/3207858"
+      },
+      {
+       "teamId": "1612709889",
+       "ticket": "https://www.ticketmaster.com/artist/998267"
+      },
+      {
+       "teamId": "1612709917",
+       "ticket": "https://www.gofevo.com/group/2026274315?ref=W"
+      },
+      {
+       "teamId": "1612709926",
+       "ticket": "https://www.ticketmaster.com/memphis-hustle-tickets/artist/2409115"
+      },
+      {
+       "teamId": "1612709904",
+       "ticket": "http://www.ticketmaster.com/artist/1078802"
+      },
+      {
+       "teamId": "50010",
+       "ticket": null
+      },
+      {
+       "teamId": "1612709923",
+       "ticket": "https://www.ticketmaster.com/windy-city-bulls-tickets/artist/2283730"
+      },
+      {
+       "teamId": "1612709908",
+       "ticket": "https://riograndevalley.gleague.nba.com/single-game-tickets"
+      },
+      {
+       "teamId": "1612709918",
+       "ticket": "https://www.ticketmaster.com/Texas-Legends-tickets/artist/1494016"
+      },
+      {
+       "teamId": "1612709925",
+       "ticket": "https://osceola.gleague.nba.com/playoffs"
+      },
+      {
+       "teamId": "1612709933",
+       "ticket": "https://tickets.ripcityremix.com/pages/tickets"
+      },
+      {
+       "teamId": "1612709919",
+       "ticket": "http://www.ticketmaster.com/artist/2047884"
+      },
+      {
+       "teamId": "1612709903",
+       "ticket": "http://www.ticketmaster.com/artist/2283757"
+      },
+      {
+       "teamId": "1612709893",
+       "ticket": "https://seatgeek.com/cleveland-charge-tickets"
+      },
+      {
+       "teamId": "1612709920",
+       "ticket": "https://www.ticketmaster.ca/raptors-905-tickets/artist/2163974?home_away=home"
+      },
+      {
+       "teamId": "1612709911",
+       "ticket": "https://hyveetix.evenue.net/events/NBDL"
+      },
+      {
+       "teamId": "1612709931",
+       "ticket": "https://www.superboletos.com/landing-evento/YoMqaiWJLFOcQQxn0oQvNg"
+      },
+      {
+       "teamId": "1612709932",
+       "ticket": "https://www.ticketmaster.com/motor-city-cruise-tickets/artist/2773642"
+      },
+      {
+       "teamId": "1612709902",
+       "ticket": "https://www.ticketmaster.com/santa-cruz-warriors-tickets/artist/1778873"
+      },
+      {
+       "teamId": "1612709914",
+       "ticket": "https://www.ticketmaster.com/stockton-kings-tickets/artist/2543256"
+      },
+      {
+       "teamId": "1612709922",
+       "ticket": "https://www.ticketmaster.com/artist/2284461"
+      },
+      {
+       "teamId": "1612709930",
+       "ticket": "https://www.axs.com/artists/1112418/nba-g-league-ignite-tickets"
+      },
+      {
+       "teamId": "1612709924",
+       "ticket": "https://www.ticketmaster.com/ontario-clippers-tickets/artist/2409123"
+      },
+      {
+       "teamId": "1612709910",
+       "ticket": "https://www.ticketmaster.com/noblesville-boom-tickets/artist/3907209"
+      },
+      {
+       "teamId": "1612709913",
+       "ticket": "https://www.tixr.com/groups/squadron"
+      }
+     ],
+     "header": {
+      "count": 10,
+      "items": [
+       {
+        "id": 62390,
+        "order": 1,
+        "text": "Players",
+        "href": "https://gleague.nba.com/players",
+        "type": "custom",
+        "icon": "",
+        "post_id": "62390",
+        "post_type": "custom",
+        "children": [
+         {
+          "id": 79351,
+          "order": 2,
+          "text": "Player Info",
+          "href": "https://gleague.nba.com/players",
+          "type": "post_type",
+          "icon": "",
+          "post_id": "13",
+          "post_type": "page",
+          "children": []
+         },
+         {
+          "id": 71809,
+          "order": 3,
+          "text": "Transactions",
+          "href": "https://gleague.nba.com/transactions",
+          "type": "custom",
+          "icon": "",
+          "post_id": "71809",
+          "post_type": "custom",
+          "children": []
+         },
+         {
+          "id": 62256,
+          "order": 4,
+          "text": "Two-Way Contracts",
+          "href": "https://gleague.nba.com/twowayplayers",
+          "type": "post_type",
+          "icon": "",
+          "post_id": "32304",
+          "post_type": "page",
+          "children": []
+         },
+         {
+          "id": 83536,
+          "order": 5,
+          "text": "NBA Call-Ups",
+          "href": "https://gleague.nba.com/nba-call-ups-2026-27",
+          "type": "post_type",
+          "icon": "",
+          "post_id": "83534",
+          "post_type": "page",
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": 62234,
+        "order": 6,
+        "text": "Games",
+        "href": "https://gleague.nba.com/games/",
+        "type": "custom",
+        "icon": "",
+        "post_id": "62234",
+        "post_type": "custom",
+        "children": []
+       },
+       {
+        "id": 83166,
+        "order": 7,
+        "text": "Schedule",
+        "href": "https://gleague.nba.com/schedule?month=11",
+        "type": "custom",
+        "icon": "",
+        "post_id": "83166",
+        "post_type": "custom",
+        "children": []
+       },
+       {
+        "id": 62391,
+        "order": 8,
+        "text": "News",
+        "href": "https://gleague.nba.com/news",
+        "type": "custom",
+        "icon": "",
+        "post_id": "62391",
+        "post_type": "custom",
+        "children": [
+         {
+          "id": 79353,
+          "order": 9,
+          "text": "Latest News",
+          "href": "https://gleague.nba.com/news",
+          "type": "post_type",
+          "icon": "",
+          "post_id": "61950",
+          "post_type": "page",
+          "children": []
+         },
+         {
+          "id": 63385,
+          "order": 10,
+          "text": "Key Dates",
+          "href": "https://gleague.nba.com/key-dates",
+          "type": "post_type",
+          "icon": "",
+          "post_id": "57650",
+          "post_type": "page",
+          "children": []
+         },
+         {
+          "id": 83017,
+          "order": 11,
+          "text": "Local Tryouts",
+          "href": "https://gleague.nba.com/local-tryouts-2026",
+          "type": "post_type",
+          "icon": "",
+          "post_id": "83015",
+          "post_type": "page",
+          "children": []
+         },
+         {
+          "id": 66573,
+          "order": 12,
+          "text": "About",
+          "href": "https://gleague.nba.com/about",
+          "type": "custom",
+          "icon": "",
+          "post_id": "66573",
+          "post_type": "custom",
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": 62238,
+        "order": 13,
+        "text": "Stats",
+        "href": "https://stats.gleague.nba.com",
+        "type": "custom",
+        "icon": "",
+        "post_id": "62238",
+        "post_type": "custom",
+        "children": []
+       },
+       {
+        "id": 62236,
+        "order": 14,
+        "text": "Standings",
+        "href": "https://gleague.nba.com/standings",
+        "type": "custom",
+        "icon": "",
+        "post_id": "62236",
+        "post_type": "custom",
+        "children": []
+       },
+       {
+        "id": 62237,
+        "order": 15,
+        "text": "Teams",
+        "href": "#",
+        "type": "custom",
+        "icon": "",
+        "post_id": "62237",
+        "post_type": "custom",
+        "children": []
+       },
+       {
+        "id": 62393,
+        "order": 16,
+        "text": "Events",
+        "href": "#",
+        "type": "custom",
+        "icon": "",
+        "post_id": "62393",
+        "post_type": "custom",
+        "children": [
+         {
+          "id": 82890,
+          "order": 17,
+          "text": "International Draft",
+          "href": "https://gleague.nba.com/2026-nba-g-league-international-draft",
+          "type": "post_type",
+          "icon": "",
+          "post_id": "79169",
+          "post_type": "page",
+          "children": []
+         },
+         {
+          "id": 79822,
+          "order": 18,
+          "text": "G League Draft",
+          "href": "https://gleague.nba.com/2026-nba-g-league-draft",
+          "type": "custom",
+          "icon": "",
+          "post_id": "79822",
+          "post_type": "custom",
+          "children": []
+         },
+         {
+          "id": 74585,
+          "order": 19,
+          "text": "Fall Invitational",
+          "href": "https://gleague.nba.com/fall-invitational",
+          "type": "post_type",
+          "icon": "",
+          "post_id": "74313",
+          "post_type": "page",
+          "children": []
+         },
+         {
+          "id": 64299,
+          "order": 20,
+          "text": "Winter Showcase",
+          "href": "https://gleague.nba.com/wintershowcase",
+          "type": "post_type",
+          "icon": "",
+          "post_id": "64015",
+          "post_type": "page",
+          "children": []
+         },
+         {
+          "id": 81027,
+          "order": 21,
+          "text": "Next Up Game",
+          "href": "https://gleague.nba.com/next-up",
+          "type": "post_type",
+          "icon": "",
+          "post_id": "64829",
+          "post_type": "page",
+          "children": []
+         },
+         {
+          "id": 66574,
+          "order": 22,
+          "text": "Playoffs",
+          "href": "https://gleague.nba.com/playoffs",
+          "type": "custom",
+          "icon": "",
+          "post_id": "66574",
+          "post_type": "custom",
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": 62239,
+        "order": 23,
+        "text": "Shop",
+        "href": "http://gleaguestore.nba.com/",
+        "type": "custom",
+        "icon": "",
+        "post_id": "62239",
+        "post_type": "custom",
+        "children": []
+       },
+       {
+        "id": 62626,
+        "order": 24,
+        "text": "Tickets",
+        "href": "https://gleague.nba.com/tickets",
+        "type": "custom",
+        "icon": "",
+        "post_id": "62626",
+        "post_type": "custom",
+        "children": [
+         {
+          "id": 79354,
+          "order": 25,
+          "text": "Game Tickets",
+          "href": "https://gleague.nba.com/tickets",
+          "type": "post_type",
+          "icon": "",
+          "post_id": "10155",
+          "post_type": "page",
+          "children": []
+         }
+        ]
+       }
+      ]
+     },
+     "footer": {
+      "footerCol1": {
+       "count": 6,
+       "items": [
+        {
+         "id": 68181,
+         "order": 1,
+         "text": "League Info",
+         "href": "#",
+         "type": "custom",
+         "icon": "",
+         "post_id": "68181",
+         "post_type": "custom",
+         "children": []
+        },
+        {
+         "id": 64688,
+         "order": 2,
+         "text": "About the League",
+         "href": "https://gleague.nba.com/about",
+         "type": "post_type",
+         "icon": "",
+         "post_id": "14459",
+         "post_type": "page",
+         "children": []
+        },
+        {
+         "id": 64693,
+         "order": 3,
+         "text": "FAQ",
+         "href": "https://gleague.nba.com/faq",
+         "type": "custom",
+         "icon": "",
+         "post_id": "64693",
+         "post_type": "custom",
+         "children": []
+        },
+        {
+         "id": 61965,
+         "order": 4,
+         "text": "Key Dates",
+         "href": "https://gleague.nba.com/key-dates",
+         "type": "custom",
+         "icon": "",
+         "post_id": "61965",
+         "post_type": "custom",
+         "children": []
+        },
+        {
+         "id": 64690,
+         "order": 5,
+         "text": "Winter Showcase",
+         "href": "https://gleague.nba.com/wintershowcase",
+         "type": "custom",
+         "icon": "",
+         "post_id": "64690",
+         "post_type": "custom",
+         "children": []
+        },
+        {
+         "id": 67125,
+         "order": 6,
+         "text": "Team Business",
+         "href": "https://gleague.nba.com/team-business",
+         "type": "post_type",
+         "icon": "",
+         "post_id": "66938",
+         "post_type": "page",
+         "children": []
+        }
+       ]
+      },
+      "footerCol2": {
+       "count": 6,
+       "items": [
+        {
+         "id": 61967,
+         "order": 1,
+         "text": "Connect",
+         "href": "#",
+         "type": "custom",
+         "icon": "",
+         "post_id": "61967",
+         "post_type": "custom",
+         "children": []
+        },
+        {
+         "id": 62226,
+         "order": 2,
+         "text": "YouTube",
+         "href": "https://www.youtube.com/nbagleague",
+         "type": "custom",
+         "icon": "",
+         "post_id": "62226",
+         "post_type": "custom",
+         "children": []
+        },
+        {
+         "id": 62227,
+         "order": 3,
+         "text": "X",
+         "href": "https://twitter.com/nbagleague",
+         "type": "custom",
+         "icon": "",
+         "post_id": "62227",
+         "post_type": "custom",
+         "children": []
+        },
+        {
+         "id": 62228,
+         "order": 4,
+         "text": "Facebook",
+         "href": "https://www.facebook.com/nbagleague",
+         "type": "custom",
+         "icon": "",
+         "post_id": "62228",
+         "post_type": "custom",
+         "children": []
+        },
+        {
+         "id": 62229,
+         "order": 5,
+         "text": "Instagram",
+         "href": "http://instagram.com/nbagleague",
+         "type": "custom",
+         "icon": "",
+         "post_id": "62229",
+         "post_type": "custom",
+         "children": []
+        },
+        {
+         "id": 62230,
+         "order": 6,
+         "text": "TikTok",
+         "href": "https://www.tiktok.com/@nbagleague?lang=en",
+         "type": "custom",
+         "icon": "",
+         "post_id": "62230",
+         "post_type": "custom",
+         "children": []
+        }
+       ]
+      },
+      "footerCol3": {
+       "count": 5,
+       "items": [
+        {
+         "id": 68291,
+         "order": 1,
+         "text": "Links",
+         "href": "#",
+         "type": "custom",
+         "icon": "",
+         "post_id": "68291",
+         "post_type": "custom",
+         "children": []
+        },
+        {
+         "id": 64692,
+         "order": 2,
+         "text": "Shop",
+         "href": "http://gleaguestore.nba.com/",
+         "type": "custom",
+         "icon": "",
+         "post_id": "64692",
+         "post_type": "custom",
+         "children": []
+        },
+        {
+         "id": 64694,
+         "order": 3,
+         "text": "Jr. NBA",
+         "href": "https://jr.nba.com/",
+         "type": "custom",
+         "icon": "",
+         "post_id": "64694",
+         "post_type": "custom",
+         "children": []
+        },
+        {
+         "id": 64695,
+         "order": 4,
+         "text": "NBA Cares",
+         "href": "https://cares.nba.com/",
+         "type": "custom",
+         "icon": "",
+         "post_id": "64695",
+         "post_type": "custom",
+         "children": []
+        },
+        {
+         "id": 64718,
+         "order": 5,
+         "text": "Careers",
+         "href": "https://careers.nba.com/",
+         "type": "custom",
+         "icon": "",
+         "post_id": "64718",
+         "post_type": "custom",
+         "children": []
+        }
+       ]
+      },
+      "footerCol4": {
+       "count": 0,
+       "items": []
+      }
+     },
+     "settings": {
+      "site": {
+       "site_title": "The NBA G League",
+       "site_tagline": "NBA G League | THE NBA Development League - Built Different.",
+       "og_image": "",
+       "page_key": "nba-affiliated-settings",
+       "currentSeason": "2026",
+       "youtubeAPIKey": "U2FsdGVkX19IIzn/+q1NFdGQGsbkl5ErgiyJ/KR52WpKhN/V24WMkHT5PQUEcwFO1vGfrmihtifGLIwqzAPNbQ==",
+       "frontendUrl": "https://gleague.nba.com",
+       "showSearch": "0",
+       "seasonType": "05",
+       "show_schedule_ticket_links": "1",
+       "showGameInfographic": "1",
+       "gameDefaultText": "<p>The NBA\\'s official minor league, the NBA G League prepares players, coaches, officials, trainers and front office staff for the NBA while acting as the league\\'s research and development laboratory. Featuring 31 teams, 30 with direct affiliations to NBA franchises for 2025-26, the league offers elite professional basketball at an affordable price in a fun, family-friendly atmosphere. This season, teams will compete in the innovative Tip-Off Tournament, a 14-game competition culminating at the 2025 NBA G League Winter Showcase from Dec. 19-22 in Orlando, FL. After the Winter Showcase, team records will reset and a 36-game regular season will begin with teams split up into Eastern and Western Conferences. The NBA G League Playoffs presented by Google Pixel commence on March 31 and will conclude with the NBA G League Finals presented by YouTube TV.</p>",
+       "showScoreboard": "1",
+       "globalHeader": "<meta name=\"google-site-verification\" content=\"5tyES9dEBtI_AZKQd5ReSPPHhKKgByW1Tx3WPwt_Fw4\" /> <!-- Tag for Activity Group: counter, Activity Name: nba-events_g-league-official_site-visits, Activity ID: 131152460 --> <!-- Expected URL: https://www.gleague.nba.com --> <!-- Activity ID: 131152460 Activity Name: nba-events_g-league-official_site-visits Activity Group Name: counter --> <!-- Start of global snippet: Please do not remove Place this snippet between the <head> and </head> tags on every page of your site. --> <!-- Google tag (gtag.js) --> <script async src=\"https://www.googletagmanager.com/gtag/js?id=DC-13089978\"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'DC-13089978'); </script> <!-- End of global snippet: Please do not remove --> <!-- Event snippet for nba-events_g-league-official_site-visits on https://www.gleague.nba.com: Please do not remove. Place this snippet on pages with events you\u2019re tracking. Creation date: 11/29/2024 --> <script> gtag('event', 'conversion', { 'allow_custom_scripts': true, 'u1': '[Page URL]', 'send_to': 'DC-13089978/count0/nba-e00+unique' }); </script> <noscript> <img src=\"https://ad.doubleclick.net/ddm/activity/src=13089978;type=count0;cat=nba-e00;u1=[Page URL];dc_lat=;dc_rdid=;tag_for_child_directed_treatment=;tfua=;npa=;gdpr=${GDPR};gdpr_consent=${GDPR_CONSENT_755};ord=1;num=1?\" width=\"1\" height=\"1\" alt=\"\"/> </noscript> <!-- End of event snippet: Please do not remove -->",
+       "ads": {
+        "pages_header_ad_path": "/2117/gleague/generic_top",
+        "pages_header_ad_sizes": "728x90;320x50",
+        "news_header_ad_path": "/2117/gleague/news_top",
+        "news_header_ad_sizes": "728x90;320x50",
+        "news_footer_ad_path": "/2117/gleague/news_bottom",
+        "news_footer_ad_sizes": "728x90;320x50",
+        "videos_header_ad_path": "/2117/gleague/videos_top",
+        "videos_header_ad_sizes": "728x90;320x50",
+        "videos_footer_ad_path": "/2117/gleague/videos_bottom",
+        "videos_footer_ad_sizes": "728x90;320x50",
+        "games_header_ad_path": "/2117/gleague/games_top",
+        "games_header_ad_sizes": "728x90;320x50",
+        "games_footer_ad_path": "/2117/gleague/games_bottom",
+        "games_footer_ad_sizes": "728x90;320x50",
+        "players_header_ad_path": "/2117/gleague/player_top",
+        "players_header_ad_sizes": "728x90;320x50",
+        "players_footer_ad_path": "/2117/gleague/player_bottom",
+        "players_footer_ad_sizes": "728x90;320x50",
+        "schedule_header_ad_path": "/2117/gleague/schedule_top",
+        "schedule_header_ad_sizes": "728x90;320x50",
+        "schedule_footer_ad_path": "/2117/gleague/schedule_bottom",
+        "schedule_footer_ad_sizes": "728x90;320x50",
+        "standings_header_ad_path": "/2117/gleague/standings_top",
+        "standings_header_ad_sizes": "728x90;320x50",
+        "standings_footer_ad_path": "/2117/gleague/standings_middle",
+        "standings_footer_ad_sizes": "728x90;320x50",
+        "tickets_header_ad_path": "/2117/gleague/tickets_top",
+        "tickets_header_ad_sizes": "728x90;320x50",
+        "tickets_footer_ad_path": "/2117/gleague/tickets_bottom",
+        "tickets_footer_ad_sizes": "728x90;320x50"
+       },
+       "socialInstagram": "https://www.instagram.com/nbagleague/",
+       "socialYoutube": "https://www.youtube.com/c/nbagleague/featured",
+       "socialTwitter": "https://twitter.com/nbagleague",
+       "socialFacebook": "https://www.facebook.com/nbagleague/",
+       "socialTwitch": "https://www.twitch.tv/nbagleague",
+       "socialTikTok": "https://www.tiktok.com/@nbagleague",
+       "app_config": {
+        "androidAppBundleId": "AndroidBundleIDHere",
+        "iosAppBundleId": "iOSBundleIDHere",
+        "webviewKeyDates": "https://gleague.nba.com/key-dates",
+        "webviewTwoWayContracts": "https://gleague.nba.com/twowayplayers",
+        "webviewTransactions": "https://gleague.nba.com/22-23-nba-g-league-transactions",
+        "webviewHelpCenter": "https://support.watch.nba.com/hc/en-us",
+        "webviewContactSupport": "https://support.watch.nba.com/hc/en-us/requests/new?ticket_form_id=114093964473",
+        "webviewPrivacyPolicy": "https://www.nba.com/privacy-policy",
+        "webviewTermsAndConditions": "https://www.nba.com/termsofuse",
+        "instagramToken": "IGQWRNazFld0tST19Xb2JDN2czbEtuVjFoRDV2QUN6cDFMM2pvYzZAXWmd0U1RycDRGYVI5ZAnRiYi1pRGh6QVdVazRCdi1uOEhWeG1MbExvNFR2NWY4LUUyTjZAxUVZABUmlYbXUtbmRwN3FYYTE4czRZAOVhxWmVZAbm8ZD",
+        "NBACookiePolicy": "https://www.nba.com/cookiepolicy",
+        "EEAUKPrivacyStatement": "https://www.nba.com/eeaukprivacy",
+        "brazilPrivacyStatement": "https://www.nba.com/brazilprivacy",
+        "californiaConsumerPrivacyStatement": "https://www.nba.com/caprivacy",
+        "coloradoConsumerPrivacyStatement": "https://www.nba.com/coprivacy"
+       },
+       "favIcon": "",
+       "scoreboardSponsorText": "",
+       "scoreboardSponsorLogo": "",
+       "scoreboardSponsorLink": "",
+       "scoreboardAnchorDateOverride": "2026-11-06",
+       "scoreboardAnchorOverrideScheduled": "on",
+       "scoreboardAnchorOverrideStart": "2026-10-08T21:00:00Z",
+       "scoreboardAnchorOverrideEnd": "2026-11-07T01:00:00Z",
+       "youtubeChannelID": "",
+       "announcementText": ""
+      },
+      "gleague": {
+       "site_title": "The NBA G League",
+       "site_tagline": "NBA G League | THE NBA Development League - Built Different.",
+       "og_image": "",
+       "page_key": "nba-affiliated-settings",
+       "currentSeason": "2026",
+       "youtubeAPIKey": "U2FsdGVkX19IIzn/+q1NFdGQGsbkl5ErgiyJ/KR52WpKhN/V24WMkHT5PQUEcwFO1vGfrmihtifGLIwqzAPNbQ==",
+       "frontendUrl": "https://gleague.nba.com",
+       "showSearch": "0",
+       "seasonType": "05",
+       "show_schedule_ticket_links": "1",
+       "showGameInfographic": "1",
+       "gameDefaultText": "<p>The NBA\\'s official minor league, the NBA G League prepares players, coaches, officials, trainers and front office staff for the NBA while acting as the league\\'s research and development laboratory. Featuring 31 teams, 30 with direct affiliations to NBA franchises for 2025-26, the league offers elite professional basketball at an affordable price in a fun, family-friendly atmosphere. This season, teams will compete in the innovative Tip-Off Tournament, a 14-game competition culminating at the 2025 NBA G League Winter Showcase from Dec. 19-22 in Orlando, FL. After the Winter Showcase, team records will reset and a 36-game regular season will begin with teams split up into Eastern and Western Conferences. The NBA G League Playoffs presented by Google Pixel commence on March 31 and will conclude with the NBA G League Finals presented by YouTube TV.</p>",
+       "showScoreboard": "1",
+       "globalHeader": "<meta name=\"google-site-verification\" content=\"5tyES9dEBtI_AZKQd5ReSPPHhKKgByW1Tx3WPwt_Fw4\" /> <!-- Tag for Activity Group: counter, Activity Name: nba-events_g-league-official_site-visits, Activity ID: 131152460 --> <!-- Expected URL: https://www.gleague.nba.com --> <!-- Activity ID: 131152460 Activity Name: nba-events_g-league-official_site-visits Activity Group Name: counter --> <!-- Start of global snippet: Please do not remove Place this snippet between the <head> and </head> tags on every page of your site. --> <!-- Google tag (gtag.js) --> <script async src=\"https://www.googletagmanager.com/gtag/js?id=DC-13089978\"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'DC-13089978'); </script> <!-- End of global snippet: Please do not remove --> <!-- Event snippet for nba-events_g-league-official_site-visits on https://www.gleague.nba.com: Please do not remove. Place this snippet on pages with events you\u2019re tracking. Creation date: 11/29/2024 --> <script> gtag('event', 'conversion', { 'allow_custom_scripts': true, 'u1': '[Page URL]', 'send_to': 'DC-13089978/count0/nba-e00+unique' }); </script> <noscript> <img src=\"https://ad.doubleclick.net/ddm/activity/src=13089978;type=count0;cat=nba-e00;u1=[Page URL];dc_lat=;dc_rdid=;tag_for_child_directed_treatment=;tfua=;npa=;gdpr=${GDPR};gdpr_consent=${GDPR_CONSENT_755};ord=1;num=1?\" width=\"1\" height=\"1\" alt=\"\"/> </noscript> <!-- End of event snippet: Please do not remove -->",
+       "ads": {
+        "pages_header_ad_path": "/2117/gleague/generic_top",
+        "pages_header_ad_sizes": "728x90;320x50",
+        "news_header_ad_path": "/2117/gleague/news_top",
+        "news_header_ad_sizes": "728x90;320x50",
+        "news_footer_ad_path": "/2117/gleague/news_bottom",
+        "news_footer_ad_sizes": "728x90;320x50",
+        "videos_header_ad_path": "/2117/gleague/videos_top",
+        "videos_header_ad_sizes": "728x90;320x50",
+        "videos_footer_ad_path": "/2117/gleague/videos_bottom",
+        "videos_footer_ad_sizes": "728x90;320x50",
+        "games_header_ad_path": "/2117/gleague/games_top",
+        "games_header_ad_sizes": "728x90;320x50",
+        "games_footer_ad_path": "/2117/gleague/games_bottom",
+        "games_footer_ad_sizes": "728x90;320x50",
+        "players_header_ad_path": "/2117/gleague/player_top",
+        "players_header_ad_sizes": "728x90;320x50",
+        "players_footer_ad_path": "/2117/gleague/player_bottom",
+        "players_footer_ad_sizes": "728x90;320x50",
+        "schedule_header_ad_path": "/2117/gleague/schedule_top",
+        "schedule_header_ad_sizes": "728x90;320x50",
+        "schedule_footer_ad_path": "/2117/gleague/schedule_bottom",
+        "schedule_footer_ad_sizes": "728x90;320x50",
+        "standings_header_ad_path": "/2117/gleague/standings_top",
+        "standings_header_ad_sizes": "728x90;320x50",
+        "standings_footer_ad_path": "/2117/gleague/standings_middle",
+        "standings_footer_ad_sizes": "728x90;320x50",
+        "tickets_header_ad_path": "/2117/gleague/tickets_top",
+        "tickets_header_ad_sizes": "728x90;320x50",
+        "tickets_footer_ad_path": "/2117/gleague/tickets_bottom",
+        "tickets_footer_ad_sizes": "728x90;320x50"
+       },
+       "socialInstagram": "https://www.instagram.com/nbagleague/",
+       "socialYoutube": "https://www.youtube.com/c/nbagleague/featured",
+       "socialTwitter": "https://twitter.com/nbagleague",
+       "socialFacebook": "https://www.facebook.com/nbagleague/",
+       "socialTwitch": "https://www.twitch.tv/nbagleague",
+       "socialTikTok": "https://www.tiktok.com/@nbagleague",
+       "app_config": {
+        "androidAppBundleId": "AndroidBundleIDHere",
+        "iosAppBundleId": "iOSBundleIDHere",
+        "webviewKeyDates": "https://gleague.nba.com/key-dates",
+        "webviewTwoWayContracts": "https://gleague.nba.com/twowayplayers",
+        "webviewTransactions": "https://gleague.nba.com/22-23-nba-g-league-transactions",
+        "webviewHelpCenter": "https://support.watch.nba.com/hc/en-us",
+        "webviewContactSupport": "https://support.watch.nba.com/hc/en-us/requests/new?ticket_form_id=114093964473",
+        "webviewPrivacyPolicy": "https://www.nba.com/privacy-policy",
+        "webviewTermsAndConditions": "https://www.nba.com/termsofuse",
+        "instagramToken": "IGQWRNazFld0tST19Xb2JDN2czbEtuVjFoRDV2QUN6cDFMM2pvYzZAXWmd0U1RycDRGYVI5ZAnRiYi1pRGh6QVdVazRCdi1uOEhWeG1MbExvNFR2NWY4LUUyTjZAxUVZABUmlYbXUtbmRwN3FYYTE4czRZAOVhxWmVZAbm8ZD",
+        "NBACookiePolicy": "https://www.nba.com/cookiepolicy",
+        "EEAUKPrivacyStatement": "https://www.nba.com/eeaukprivacy",
+        "brazilPrivacyStatement": "https://www.nba.com/brazilprivacy",
+        "californiaConsumerPrivacyStatement": "https://www.nba.com/caprivacy",
+        "coloradoConsumerPrivacyStatement": "https://www.nba.com/coprivacy"
+       },
+       "favIcon": "",
+       "scoreboardSponsorText": "",
+       "scoreboardSponsorLogo": "",
+       "scoreboardSponsorLink": "",
+       "scoreboardAnchorDateOverride": "2026-11-06",
+       "scoreboardAnchorOverrideScheduled": "on",
+       "scoreboardAnchorOverrideStart": "2026-10-08T21:00:00Z",
+       "scoreboardAnchorOverrideEnd": "2026-11-07T01:00:00Z",
+       "youtubeChannelID": "",
+       "announcementText": ""
+      }
+     },
+     "content": {
+      "id": 58070,
+      "type": "page",
+      "brand": "gleague",
+      "name": "transactions",
+      "title": "NBA G League Transactions",
+      "status": "publish",
+      "slug": "transactions",
+      "permalink": "https://gleague.nba.com/transactions",
+      "excerpt": "",
+      "timestamp": 1635868473000,
+      "date": "2021-11-02T15:54:33Z",
+      "modified": "2022-10-24T18:27:17Z",
+      "category": "",
+      "featuredImage": {
+       "url": "",
+       "alt": ""
+      },
+      "blocks": [],
+      "seo": {
+       "keyword": "",
+       "title": "NBA G League Transactions - The NBA G League",
+       "description": "",
+       "facebook": {
+        "title": "NBA G League Transactions - The NBA G League",
+        "description": "",
+        "image": "",
+        "imageId": ""
+       },
+       "twitter": {
+        "title": "NBA G League Transactions - The NBA G League",
+        "description": "",
+        "image": "",
+        "imageId": ""
+       }
+      },
+      "taxonomy": {},
+      "inLineAd": "",
+      "footerAd": "",
+      "hidePageTitle": false,
+      "pageHeaderInfo": {
+       "show_header": "1",
+       "title": "",
+       "sponsor_text": "",
+       "sponsor_link": "",
+       "sponsor_logo": {
+        "url": "",
+        "alt": ""
+       }
+      },
+      "pageAdsInfo": {
+       "show_advertisements": "1",
+       "header_ad_path": "/2117/gleague/transactions_top",
+       "header_ad_sizes": "728x90;320x50",
+       "footer_ad_path": "/2117/gleague/transactions_bottom",
+       "footer_ad_sizes": "728x90;320x50"
+      },
+      "template": "default",
+      "contentFiltered": "",
+      "contentText": "",
+      "categoryPrimary": {
+       "name": "",
+       "slug": "",
+       "bannerImage": "",
+       "mobileBannerImage": "",
+       "menu": {},
+       "mobileMenu": {},
+       "adfuelTarget": "",
+       "isHub": false
+      },
+      "components": [],
+      "authors": [
+       {
+        "id": 15,
+        "slug": "lisa-meehan",
+        "name": "Lisa Meehan",
+        "firstName": "Lisa",
+        "lastName": "Meehan",
+        "organization": "",
+        "isNBAStaff": false,
+        "authorPhoto": "",
+        "socialHandle": "",
+        "socialLink": "",
+        "wpseoTitle": "",
+        "wpseoMetadesc": "",
+        "description": "",
+        "userUrl": "https://www.nba.com",
+        "featuredAuthor": false
+       }
+      ],
+      "author": {
+       "id": 15,
+       "slug": "lisa-meehan",
+       "name": "Lisa Meehan",
+       "firstName": "Lisa",
+       "lastName": "Meehan",
+       "organization": "",
+       "isNBAStaff": false,
+       "authorPhoto": "",
+       "socialHandle": "",
+       "socialLink": "",
+       "wpseoTitle": "",
+       "wpseoMetadesc": "",
+       "description": "",
+       "userUrl": "https://www.nba.com",
+       "featuredAuthor": false
+      }
+     },
+     "seo": {
+      "keyword": "",
+      "title": "NBA G League Transactions - The NBA G League",
+      "description": "",
+      "facebook": {
+       "title": "NBA G League Transactions - The NBA G League",
+       "description": "",
+       "image": "",
+       "imageId": ""
+      },
+      "twitter": {
+       "title": "NBA G League Transactions - The NBA G League",
+       "description": "",
+       "image": "",
+       "imageId": ""
+      }
+     },
+     "frontend": {
+      "env": "production",
+      "protocol": "https:",
+      "base_url": "gleague.nba.com",
+      "url": "gleague.nba.com",
+      "origin": "https://gleague.nba.com"
+     }
+    }
+   },
+   "messages": {
+    "Global": {
+     "skip": "Skip to Main Content",
+     "menutoggle": "Toggle Menu",
+     "loadmore": "Load More",
+     "noresults": "No results found.",
+     "readmore": "Read More",
+     "copyclipboard": "Copy to Clipboard",
+     "sharefb": "Share on Facebook",
+     "sharetwitter": "Share on Twitter",
+     "followus": "Follow Us",
+     "close": "Close",
+     "featured_highlight": "Featured Highlight",
+     "resetfilters": "Reset Filters",
+     "filterbymonth": "Filter by Month",
+     "filterbyyear": "Filter by Year",
+     "select": "Select",
+     "month": "Month",
+     "year": "Year",
+     "viewbymonth": "View by Month",
+     "viewbyyear": "View by Year",
+     "heading_news": "News",
+     "related": "Related Articles",
+     "staffarticle": "By {teamName} Staff ",
+     "followon": "Follow on ",
+     "instagram": "Instagram",
+     "twitter": "Twitter",
+     "facebook": "Facebook",
+     "youtube": "YouTube",
+     "tiktok": "TikTok",
+     "twitch": "Twitch",
+     "playall": "Play All",
+     "videos_in_series": "Videos in Series",
+     "affiliate": "NBA Affiliate",
+     "x": "X"
+    },
+    "Headings": {
+     "news": "News",
+     "schedule": "Schedule",
+     "standings": "Standings"
+    },
+    "Lightbox": {
+     "close": "Close Window"
+    },
+    "Error": {
+     "page_title": "404 - Page Not Found",
+     "title": "Page not found.",
+     "message": "The page you\u2019re looking for does not exist or was moved from this address."
+    },
+    "ServerError": {
+     "page_title": "500 - Internal Server Error",
+     "title": "Something went wrong.",
+     "message": "An unexpected error occurred. Please try again later."
+    },
+    "Legal": {
+     "copyright": "Copyright \u00a9 {currentYear} NBA Media Ventures, LLC.<br/>All rights reserved. No portion of NBA.com may be duplicated, redistributed or manipulated in any form.<br/>If you are having difficulty accessing any content on this website, please visit our {accessibilityPageLink}."
+    },
+    "SignUp": {
+     "heading": "STAY UP TO DATE WITH ALL NBA G LEAGUE NEWS",
+     "input": "Email Address",
+     "button": "Sign Up",
+     "success": "You\u2019re all set! We\u2019ll keep you up to date with the latest NBA G League news and headlines."
+    },
+    "Search": {
+     "input": "Search for players, videos and news",
+     "label": "Enter search terms",
+     "close": "Close Search Window",
+     "season": "Season",
+     "watch": "Watch the Game",
+     "buy_tickets": "Buy Tickets",
+     "no_results": "No Results Found"
+    },
+    "TipOff": {
+     "article": "The",
+     "label": "Tip Off"
+    },
+    "Scoreboard": {
+     "preGame": "Buy Tickets",
+     "liveGame": "Watch Live",
+     "replay": "Watch Replay",
+     "live": "LIVE",
+     "final": "FINAL",
+     "click": "Go To Game",
+     "buy_tickets": "Buy Tickets",
+     "starting": "The Game Will Begin Shortly",
+     "box_score": "Box Score",
+     "watch_game": "Watch the Game",
+     "watch_recap": "Watch the Game Recap",
+     "home_winner": "The home team won the game.",
+     "away_winner": "The away team won the game.",
+     "watch_on": "Watch on: "
+    },
+    "Schedule": {
+     "no_games": "The are no games scheduled for your current criteria.",
+     "by_team": "Filter by Team",
+     "all_teams": "All Teams",
+     "by_month": "Filter by Month",
+     "select_month": "Select Month",
+     "hide_scores": "Hide Scores",
+     "hide_past": "Hide Past Games",
+     "non_regular": "Non-Regular Season",
+     "buy_tickets": "Buy Tickets",
+     "tbd": "TBD",
+     "delayed": "Delayed",
+     "postponed": "Postponed",
+     "cancelled": "Cancelled",
+     "final": "Final",
+     "game_details": "Game details: {awayTeam} at {homeTeam}"
+    },
+    "Games": {
+     "by_date": "Filter by Date",
+     "watch_game": "Watch the Game",
+     "watch_recap": "Watch the Game Recap",
+     "box_score": "Box Score",
+     "leader_headline": "Game Leaders",
+     "teamleader_headline": "Team Leaders",
+     "player": "Player",
+     "points": "PTS",
+     "rebounds": "REB",
+     "assists": "AST",
+     "recap_headline": "Game Recap",
+     "no_games": "The are no games for your selected date.",
+     "guard": "Guard",
+     "center": "Center",
+     "forward": "Forward",
+     "buy_tickets": "Buy Tickets",
+     "Local": "Local:",
+     "tbd": "TBD"
+    },
+    "Tickets": {
+     "buy_tickets": "Buy Tickets",
+     "versus": "V",
+     "no_upcoming": "There are no upcoming games",
+     "click": "Go To Game",
+     "upcoming_games": "Upcoming Games",
+     "ticket_hub": "Ticket Hub"
+    },
+    "Standings": {
+     "season": "Season",
+     "filter_season": "Filter by Season",
+     "filter_seasonType": "Filter by Season Type",
+     "filter_rankGroup": "Group By",
+     "by_month": "Filter by Month",
+     "league": "League",
+     "conference": "Conference",
+     "division": "Division",
+     "regular": "Regular",
+     "showcase": "Showcase",
+     "showcase_title": "Showcase Cup Standings",
+     "central": "Central",
+     "east": "East",
+     "south": "South",
+     "west": "West",
+     "eastern": "Eastern",
+     "western": "Western",
+     "atlantic": "Atlantic",
+     "southeast": "Southeast",
+     "midwest": "Midwest",
+     "pacific": "Pacific",
+     "southwest": "Southwest",
+     "no_results": "No {order} games found for the {season} season.",
+     "standings": "Standings",
+     "determinations": "Standings Determinations",
+     "tip-off-tournament": "Tip-Off Tournament"
+    },
+    "FeaturedGrid": {
+     "video": "More Videos",
+     "post": "More News"
+    },
+    "Draft": {
+     "round": "Round",
+     "pick": "Pick",
+     "team": "Team",
+     "player": "Player",
+     "position": "Position",
+     "school": "School",
+     "affiliate": "NBA Affiliate",
+     "draft-round": "Draft Round"
+    },
+    "VOD": {
+     "watch": "Watch",
+     "search": "Search for your favorite teams, players, or games.",
+     "input": "Search...",
+     "featuredseries": "Play All Videos In Series",
+     "searchHeader": "Search",
+     "clear_search": "Back to Videos"
+    },
+    "Player": {
+     "number": "Number",
+     "position": "Position",
+     "height": "Height",
+     "weight": "Weight",
+     "born": "Born",
+     "drafted": "Drafted",
+     "attended": "Last Attended",
+     "career_stats": "Career Stats",
+     "stats": "Stats",
+     "full_stats": "Full Stats",
+     "player_bio": "Player Bio",
+     "related_videos": "Related Videos",
+     "no_stats": "No stats found for {playerName}.",
+     "season": "Season",
+     "team": "Team",
+     "age": "Age",
+     "games_played": "Games Played",
+     "games_started": "Games Started",
+     "minutes": "Minutes",
+     "points": "Points",
+     "field_goals_made": "Field Goals Made",
+     "field_goals_attempted": "Field Goals Attempted",
+     "field_goal_percentage": "Field Goal Percentage",
+     "three_pointers_made": "Three Pointers Made",
+     "three_pointers_attempted": "Three Pointers Attempted",
+     "three_point_percentage": "Three Point Percentage",
+     "free_throws_made": "Free Throws Made",
+     "free_throws_attempted": "Free Throws Attempted",
+     "free_throw_percentage": "Free Throw Percentage",
+     "offensive_rebounds": "Offensive Rebounds",
+     "defensive_rebounds": "Defensive Rebounds",
+     "total_rebounds": "Total Rebounds",
+     "assists": "Assists",
+     "steals": "Steals",
+     "blocks": "Blocks",
+     "turnovers": "Turnovers",
+     "personal_fouls": "Personal Fouls"
+    },
+    "Players": {
+     "players": "Players",
+     "all_positions": "All Positions",
+     "center": "Center",
+     "forward": "Forward",
+     "guard": "Guard",
+     "forward_center": "Forward-Center",
+     "forward_guard": "Forward-Guard",
+     "all_schools": "All Schools",
+     "all_teams": "All Teams",
+     "search": "Search by Name",
+     "filter_position": "Filter by Position",
+     "filter_school": "Filter by School",
+     "filter_teams": "Filter by Team",
+     "click": "Go To Game",
+     "roster": "Full Roster",
+     "no_results": "No Players Found.",
+     "top_performer": "Top Performer",
+     "points": "Points",
+     "rebounds": "Rebounds",
+     "assists": "Assists"
+    },
+    "Roster": {
+     "player": "Player",
+     "number": "Num",
+     "position": "Pos",
+     "school": "School",
+     "height": "Height",
+     "weight": "Weight"
+    },
+    "Filters": {
+     "filters": "Filters",
+     "close": "Close Filters"
+    },
+    "Game": {
+     "upcoming": "Watch on {streaming}",
+     "watch": "Watch Now on {streaming}",
+     "replay": "Watch Replay on {streaming}",
+     "play-by-play": "Play-By-Play",
+     "box-score": "Box Score",
+     "game-story": "Game Story",
+     "pre-game": "Pre-Game",
+     "inactive": "DNP - Inactive",
+     "arena": "Arena",
+     "attendance": "Attendance",
+     "download": "Download Game Book (pdf)",
+     "officials": "Officials",
+     "latest": "Latest First",
+     "overtime": "Overtime",
+     "quarters": "Quarters",
+     "quarter": {
+      "1": "1st Quarter",
+      "2": "2nd Quarter",
+      "3": "3rd Quarter",
+      "4": "4th Quarter",
+      "5": "Overtime 1",
+      "6": "Overtime 2",
+      "7": "Overtime 3",
+      "8": "Overtime 4",
+      "all": "All Quarters"
+     },
+     "ot": "Overtime {quarter}",
+     "all": "All",
+     "noplays__player": "No plays by {player}.",
+     "noplays__quarter": "No plays found for this quarter.",
+     "open-mobile": "Show Player Filters",
+     "close-mobile": "Hide Player Filters",
+     "arena-info": "Arena Information",
+     "tied": "Times Tied:",
+     "inactive-pl": "Inactive Players",
+     "scoring": "Scoring",
+     "lead": "Lead Changes:"
+    },
+    "Infographic": {
+     "leaders": "Leaders",
+     "points": "Points",
+     "rebounds": "Rebounds",
+     "assists": "Assists",
+     "stats": "Team Stats",
+     "rank": "Rank",
+     "standings": "Record",
+     "winPrct": "Win %",
+     "lossPrct": "Loss %",
+     "streak": "Streak",
+     "lastTen": "Last 10",
+     "home": "Home",
+     "away": "Away"
+    },
+    "Callup": {
+     "heading": "Featured Call Up"
+    },
+    "Status": {
+     "upcoming": "UPCOMING",
+     "live": "LIVE",
+     "final": "FINAL"
+    },
+    "Transactions": {
+     "all_types": "All Types",
+     "all_teams": "All Teams",
+     "all_dates": "All Dates",
+     "two_way_contract": "Two-Way Signing",
+     "10_day_contract": "10-day Contract Signed",
+     "acquired": "Acquired",
+     "acquired_from_player_pool": "Acquired From Player Pool",
+     "acquired_from_waivers": "Acquired From Waivers",
+     "assigned": "Assigned",
+     "buyout": "Buyout",
+     "called-up": "NBA Call-Up",
+     "trade": "Traded",
+     "waived": "Waived",
+     "waivers_cleared": "Waivers Cleared",
+     "drafted": "Drafted",
+     "recalled": "Recalled",
+     "filter_teams": "Filter by Team",
+     "7_days": "7 Days",
+     "15_days": "15 Days",
+     "30_days": "30 Days",
+     "60_days": "60 Days",
+     "year": "Year",
+     "no_results": "No transactions found."
+    },
+    "Streaming": {
+     "streaming_today": "Streaming Today",
+     "upcoming": "Upcoming Streams"
+    },
+    "Playoffs": {
+     "western_conference": "Western Conference",
+     "eastern_conference": "Eastern Conference",
+     "round": "Round {round}",
+     "conference_semifinals": "Conference Semifinals",
+     "conference_finals": "Conference Finals",
+     "finals": "G League Finals",
+     "season": "{season} Season",
+     "presented_by": "Presented by",
+     "watch_on": "Watch on:",
+     "tbd": "TBD",
+     "best_of": "*Best out of {count} games.",
+     "game_scores": "Game Scores",
+     "game_number": "Game {number}",
+     "no_results": "The playoff bracket is not available.",
+     "playoff_bracket": "Playoff Bracket"
+    }
+   },
+   "analytics": {
+    "page": {
+     "pageInfo": {
+      "pageName": "gleague:transactions:main",
+      "siteSection": "gleague:transactions"
+     }
+    }
+   }
+  },
+  "__N_SSP": true
+ },
+ "page": "/transactions",
+ "query": {},
+ "buildId": "IkVveCMrut6VS7shh6Wv7",
+ "isFallback": false,
+ "isExperimentalCompile": false,
+ "gssp": true,
+ "locale": "en",
+ "locales": [
+  "en"
+ ],
+ "defaultLocale": "en",
+ "scriptLoader": []
+}

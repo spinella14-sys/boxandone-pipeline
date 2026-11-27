@@ -742,6 +742,11 @@ def main():
                     # RAPM with a box + tracking prior; shot quality and shot-making
                     ok &= run(log, ["compute_tprapm.py", "build", "--season", season])
                     ok &= run(log, ["compute_shotq.py", "build", "--seasons", season])
+                    # MIN% and the qualifying pool every ranking uses
+                    ok &= run(log, ["export_availability.py", "--seasons", season])
+                    # Win Shares; box score plus luck-adjusted on/off (PIPM-style)
+                    ok &= run(log, ["compute_ws.py", "build", "--seasons", season])
+                    ok &= run(log, ["compute_pipm.py", "build", "--seasons", season])
                     # each team's shots, both ends, for the team page
                     ok &= run(log, ["export_team_shots.py", "build", "--season", season, "--hot"])
                     # each team's lineup combinations, 5-man down to 2-man

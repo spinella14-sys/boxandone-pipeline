@@ -1,0 +1,70 @@
+
+===== nightly 2026-10-21 05:13:14 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+   0.0s  season 2026-27
+   0.5s  stale lock (275 min old) — taking it
+4789.6s  pulling database (168 MB)
+4810.2s  holding 26 games for 2026-27
+4810.2s  cleared 7 cached schedule pages for 2026-27
+4810.2s  $ ingest_games.py schedule --seasons 2027:2027
+4811.4s     Traceback (most recent call last):
+4811.4s       File "/Users/adamspinella/boxandone/ingest_games.py", line 519, in <module>
+4811.4s         phase_schedule(range(hi, lo - 1, -1))
+4811.4s       File "/Users/adamspinella/boxandone/ingest_games.py", line 115, in phase_schedule
+4811.4s         con = db()
+4811.4s       File "/Users/adamspinella/boxandone/ingest_games.py", line 53, in db
+4811.4s         con = duckdb.connect(DB_PATH)
+4811.4s     _duckdb.IOException: IO Error: Could not set lock on file "/Users/adamspinella/boxandone/data/boxandone.duckdb": Conflicting lock is held in /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python (PID 43563) by user adamspinella. However, you would be able to open this database in read-only mode, e.g. by using the -readonly parameter in the CLI. See also https://duckdb.org/docs/stable/connect/concurrency
+4811.4s     exit 1
+4811.4s  $ ingest_games.py fetch
+4811.9s     Traceback (most recent call last):
+4811.9s       File "/Users/adamspinella/boxandone/ingest_games.py", line 521, in <module>
+4811.9s         phase_fetch(limit=a.limit)
+4811.9s       File "/Users/adamspinella/boxandone/ingest_games.py", line 187, in phase_fetch
+4811.9s         con = db()
+4811.9s       File "/Users/adamspinella/boxandone/ingest_games.py", line 53, in db
+4811.9s         con = duckdb.connect(DB_PATH)
+4811.9s     _duckdb.IOException: IO Error: Could not set lock on file "/Users/adamspinella/boxandone/data/boxandone.duckdb": Conflicting lock is held in /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python (PID 43563) by user adamspinella. However, you would be able to open this database in read-only mode, e.g. by using the -readonly parameter in the CLI. See also https://duckdb.org/docs/stable/connect/concurrency
+4811.9s     exit 1
+4811.9s  $ ingest_games.py parse
+4812.2s     registry: 3,849 bbref IDs
+4812.2s       nothing to parse
+4812.2s  0 new games
+4812.6s  stats.nba.com reachable
+4812.6s  $ ingest_rosters.py build --season 2026-27
+4862.2s     fetching 30 rosters…
+4862.2s       519 players on rosters
+4862.2s       created  0 new players
+4862.2s       linked   0 to existing registry entries
+4862.2s       staged   0 for review
+4862.2s       roster   519 rows for 2026-10-21
+4862.2s  $ sync_players_supabase.py
+4864.6s     registry 4947   supabase 4947   missing 0
+4864.6s  $ ingest_schedule.py build
+4871.3s     1274 games stored
+4871.3s       2026-27    1274 games    12 KB
+4871.3s  $ ingest_preseason.py build --season 2026-27
+4894.1s     2026-27 Pre Season: 1991 player-game rows
+4894.1s       2026-27     69 games   1977 box rows    14 skipped (unknown players)
+4894.1s       69 games, 1977 box rows, 14 rows skipped
+4894.1s       Skipped rows are players the registry does not have — mostly
+4894.1s       rookies. They need adding before those lines can land.
+4894.2s  43 new preseason games
+4894.2s  $ ingest_transactions.py build --season 2026-27 --force
+4912.6s     2026-27     844 transactions    925 items
+4912.6s       844 transactions, 925 items
+4912.6s       408 player references not in the registry — mostly people who
+4912.6s       were signed and waived without ever playing a game.
+4912.6s  $ export_transactions.py build
+4950.8s     2026-27     842     26 KB
+4950.8s       2025-26    1130     36 KB
+4950.8s       2024-25    1063     36 KB
+4950.8s       2023-24    1034     34 KB
+4950.8s       2022-23     998     33 KB
+4950.8s       2021-22    1894     53 KB
+4950.8s       2020-21     833     31 KB
+4950.8s       2019-20    1800     49 KB
+4950.8s       2018-19    1578     46 KB
+4950.8s       2017-18    1622     43 KB
+4950.8s       2016-17    1785     46 KB
+4950.8s       2015-16    1392     36 KB
+4950.8s  
