@@ -13,10 +13,11 @@ THE RULES (2023 CBA, as Hoops Rumors' glossary states them)
   - a Year of Service is credited at the end of the league year (June 30) for
     a season with at least one day on an Active or Inactive List
 
-ONE CHOICE, MADE ON ADVICE
+ONE CHOICE, CORRECTED
   A season spent only on a two-way does not earn a Year of Service — Adam's
-  league contact. Hoops Rumors writes as though it does. TWO_WAY_EARNS_YOS
-  holds the choice; every result says which rule produced it.
+  league contact — later corrected: a season on a two-way uses a season of
+  eligibility whether or not he was ever active, as Hoops Rumors has it.
+  TWO_WAY_EARNS_YOS holds the choice; each season records how it counted.
 
 HOW A SEASON IS COUNTED
   A season earns a year when the player
@@ -58,7 +59,7 @@ os.chdir(HOME)
 import nightly2 as N  # noqa: E402
 
 PREFIX = "v2"
-TWO_WAY_EARNS_YOS = False
+TWO_WAY_EARNS_YOS = True
 FEED_FROM = date(2015, 7, 1)
 SAME_TEAM_MAX = 3
 LOCAL = os.path.join(HOME, "data", "service")

@@ -1,91 +1,3 @@
-===== exit 0 =====
-
-===== tracking 2026-10-23 13:11:00 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-  stats.nba.com unreachable — nothing to do here
-===== exit 0 =====
-
-===== tracking 2026-10-23 14:11:54 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-  2026-27: 7 of 39 games to fetch
-      defense 0012600066: Failed to perform, curl: (28) Connection timed out after 476
-      defense 0012600066: Failed to perform, curl: (28) Resolving timed out after 1066
-      fetched 7 games
-  2026-27: 39 games with tracking, 1401 player-games, 8392 matchup pairs, 0 game pages written, 0 player-games without our id
-  2024-25: 1154 of 1321 games to fetch
-      track 0022401112: Failed to perform, curl: (28) Operation timed out after 4559
-      fetched 13 games
-  time's up — the next run carries on from here
-Traceback (most recent call last):
-  File "/Users/adamspinella/boxandone/ingest_game_tracking.py", line 465, in <module>
-    main()
-  File "/Users/adamspinella/boxandone/ingest_game_tracking.py", line 453, in main
-    cmd_daily(a.minutes)
-  File "/Users/adamspinella/boxandone/ingest_game_tracking.py", line 437, in cmd_daily
-    cmd_build(touched)
-  File "/Users/adamspinella/boxandone/ingest_game_tracking.py", line 341, in cmd_build
-    ids = player_ids()
-  File "/Users/adamspinella/boxandone/ingest_game_tracking.py", line 328, in player_ids
-    con = duckdb.connect(DB_PATH, read_only=True)
-_duckdb.IOException: IO Error: Could not set lock on file "/Users/adamspinella/boxandone/data/boxandone.duckdb": Conflicting lock is held in /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python (PID 34000) by user adamspinella. See also https://duckdb.org/docs/stable/connect/concurrency
-===== exit 1 =====
-
-===== tracking 2026-10-23 16:21:12 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-  2026-27: 9 of 41 games to fetch
-      defense 0022600006: Failed to perform, curl: (28) Operation timed out after 4000
-      matchups 0012600027: Failed to perform, curl: (28) Connection timed out after 725
-      track 0012600067: Failed to perform, curl: (28) Operation timed out after 1028
-      defense 0012600067: Failed to perform, curl: (28) Connection timed out after 470
-      fetched 9 games
-Traceback (most recent call last):
-  File "/Users/adamspinella/boxandone/ingest_game_tracking.py", line 465, in <module>
-    main()
-  File "/Users/adamspinella/boxandone/ingest_game_tracking.py", line 453, in main
-    cmd_daily(a.minutes)
-  File "/Users/adamspinella/boxandone/ingest_game_tracking.py", line 430, in cmd_daily
-    after = {g[0] for g in season_games(cur) if os.path.exists(raw_path("track", g[0]))}
-  File "/Users/adamspinella/boxandone/ingest_game_tracking.py", line 177, in season_games
-    con.execute("ATTACH '%s' AS hot (READ_ONLY)" % DB_PATH)
-_duckdb.IOException: IO Error: Could not set lock on file "/Users/adamspinella/boxandone/data/boxandone.duckdb": Conflicting lock is held in /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python (PID 34528) by user adamspinella. See also https://duckdb.org/docs/stable/connect/concurrency
-===== exit 1 =====
-
-===== tracking 2026-10-23 19:23:03 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-Traceback (most recent call last):
-  File "/Users/adamspinella/boxandone/ingest_game_tracking.py", line 465, in <module>
-    main()
-  File "/Users/adamspinella/boxandone/ingest_game_tracking.py", line 453, in main
-    cmd_daily(a.minutes)
-  File "/Users/adamspinella/boxandone/ingest_game_tracking.py", line 428, in cmd_daily
-    before = {g[0] for g in season_games(cur) if os.path.exists(raw_path("track", g[0]))}
-  File "/Users/adamspinella/boxandone/ingest_game_tracking.py", line 177, in season_games
-    con.execute("ATTACH '%s' AS hot (READ_ONLY)" % DB_PATH)
-_duckdb.IOException: IO Error: Could not set lock on file "/Users/adamspinella/boxandone/data/boxandone.duckdb": Conflicting lock is held in /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python (PID 34528) by user adamspinella. See also https://duckdb.org/docs/stable/connect/concurrency
-===== exit 1 =====
-
-===== tracking 2026-10-23 20:07:02 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-  2026-27: 7 of 41 games to fetch
-      fetched 7 games
-  2026-27: 41 games with tracking, 1469 player-games, 8774 matchup pairs, 0 game pages written, 0 player-games without our id
-  2024-25: 1141 of 1321 games to fetch
-      50/1141
-      fetched 76 games
-  time's up — the next run carries on from here
-  2024-25: 256 games with tracking, 6988 player-games, 47130 matchup pairs, 256 game pages written, 3 player-games without our id
-===== exit 0 =====
-
-===== tracking 2026-10-23 21:07:02 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-  2026-27: 7 of 41 games to fetch
-      fetched 7 games
-  2026-27: 41 games with tracking, 1469 player-games, 8774 matchup pairs, 0 game pages written, 0 player-games without our id
-  2024-25: 1065 of 1321 games to fetch
-      50/1065
-      fetched 70 games
-  time's up — the next run carries on from here
-  2024-25: 326 games with tracking, 8802 player-games, 60189 matchup pairs, 326 game pages written, 3 player-games without our id
-===== exit 0 =====
-
-===== tracking 2026-10-23 22:11:29 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-  2026-27: 7 of 41 games to fetch
-      fetched 7 games
-  2026-27: 41 games with tracking, 1469 player-games, 8774 matchup pairs, 0 game pages written, 0 player-games without our id
   2024-25: 995 of 1321 games to fetch
       defense 0022400929: HTTP 503
       track 0022400937: HTTP 500
@@ -4997,4 +4909,92 @@ _duckdb.IOException: IO Error: Could not set lock on file "/Users/adamspinella/b
   2026-27: 8 of 295 games to fetch
       fetched 8 games
   2026-27: 295 games with tracking, 8452 player-games, 59889 matchup pairs, 0 game pages written, 24 player-games without our id
+===== exit 0 =====
+
+===== tracking 2026-11-27 01:07:00 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  2026-27: 8 of 295 games to fetch
+      fetched 8 games
+  2026-27: 295 games with tracking, 8452 player-games, 59889 matchup pairs, 0 game pages written, 24 player-games without our id
+===== exit 0 =====
+
+===== tracking 2026-11-27 02:12:01 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  stats.nba.com unreachable — nothing to do here
+===== exit 0 =====
+
+===== tracking 2026-11-27 03:16:02 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  stats.nba.com unreachable — nothing to do here
+===== exit 0 =====
+
+===== tracking 2026-11-27 04:18:49 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  stats.nba.com unreachable — nothing to do here
+===== exit 0 =====
+
+===== tracking 2026-11-27 05:11:06 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  stats.nba.com unreachable — nothing to do here
+===== exit 0 =====
+
+===== tracking 2026-11-27 06:15:26 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  stats.nba.com unreachable — nothing to do here
+===== exit 0 =====
+
+===== tracking 2026-11-27 07:09:54 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  stats.nba.com unreachable — nothing to do here
+===== exit 0 =====
+
+===== tracking 2026-11-27 08:19:56 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  stats.nba.com unreachable — nothing to do here
+===== exit 0 =====
+
+===== tracking 2026-11-27 09:07:01 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  2026-27: 8 of 295 games to fetch
+      fetched 8 games
+  2026-27: 295 games with tracking, 8452 player-games, 59889 matchup pairs, 0 game pages written, 24 player-games without our id
+===== exit 0 =====
+
+===== tracking 2026-11-27 10:19:56 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  stats.nba.com unreachable — nothing to do here
+===== exit 0 =====
+
+===== tracking 2026-11-27 11:10:49 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  stats.nba.com unreachable — nothing to do here
+===== exit 0 =====
+
+===== tracking 2026-11-27 12:07:05 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  2026-27: 8 of 295 games to fetch
+      track 0022600189: Failed to perform, curl: (6) Could not resolve host: stats.n
+      track 0012600067: Failed to perform, curl: (28) Operation timed out after 1036
+      fetched 8 games
+  2026-27: 295 games with tracking, 8452 player-games, 59889 matchup pairs, 0 game pages written, 24 player-games without our id
+===== exit 0 =====
+
+===== tracking 2026-11-27 13:17:16 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  stats.nba.com unreachable — nothing to do here
+===== exit 0 =====
+
+===== tracking 2026-11-27 14:17:48 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  stats.nba.com unreachable — nothing to do here
+===== exit 0 =====
+
+===== tracking 2026-11-27 15:16:37 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  stats.nba.com unreachable — nothing to do here
+===== exit 0 =====
+
+===== tracking 2026-11-27 16:19:47 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  stats.nba.com unreachable — nothing to do here
+===== exit 0 =====
+
+===== tracking 2026-11-27 17:20:01 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  stats.nba.com unreachable — nothing to do here
+===== exit 0 =====
+
+===== tracking 2026-11-27 18:19:31 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  stats.nba.com unreachable — nothing to do here
+===== exit 0 =====
+
+===== tracking 2026-11-27 19:22:23 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  stats.nba.com unreachable — nothing to do here
+===== exit 0 =====
+
+===== tracking 2026-11-27 20:21:26 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+  stats.nba.com unreachable — nothing to do here
 ===== exit 0 =====

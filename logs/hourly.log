@@ -1,435 +1,3 @@
-31386.3s       2026-27   tracking.parquet  68 player rows  (0 NBA ids not in the registry)
-31386.3s  $ ingest_playtypes.py build --season 2026-27
-31778.2s     2026-27 Regular Season dfd_lt6: HTTP 500
-31778.2s           2026-27 Regular Season dfd_lt6: HTTP 500
-31778.2s           2026-27 Regular Season dfd_lt6: HTTP 500
-31778.2s       2026-27 defense    313 player rows,  57 metrics, 0 without our id
-31778.2s  changed — exporting
-31778.2s  $ export_transactions.py build --season 2026-27
-31782.8s     2026-27     843     26 KB
-31795.9s    registry 206 KB
-31796.8s    manifest: 31 seasons
-31798.1s    rosters: 519 players as of 2026-10-22
-31798.6s  pushing database (192 MB)
-31867.6s  done (ok)
-===== exit 0 =====
-
-===== hourly 2026-10-22 07:37:02 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-   0.0s  hourly 2026-27
-   1.4s  pulling database (192 MB)
-  70.0s  $ ingest_transactions.py build --season 2026-27 --force
-  90.1s     2026-27     845 transactions    926 items
-  90.1s       845 transactions, 926 items
-  90.1s       400 player references not in the registry — mostly people who
-  90.1s       were signed and waived without ever playing a game.
-  90.5s  stats.nba.com reachable
-  90.5s  $ ingest_rosters.py build --season 2026-27
- 139.9s     fetching 30 rosters…
- 139.9s       519 players on rosters
- 139.9s       created  0 new players
- 139.9s       linked   0 to existing registry entries
- 139.9s       staged   0 for review
- 139.9s       roster   519 rows for 2026-10-22
- 139.9s  $ sync_players_supabase.py
- 142.5s     registry 4947   supabase 4947   missing 0
- 142.5s  $ positions_supabase.py pull
- 146.3s     629 admin positions pulled from Supabase
- 146.3s  no change — nothing pushed
-===== exit 0 =====
-
-===== hourly 2026-10-22 08:37:03 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-   0.0s  hourly 2026-27
-   0.8s  pulling database (196 MB)
-  72.3s  $ ingest_transactions.py build --season 2026-27 --force
-  92.9s     2026-27     845 transactions    926 items
-  92.9s       845 transactions, 926 items
-  92.9s       366 player references not in the registry — mostly people who
-  92.9s       were signed and waived without ever playing a game.
-  93.3s  stats.nba.com reachable
-  93.3s  $ ingest_rosters.py build --season 2026-27
- 142.0s     fetching 30 rosters…
- 142.0s       519 players on rosters
- 142.0s       created  0 new players
- 142.0s       linked   0 to existing registry entries
- 142.0s       staged   0 for review
- 142.0s       roster   519 rows for 2026-10-22
- 142.0s  $ sync_players_supabase.py
- 144.4s     registry 4947   supabase 4947   missing 0
- 144.4s  $ positions_supabase.py pull
- 148.3s     629 admin positions pulled from Supabase
- 148.3s  no change — nothing pushed
-===== exit 0 =====
-
-===== hourly 2026-10-22 09:37:01 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-   0.0s  hourly 2026-27
-   1.4s  pulling database (196 MB)
-  72.2s  $ ingest_transactions.py build --season 2026-27 --force
-  92.9s     2026-27     845 transactions    926 items
-  92.9s       845 transactions, 926 items
-  92.9s       366 player references not in the registry — mostly people who
-  92.9s       were signed and waived without ever playing a game.
-  93.3s  stats.nba.com reachable
-  93.3s  $ ingest_rosters.py build --season 2026-27
- 141.4s     fetching 30 rosters…
- 141.4s       519 players on rosters
- 141.4s       created  0 new players
- 141.4s       linked   0 to existing registry entries
- 141.4s       staged   0 for review
- 141.4s       roster   519 rows for 2026-10-22
- 141.4s  $ sync_players_supabase.py
- 144.1s     registry 4947   supabase 4947   missing 0
- 144.1s  $ positions_supabase.py pull
- 147.8s     629 admin positions pulled from Supabase
- 147.9s  no change — nothing pushed
-===== exit 0 =====
-
-===== hourly 2026-10-22 10:37:05 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-   0.0s  hourly 2026-27
-   1.6s  pulling database (196 MB)
-  71.8s  $ ingest_transactions.py build --season 2026-27 --force
-  92.5s     2026-27     845 transactions    926 items
-  92.5s       845 transactions, 926 items
-  92.5s       366 player references not in the registry — mostly people who
-  92.5s       were signed and waived without ever playing a game.
-  93.0s  stats.nba.com reachable
-  93.0s  $ ingest_rosters.py build --season 2026-27
- 143.0s     fetching 30 rosters…
- 143.0s       519 players on rosters
- 143.0s       created  0 new players
- 143.0s       linked   0 to existing registry entries
- 143.0s       staged   0 for review
- 143.0s       roster   519 rows for 2026-10-22
- 143.0s  $ sync_players_supabase.py
- 145.3s     registry 4947   supabase 4947   missing 0
- 145.3s  $ positions_supabase.py pull
- 149.0s     629 admin positions pulled from Supabase
- 149.0s  no change — nothing pushed
-===== exit 0 =====
-
-===== hourly 2026-10-22 11:37:03 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-   0.0s  hourly 2026-27
-   5.8s  pulling database (196 MB)
-  79.5s  $ ingest_transactions.py build --season 2026-27 --force
- 102.2s     2026-27     845 transactions    926 items
- 102.2s       845 transactions, 926 items
- 102.2s       366 player references not in the registry — mostly people who
- 102.2s       were signed and waived without ever playing a game.
- 102.6s  stats.nba.com reachable
- 102.6s  $ ingest_rosters.py build --season 2026-27
- 152.3s     fetching 30 rosters…
- 152.3s       519 players on rosters
- 152.3s       created  0 new players
- 152.3s       linked   0 to existing registry entries
- 152.3s       staged   0 for review
- 152.3s       roster   519 rows for 2026-10-22
- 152.3s  $ sync_players_supabase.py
- 154.9s     registry 4947   supabase 4947   missing 0
- 154.9s  $ positions_supabase.py pull
- 159.1s     629 admin positions pulled from Supabase
- 159.2s  no change — nothing pushed
-===== exit 0 =====
-
-===== hourly 2026-10-22 12:38:30 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-already ran today — nothing to do
-===== exit 0 =====
-
-===== hourly 2026-10-22 13:37:03 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-already ran today — nothing to do
-===== exit 0 =====
-
-===== hourly 2026-10-22 14:38:58 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-already ran today — nothing to do
-===== exit 0 =====
-
-===== hourly 2026-10-22 15:42:21 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-already ran today — nothing to do
-===== exit 0 =====
-
-===== hourly 2026-10-22 16:53:43 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-already ran today — nothing to do
-===== exit 0 =====
-
-===== hourly 2026-10-22 17:37:00 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-already ran today — nothing to do
-===== exit 0 =====
-
-===== hourly 2026-10-22 18:37:01 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-already ran today — nothing to do
-===== exit 0 =====
-
-===== hourly 2026-10-22 19:37:00 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-already ran today — nothing to do
-===== exit 0 =====
-
-===== hourly 2026-10-22 20:46:04 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-already ran today — nothing to do
-===== exit 0 =====
-
-===== hourly 2026-10-22 21:53:57 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-already ran today — nothing to do
-===== exit 0 =====
-
-===== hourly 2026-10-22 22:51:49 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-already ran today — nothing to do
-===== exit 0 =====
-
-===== hourly 2026-10-22 23:53:27 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-already ran today — nothing to do
-===== exit 0 =====
-
-===== hourly 2026-10-23 00:41:02 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-before 6am — waiting for the morning
-===== exit 0 =====
-
-===== hourly 2026-10-23 01:40:07 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-before 6am — waiting for the morning
-===== exit 0 =====
-
-===== hourly 2026-10-23 02:47:32 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-before 6am — waiting for the morning
-===== exit 0 =====
-
-===== hourly 2026-10-23 03:41:06 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-before 6am — waiting for the morning
-===== exit 0 =====
-
-===== hourly 2026-10-23 04:42:46 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-before 6am — waiting for the morning
-===== exit 0 =====
-
-===== hourly 2026-10-23 05:43:37 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-before 6am — waiting for the morning
-===== exit 0 =====
-
-===== hourly 2026-10-23 06:45:51 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-   0.0s  hourly 2026-27
-   1.7s  pulling database (196 MB)
-18138.9s  EXCEPTION: Contents of stored object "v2/db/boxandone.duckdb" in bucket "box-and-one-stats" did not match expected ETag.
-===== exit 1 =====
-
-===== hourly 2026-10-23 12:39:04 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-   0.0s  hourly 2026-27
-   1.7s  pulling database (195 MB)
-9170.3s  $ ingest_transactions.py build --season 2026-27 --force
-9191.4s     2026-27     847 transactions    928 items
-9191.4s       847 transactions, 928 items
-9191.4s       363 player references not in the registry — mostly people who
-9191.4s       were signed and waived without ever playing a game.
-9191.7s  stats.nba.com reachable
-9191.7s  $ ingest_rosters.py build --season 2026-27
-11206.7s     fetching 30 rosters…
-11206.7s           1610612749: Failed to perform, curl: (28) Connection timed out after 107
-11206.7s       519 players on rosters
-11206.7s       created  0 new players
-11206.7s       linked   0 to existing registry entries
-11206.7s       staged   0 for review
-11206.7s       roster   519 rows for 2026-10-23
-11206.7s  $ sync_players_supabase.py
-12191.2s     Traceback (most recent call last):
-12191.2s       File "/Users/adamspinella/boxandone/sync_players_supabase.py", line 112, in <module>
-12191.2s         main()
-12191.2s       File "/Users/adamspinella/boxandone/sync_players_supabase.py", line 88, in main
-12191.2s         have = supabase_ids(env, token)
-12191.2s       File "/Users/adamspinella/boxandone/sync_players_supabase.py", line 64, in supabase_ids
-12191.2s         code, rows = call(env, token, "players?select=player_id&order=player_id"
-12191.2s       File "/Users/adamspinella/boxandone/sync_players_supabase.py", line 54, in call
-12191.2s         with urllib.request.urlopen(req, timeout=120) as r:
-12191.2s       File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/urllib/request.py", line 214, in urlopen
-12191.2s         return opener.open(url, data, timeout)
-12191.2s       File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/urllib/request.py", line 517, in open
-12191.2s         response = self._open(req, data)
-12191.2s       File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/urllib/request.py", line 534, in _open
-12191.2s         result = self._call_chain(self.handle_open, protocol, protocol +
-12191.2s       File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/urllib/request.py", line 494, in _call_chain
-12191.2s         result = func(*args)
-12191.2s       File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/urllib/request.py", line 1389, in https_open
-12191.2s         return self.do_open(http.client.HTTPSConnection, req,
-12191.2s       File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/urllib/request.py", line 1350, in do_open
-12191.2s         r = h.getresponse()
-12191.2s       File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/http/client.py", line 1349, in getresponse
-12191.2s         response.begin()
-12191.2s       File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/http/client.py", line 316, in begin
-12191.2s         version, status, reason = self._read_status()
-12191.2s       File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/http/client.py", line 277, in _read_status
-12191.2s         line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
-12191.2s       File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/socket.py", line 704, in readinto
-12191.2s         return self._sock.recv_into(b)
-12191.2s       File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/ssl.py", line 1241, in recv_into
-12191.2s         return self.read(nbytes, buffer)
-12191.2s       File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/ssl.py", line 1099, in read
-12191.2s         return self._sslobj.read(len, buffer)
-12191.2s     socket.timeout: The read operation timed out
-12191.2s     exit 1
-12191.2s  $ positions_supabase.py pull
-22623.9s     Traceback (most recent call last):
-22623.9s       File "/Users/adamspinella/boxandone/positions_supabase.py", line 233, in <module>
-22623.9s         {"check": cmd_check, "seed": cmd_seed, "pull": cmd_pull}.get(
-22623.9s       File "/Users/adamspinella/boxandone/positions_supabase.py", line 151, in cmd_pull
-22623.9s         for r in fetch_all(env):                 # newest first within each player
-22623.9s       File "/Users/adamspinella/boxandone/positions_supabase.py", line 97, in fetch_all
-22623.9s         code, page = SP.call(env, None, "player_positions?select=player_id,position,effective_from,"
-22623.9s       File "/Users/adamspinella/boxandone/sync_players_supabase.py", line 55, in call
-22623.9s         raw = r.read().decode()
-22623.9s       File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/http/client.py", line 466, in read
-22623.9s         return self._readall_chunked()
-22623.9s       File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/http/client.py", line 576, in _readall_chunked
-22623.9s         value.append(self._safe_read(chunk_left))
-22623.9s       File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/http/client.py", line 613, in _safe_read
-22623.9s         data = self.fp.read(amt)
-22623.9s       File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/socket.py", line 704, in readinto
-22623.9s         return self._sock.recv_into(b)
-22623.9s       File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/ssl.py", line 1241, in recv_into
-22623.9s         return self.read(nbytes, buffer)
-22623.9s       File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/ssl.py", line 1099, in read
-22623.9s         return self._sslobj.read(len, buffer)
-22623.9s     socket.timeout: The read operation timed out
-22623.9s     exit 1
-22624.0s  daily stats refresh: tracking and play types
-22624.0s  $ ingest_tracking.py build --season 2026-27
-26732.3s     2026-27 Regular Season drives: Failed to perform, curl: (28) Operation timed out after 600979 millise
-26732.3s       2026-27    38743 values
-26732.3s       2026-27   tracking.parquet  345 player rows  (0 NBA ids not in the registry)
-26732.3s  $ ingest_playtypes.py build --season 2026-27
-26863.6s     2026-27 playtypes   32 player rows,  79 metrics, 0 without our id
-26863.6s       2026-27 defense    336 player rows,  57 metrics, 0 without our id
-26863.6s  changed — exporting
-26863.6s  $ export_transactions.py build --season 2026-27
-26868.6s     2026-27     845     26 KB
-26886.5s    registry 207 KB
-26887.6s    manifest: 31 seasons
-26889.0s    rosters: 519 players as of 2026-10-23
-26928.5s  EXCEPTION: lost the database lock while paused (laptop asleep?) — another run took over and has the newer database; not pushing
-===== exit 1 =====
-
-===== hourly 2026-10-23 20:37:02 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-   0.0s  hourly 2026-27
-   1.7s  pulling database (195 MB)
-  38.4s  $ ingest_transactions.py build --season 2026-27 --force
-  59.5s     2026-27     847 transactions    928 items
-  59.5s       847 transactions, 928 items
-  59.5s       363 player references not in the registry — mostly people who
-  59.5s       were signed and waived without ever playing a game.
-  59.9s  stats.nba.com reachable
-  59.9s  $ ingest_rosters.py build --season 2026-27
- 110.6s     fetching 30 rosters…
- 110.6s       519 players on rosters
- 110.6s       created  0 new players
- 110.6s       linked   0 to existing registry entries
- 110.6s       staged   0 for review
- 110.6s       roster   519 rows for 2026-10-23
- 110.6s  $ sync_players_supabase.py
- 112.9s     registry 4947   supabase 4947   missing 0
- 112.9s  $ positions_supabase.py pull
- 116.5s     629 admin positions pulled from Supabase
- 116.6s  changed — exporting
- 116.6s  $ export_transactions.py build --season 2026-27
- 121.0s     2026-27     845     26 KB
- 137.0s    registry 215 KB
- 138.1s    manifest: 31 seasons
- 140.0s    rosters: 519 players as of 2026-10-23
- 140.5s  pushing database (195 MB)
- 192.2s  done (ok)
-===== exit 0 =====
-
-===== hourly 2026-10-23 21:37:02 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-already ran today — nothing to do
-===== exit 0 =====
-
-===== hourly 2026-10-23 22:37:02 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-already ran today — nothing to do
-===== exit 0 =====
-
-===== hourly 2026-10-23 23:37:02 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-already ran today — nothing to do
-===== exit 0 =====
-
-===== hourly 2026-10-24 00:37:01 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-before 6am — waiting for the morning
-===== exit 0 =====
-
-===== hourly 2026-10-24 01:48:59 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-before 6am — waiting for the morning
-===== exit 0 =====
-
-===== hourly 2026-10-24 02:53:48 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-before 6am — waiting for the morning
-===== exit 0 =====
-
-===== hourly 2026-10-24 03:41:48 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-before 6am — waiting for the morning
-===== exit 0 =====
-
-===== hourly 2026-10-24 04:37:54 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-before 6am — waiting for the morning
-===== exit 0 =====
-
-===== hourly 2026-10-24 05:53:19 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-before 6am — waiting for the morning
-===== exit 0 =====
-
-===== hourly 2026-10-24 06:52:35 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-   0.0s  hourly 2026-27
-   1.7s  pulling database (200 MB)
-8038.8s  $ ingest_transactions.py build --season 2026-27 --force
-8079.3s     2026-27     848 transactions    929 items
-8079.3s       848 transactions, 929 items
-8079.3s       360 player references not in the registry — mostly people who
-8079.3s       were signed and waived without ever playing a game.
-8079.7s  stats.nba.com reachable
-8079.7s  $ ingest_rosters.py build --season 2026-27
-8130.2s     fetching 30 rosters…
-8130.2s       519 players on rosters
-8130.2s       created  0 new players
-8130.2s       linked   0 to existing registry entries
-8130.2s       staged   0 for review
-8130.2s       roster   519 rows for 2026-10-24
-8130.2s  $ sync_players_supabase.py
-8132.3s     registry 4947   supabase 4947   missing 0
-8132.3s  $ positions_supabase.py pull
-8136.6s     629 admin positions pulled from Supabase
-8136.6s  daily stats refresh: tracking and play types
-8136.6s  $ ingest_tracking.py build --season 2026-27
-8287.9s     2026-27    39177 values
-8287.9s       2026-27   tracking.parquet  376 player rows  (0 NBA ids not in the registry)
-8287.9s  $ ingest_playtypes.py build --season 2026-27
-11930.2s     2026-27 playtypes  123 player rows, 109 metrics, 0 without our id
-11930.2s       2026-27 defense    360 player rows,  57 metrics, 0 without our id
-11930.4s  changed — exporting
-11930.4s  $ export_transactions.py build --season 2026-27
-11934.8s     2026-27     846     26 KB
-11954.5s    registry 215 KB
-11955.4s    manifest: 31 seasons
-11956.8s    rosters: 519 players as of 2026-10-24
-12080.5s  EXCEPTION: lost the database lock while paused (laptop asleep?) — another run took over and has the newer database; not pushing
-===== exit 1 =====
-
-===== hourly 2026-10-24 10:44:01 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-   0.0s  hourly 2026-27
-   1.9s  pulling database (200 MB)
-17106.4s  $ ingest_transactions.py build --season 2026-27 --force
-17128.5s     2026-27     848 transactions    929 items
-17128.5s       848 transactions, 929 items
-17128.5s       359 player references not in the registry — mostly people who
-17128.5s       were signed and waived without ever playing a game.
-17129.1s  stats.nba.com reachable
-17129.1s  $ ingest_rosters.py build --season 2026-27
-23245.5s     fetching 30 rosters…
-23245.5s           1610612749: Failed to perform, curl: (28) Connection timed out after 849
-23245.5s       519 players on rosters
-23245.5s       created  0 new players
-23245.5s       linked   0 to existing registry entries
-23245.5s       staged   0 for review
-23245.5s       roster   519 rows for 2026-10-24
-23245.5s  $ sync_players_supabase.py
-23248.5s     registry 4947   supabase 4947   missing 0
-23248.5s  $ positions_supabase.py pull
-23252.1s     629 admin positions pulled from Supabase
-23252.2s  no change — nothing pushed
-===== exit 0 =====
-
-===== hourly 2026-10-24 17:49:33 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
-already ran today — nothing to do
-===== exit 0 =====
 
 ===== hourly 2026-10-24 18:42:17 EDT (/Library/Developer/CommandLineTools/usr/bin/python3) =====
 already ran today — nothing to do
@@ -5268,3 +4836,169 @@ stopped after 20 minutes (laptop asleep, or a call that never answered)
 1167.0s  daily stats refresh: tracking and play types
 1167.0s  $ ingest_tracking.py build --season 2026-27
 stopped after 20 minutes (laptop asleep, or a call that never answered)
+
+===== hourly 2026-11-27 00:37:02 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+before 6am — waiting for the morning
+===== exit 0 =====
+
+===== hourly 2026-11-27 01:37:03 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+before 6am — waiting for the morning
+===== exit 0 =====
+
+===== hourly 2026-11-27 02:45:03 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+before 6am — waiting for the morning
+===== exit 0 =====
+
+===== hourly 2026-11-27 03:45:03 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+before 6am — waiting for the morning
+===== exit 0 =====
+
+===== hourly 2026-11-27 04:53:12 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+before 6am — waiting for the morning
+===== exit 0 =====
+
+===== hourly 2026-11-27 05:43:57 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+before 6am — waiting for the morning
+===== exit 0 =====
+
+===== hourly 2026-11-27 06:49:07 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+   0.0s  hourly 2026-27
+1261.5s  pulling database (254 MB)
+2092.6s  $ ingest_transactions.py build --season 2026-27 --force
+2113.4s     2026-27     882 transactions    962 items
+2113.4s       882 transactions, 962 items
+2113.4s       323 player references not in the registry — mostly people who
+2113.4s       were signed and waived without ever playing a game.
+2114.2s  stats.nba.com reachable
+2114.2s  $ ingest_rosters.py build --season 2026-27
+2161.8s     fetching 30 rosters…
+2161.8s       526 players on rosters
+2161.8s       created  0 new players
+2161.8s       linked   0 to existing registry entries
+2161.8s       staged   0 for review
+2161.8s       roster   526 rows for 2026-11-27
+2162.0s  $ sync_players_supabase.py
+2165.7s     registry 7354   supabase 7354   missing 0
+2165.7s  $ positions_supabase.py pull
+2169.7s     634 admin positions pulled from Supabase
+2169.7s  $ ingest_gleague.py run --season 2026-27 --only-new
+2183.2s     2026-27 schedule: 776 games, 105 final — regular 558, showcase 1, tipoff 217
+2183.2s       2026-27: nothing to fetch
+2183.2s       2026-27: nothing to parse
+2183.2s       2026-27: 0 new G League games
+2183.2s  $ ingest_twoway.py run --season 2026-27
+2237.3s     transactions: 1232 on the page (15 new) — rights_trade 218, returned 205, gl_waive 144, allocate 99, twoway_sign 95, assign 90, recall 85, draft 73, tryout 70, pool_claim 60, twoway_end 38, gl_trade 17, gl_terminate 13, call_up 11, deactivate 6, gl_claim 4, return_from_callup 3, deallocate 1; 994 of 1241 this season matched to a player
+2237.3s       player movement: 10148 rows (0 new) back to 2015-07-01; 9580 matched to a player by NBA id
+2237.3s       two-way list: 90 players on 30 NBA teams; 88 matched to a player, 90 to an NBA team
+2237.3s       active lists: 0 new games read (270 this season)
+2237.3s       tracker: 90 two-way players, 0 teams with an open slot, 0 within 5 games of the limit, 2 with no active count (unmatched); deadline in 97 days
+2237.3s  $ ingest_injuries.py daily
+2239.0s     2026-11-26: no games
+2239.0s       2026-11-27: no games
+2239.0s  daily stats refresh: tracking and play types
+2239.0s  $ ingest_tracking.py build --season 2026-27
+2370.4s     2026-27    64710 values
+2370.4s       2026-27   tracking.parquet  482 player rows  (0 NBA ids not in the registry)
+2370.4s  $ ingest_playtypes.py build --season 2026-27
+stopped after 20 minutes (laptop asleep, or a call that never answered)
+
+===== hourly 2026-11-27 07:37:05 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+   0.0s  hourly 2026-27
+   0.7s  another run started 27 min ago (Adams-MacBook-Air.local) — exiting
+===== exit 0 =====
+
+===== hourly 2026-11-27 08:37:01 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+   0.0s  hourly 2026-27
+   0.4s  stale lock (87 min old) — taking it
+   1.1s  pulling database (254 MB)
+1272.7s  $ ingest_transactions.py build --season 2026-27 --force
+1295.5s     2026-27     882 transactions    962 items
+1295.5s       882 transactions, 962 items
+1295.5s       323 player references not in the registry — mostly people who
+1295.5s       were signed and waived without ever playing a game.
+stopped after 20 minutes (laptop asleep, or a call that never answered)
+
+===== hourly 2026-11-27 09:37:01 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+   0.0s  hourly 2026-27
+   1.9s  pulling database (254 MB)
+
+===== hourly 2026-11-27 11:37:00 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+   0.0s  hourly 2026-27
+   0.7s  stale lock (120 min old) — taking it
+   1.8s  pulling database (254 MB)
+10791.0s  EXCEPTION: Contents of stored object "v2/db/boxandone.duckdb" in bucket "box-and-one-stats" did not match expected ETag.
+===== exit 1 =====
+
+===== hourly 2026-11-27 14:37:02 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+   0.0s  hourly 2026-27
+   1.3s  pulling database (254 MB)
+12380.7s  EXCEPTION: Could not connect to the endpoint URL: "https://de63a0ec50363ea1ffcc3504ece7a5b8.r2.cloudflarestorage.com/box-and-one-stats/v2/db/boxandone.duckdb"
+===== exit 1 =====
+
+===== hourly 2026-11-27 18:48:09 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+   0.0s  hourly 2026-27
+Traceback (most recent call last):
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/urllib3/connection.py", line 174, in _new_conn
+    conn = connection.create_connection(
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/urllib3/util/connection.py", line 72, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/socket.py", line 953, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+socket.gaierror: [Errno 8] nodename nor servname provided, or not known
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/botocore/httpsession.py", line 477, in send
+    urllib_response = conn.urlopen(
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/urllib3/connectionpool.py", line 802, in urlopen
+    retries = retries.increment(
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/urllib3/util/retry.py", line 527, in increment
+    raise six.reraise(type(error), error, _stacktrace)
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/urllib3/packages/six.py", line 770, in reraise
+    raise value
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/urllib3/connectionpool.py", line 716, in urlopen
+    httplib_response = self._make_request(
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/urllib3/connectionpool.py", line 404, in _make_request
+    self._validate_conn(conn)
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/urllib3/connectionpool.py", line 1061, in _validate_conn
+    conn.connect()
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/urllib3/connection.py", line 363, in connect
+    self.sock = conn = self._new_conn()
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/urllib3/connection.py", line 186, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <botocore.awsrequest.AWSHTTPSConnection object at 0x108b332b0>: Failed to establish a new connection: [Errno 8] nodename nor servname provided, or not known
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/adamspinella/boxandone/hourly.py", line 233, in <module>
+    main()
+  File "/Users/adamspinella/boxandone/hourly.py", line 153, in main
+    if not N.acquire_lock(s3, bucket, log):
+  File "/Users/adamspinella/boxandone/nightly2.py", line 199, in acquire_lock
+    s3.put_object(Bucket=bucket, Key=LOCK_KEY, Body=json.dumps(_MY_LOCK).encode())
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/botocore/client.py", line 602, in _api_call
+    return self._make_api_call(operation_name, kwargs)
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/botocore/context.py", line 123, in wrapper
+    return func(*args, **kwargs)
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/botocore/client.py", line 1060, in _make_api_call
+    http, parsed_response = self._make_request(
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/botocore/client.py", line 1084, in _make_request
+    return self._endpoint.make_request(operation_model, request_dict)
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/botocore/endpoint.py", line 119, in make_request
+    return self._send_request(request_dict, operation_model)
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/botocore/endpoint.py", line 229, in _send_request
+    raise exception
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/botocore/endpoint.py", line 279, in _do_get_response
+    http_response = self._send(request)
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/botocore/endpoint.py", line 383, in _send
+    return self.http_session.send(request)
+  File "/Users/adamspinella/Library/Python/3.9/lib/python/site-packages/botocore/httpsession.py", line 506, in send
+    raise EndpointConnectionError(endpoint_url=request.url, error=e)
+botocore.exceptions.EndpointConnectionError: Could not connect to the endpoint URL: "https://de63a0ec50363ea1ffcc3504ece7a5b8.r2.cloudflarestorage.com/box-and-one-stats/v2/db/.nightly.lock"
+===== exit 1 =====
+
+===== hourly 2026-11-27 20:37:01 EST (/Library/Developer/CommandLineTools/usr/bin/python3) =====
+   0.0s  hourly 2026-27
+   1.1s  pulling database (254 MB)
